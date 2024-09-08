@@ -25,6 +25,7 @@ function Signup() {
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(true)
 
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isPasswordMatched, setIsPasswordMatched] = useState(true)
   const [hasLowerCase, setHasLowerCase] = useState(false)
@@ -51,7 +52,12 @@ function Signup() {
   }
   //비밀번호 일치 여부 검사
   const validateConfirmPassword = (value) => password === value || value === ""
-  
+
+  //비밀번호 보이기/숨기기
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
+  };
+
   const validateNickname = (value) => {
     // 닉네임 : 한글, 영어 대소문자, 숫자로 이루어진 2~16자리
     const regex = /^[가-힣a-zA-Z0-9]{2,16}$/
@@ -89,7 +95,7 @@ function Signup() {
     setUsername(value)
     const validUsername = validateUsername(value)
     setIsValidUsername(validUsername)
-    
+
     if (validUsername) {
       await checkUsernameAvailability(value)
     }
@@ -242,16 +248,31 @@ function Signup() {
             <label htmlFor="password" className="block text-sm font-semibold leading-6 text-gray-900">
               비밀번호
             </label>
-            <div className="mt-2.5">
+            <div className="mt-2.5 relative">
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={passwordHandleChange}
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.013 10.013 0 0012 19.25c-3.45 0-6.6-1.92-8.25-5a10.013 10.013 0 018.25-5 10.013 10.013 0 018.25 5c-.397.72-.932 1.377-1.575 1.925m-2.29 1.69a5.375 5.375 0 01-6.63-.13M13.5 8.625a5.375 5.375 0 016.63-.13" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.75c3.45 0 6.6 1.92 8.25 5-1.65 3.08-4.8 5-8.25 5a10.013 10.013 0 01-8.25-5c1.65-3.08 4.8-5 8.25-5zM4.75 9.75c.35.56.783 1.077 1.275 1.525m13.725 0c-.492-.448-.925-.965-1.275-1.525" />
+                  </svg>
+                )}
+              </button>
               {showValidationMessage && (
                 <div className="mt-2 text-sm">
                   <p>비밀번호는 영어
