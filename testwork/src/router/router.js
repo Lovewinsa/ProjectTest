@@ -22,6 +22,7 @@ import CourseForm from "../pages/boards/CourseForm"
 import Course from "../pages/boards/Course"
 import MapComponentBox from "../components/MapComponentBox"
 import CourseDetail from "../pages/boards/CourseDetail"
+import CourseUpdateForm from "../pages/boards/CourseUpdateForm"
 
 const routes = [
     // /users/:id
@@ -48,7 +49,9 @@ const routes = [
     {path:"/course", element:<Course/>},
     {path:"/course/new", element:<CourseForm/>},
     {path:"/mapcomponent", element:<MapComponentBox/>},
-    {path:"/course/detail", element:<CourseDetail/>}
+    {path:"/course/detail", element:<CourseDetail/>},
+    {path:"/course/:id/edit", element:<CourseUpdateForm/>}
+
 ]
 
 const router = createBrowserRouter([{

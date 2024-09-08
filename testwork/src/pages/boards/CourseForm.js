@@ -26,7 +26,7 @@ const CourseForm = () => {
     // Add more countries and cities as needed
   };
   // 선택한 나라에 맞는 도시 목록을 얻음
-  const cities = citiesByCountry[country] || [];
+  const cities = citiesByCountry[country] || []; //citiesByCountry[country]가 undefined 또는 null일 경우 빈 배열 반환
   const [tagInput, setTagInput] = useState("");
   const [postTags, setTags] = useState([]);
   const [days, setDays] = useState([{ places: [""], dayMemo: "" }]);
@@ -189,7 +189,6 @@ const CourseForm = () => {
             />
           </div>
           <div>
-            {/* 나라 선택 */}
             <div>
               <label htmlFor="country" className="block font-semibold">
                 여행할 나라
@@ -239,7 +238,6 @@ const CourseForm = () => {
               </select>
             </div>
 
-            {/* 도시 선택 */}
             <div>
               <label htmlFor="city" className="block font-semibold">
                 여행할 도시

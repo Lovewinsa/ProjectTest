@@ -20,6 +20,10 @@ function Signup() {
   const [isValidNickname, setIsValidNickname] = useState(true)
   const [isValidEmail, setIsValidEmail] = useState(true)
 
+  //아이디, 닉네임 중복검사
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
+  const [isNicknameAvailable, setIsNicknameAvailable] = useState(true)
+
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isPasswordMatched, setIsPasswordMatched] = useState(true)
@@ -43,38 +47,56 @@ function Signup() {
   const validateUsername = (value) => {
     // 아이디 : 영어 소문자와 숫자로 이루어진 6~16자리
     const regex = /^[a-z0-9]{6,16}$/
-    if (value === "") return true
-    return regex.test(value)
+    return regex.test(value) || value === ""
   }
   //비밀번호 일치 여부 검사
-  const validateConfirmPassword = (value) => {
-    if (value === "") return true
-    else if (password === value) return true
-    else return false
-  }
+  const validateConfirmPassword = (value) => password === value || value === ""
+  
   const validateNickname = (value) => {
     // 닉네임 : 한글, 영어 대소문자, 숫자로 이루어진 2~16자리
     const regex = /^[가-힣a-zA-Z0-9]{2,16}$/
-    if (value === "") return true
-    return regex.test(value)
+    return regex.test(value) || value === ""
   }
   const validateEmail = (value) => {
     // 이메일 : 이메일 형식
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    if (value === "") return true
-    return regex.test(value)
+    return regex.test(value) || value === ""
   }
   const updateIsAllChecked = (validUsername, validPassword, passwordMatched, validNickname, validEmail, isVerified) => {
     setIsAllChecked(validUsername && validPassword && passwordMatched && validNickname && validEmail && isVerified)
   }
 
-  const usernameHandleChange = (e) => {
+  //아이디, 닉네임 중복검사
+  const checkUsernameAvailability = async (value) => {
+    try {
+      const response = await axios.post(`/api/v1/users/check/${username}`, { username: value })
+      setIsUsernameAvailable(response.data.available)
+    } catch (error) {
+      console.error("중복 확인에 실패했습니다.")
+    }
+  }
+  const checkNicknameAvailability = async (value) => {
+    try {
+      const response = await axios.post(`/api/v1/users/check/${nickname}`, { nickname: value })
+      setIsNicknameAvailable(response.data.available)
+    } catch (error) {
+      console.error("중복 확인에 실패했습니다.")
+    }
+  }
+
+  const usernameHandleChange = async (e) => {
     const value = e.target.value
-    const validUsername = validateUsername(value)
     setUsername(value)
+    const validUsername = validateUsername(value)
     setIsValidUsername(validUsername)
+    
+    if (validUsername) {
+      await checkUsernameAvailability(value)
+    }
+
     updateIsAllChecked(validUsername, isValidPassword, isPasswordMatched, isValidNickname, isValidEmail, isVerified)
   }
+
   const passwordHandleChange = (e) => {
     const value = e.target.value
     setPassword(value)
@@ -101,23 +123,30 @@ function Signup() {
   //비밀번호 확인
   const confirmPasswordHandleChange = (e) => {
     const value = e.target.value
-    const passwordMatched = validateConfirmPassword(value)
     setConfirmPassword(value)
+    const passwordMatched = validateConfirmPassword(value)
     setIsPasswordMatched(passwordMatched)
+
     updateIsAllChecked(isValidUsername, isValidPassword, passwordMatched, isValidNickname, isValidEmail, isVerified)
   }
 
-  const nicknameHandleChange = (e) => {
+  const nicknameHandleChange = async (e) => {
     const value = e.target.value
-    const validNickname = validateNickname(value)
     setNickname(value)
+    const validNickname = validateNickname(value)
     setIsValidNickname(validNickname)
+
+    if (validNickname) {
+      await checkNicknameAvailability(value)
+    }
+
     updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, validNickname, isValidEmail, isVerified)
   }
 
   const phoneNumberHandleChange = (e) => {
     setPhoneNumber(e.target.value)
   }
+
   const emailHandleChange = (e) => {
     const value = e.target.value
     const validEmail = validateEmail(value)
@@ -125,6 +154,7 @@ function Signup() {
     setIsValidEmail(validEmail)
     updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, isValidNickname, validEmail, isVerified)
   }
+
   const verificationCodeHandleChange = (e) => {
     setVerificationCode(e.target.value)
   }
@@ -200,6 +230,11 @@ function Signup() {
                   아이디는 영어 소문자와 숫자로 이루어진 6~16자리여야 합니다.
                 </p>
               )}
+              {!isUsernameAvailable && (
+                <p className="mt-2 text-sm text-red-600">
+                  이미 사용중인 아이디입니다.
+                </p>
+              )}
             </div>
           </div>
 
@@ -272,6 +307,11 @@ function Signup() {
               {!isValidNickname && (
                 <p className="mt-2 text-sm text-red-600">
                   닉네임은 한글, 영어 대소문자, 숫자로 이루어진 2~16자리여야 합니다.
+                </p>
+              )}
+              {!isNicknameAvailable && (
+                <p className="mt-2 text-sm text-red-600">
+                  이미 사용중인 닉네임 입니다.
                 </p>
               )}
             </div>
