@@ -89,16 +89,22 @@ function Signup() {
       console.error("중복 확인에 실패했습니다.")
     }
   }
+  const handleCheckUsername = async () => {
+    if (isValidUsername) {
+      await checkUsernameAvailability(username);
+    }
+  }
+  const handleCheckNickname = async () => {
+    if (isValidUsername) {
+      await checkNicknameAvailability(nickname);
+    }
+  };
 
   const usernameHandleChange = async (e) => {
     const value = e.target.value
     setUsername(value)
     const validUsername = validateUsername(value)
     setIsValidUsername(validUsername)
-
-    if (validUsername) {
-      await checkUsernameAvailability(value)
-    }
 
     updateIsAllChecked(validUsername, isValidPassword, isPasswordMatched, isValidNickname, isValidEmail, isVerified)
   }
@@ -141,10 +147,6 @@ function Signup() {
     setNickname(value)
     const validNickname = validateNickname(value)
     setIsValidNickname(validNickname)
-
-    if (validNickname) {
-      await checkNicknameAvailability(value)
-    }
 
     updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, validNickname, isValidEmail, isVerified)
   }
@@ -231,6 +233,12 @@ function Signup() {
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
+              <button
+                onClick={handleCheckUsername}
+                className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                아이디 중복 확인
+              </button>
               {!isValidUsername && (
                 <p className="mt-2 text-sm text-red-600">
                   아이디는 영어 소문자와 숫자로 이루어진 6~16자리여야 합니다.
@@ -325,6 +333,12 @@ function Signup() {
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
+              <button
+                onClick={handleCheckNickname}
+                className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                닉네임 중복 확인
+              </button>
               {!isValidNickname && (
                 <p className="mt-2 text-sm text-red-600">
                   닉네임은 한글, 영어 대소문자, 숫자로 이루어진 2~16자리여야 합니다.
