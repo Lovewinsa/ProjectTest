@@ -13,7 +13,7 @@ function Agreement() {
         selective: false
     })
     const { selective, ...rest } = agreements
-    const text = useState("약관내용...")
+    const [text, textarea] = useState("약관내용...")
     const navigate = useNavigate()
     const [isDisabled, setIsDisabled] = useState(true);
     const essentialChecked = Object.values(rest).every((value) => value === true)

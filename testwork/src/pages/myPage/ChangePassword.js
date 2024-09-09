@@ -1,11 +1,13 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 function PasswordUpdate(props) {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const {id} = useParams()
+
+  // const [currentPassword, setCurrentPassword] = useState("");
+  // const [newPassword, setNewPassword] = useState("");
+  // const [newConfirmPassword, setNewConfirmPassword] = useState("");
 
   const [isValidNewPassword, setIsValidNewPassword] = useState(true);
   const [isPasswordMatched, setIsPasswordMatched] = useState(true);
@@ -20,6 +22,9 @@ function PasswordUpdate(props) {
 
   const [isAllChecked, setIsAllChecked] = useState(false)
 
+  //유저의 모든 정보
+  const [profile, setProfile] = useState({})
+
   const navigate = useNavigate();
 
   const validatePassword = (value) => {
@@ -32,26 +37,53 @@ function PasswordUpdate(props) {
   };
   //기존 비밀번호 핸들러
   const handleCurrentPassword = (e)=>{
-    setCurrentPassword(e.target.value)
+    setProfile({
+      ...profile,
+      "passowrd" : e.target.value
+    })
+
   }
   //새 비밀번호 핸들러
   const handleNewPasswordChange = (e) => {
     const value = e.target.value;
-    setNewPassword(value);
+    setProfile({
+      ...profile,
+      newPassword : value
+    })
+
     validatePassword(value);
     setShowValidationMessage(true)
   };
 
   //새 비밀번호 확인 핸들러
   const handleConfirmPasswordChange = (e) => {
-    setConfirmPassword(e.target.value);
-    // setIsPasswordMatch(value === newPassword);
+    setProfile({
+      ...profile,
+      newConfirmPassword : e.target.value
+    })  
+
   };
 
-  //변경 버튼 핸들러
+  //수정 버튼 핸들러
   const handleChangePassword = async () => {
 
+    axios.put(`/api/v1/auth/${id}/password`, profile)
+    .then(res=>{
+      console.log(res.data)
+      alert("비밀번호 수정 완료")
+      navigate(`/users/${id}/profile/edit`);
+    })
+    .catch(error=>console.log(error))
   };
+
+  //처음 유저 정보를 불러와 상태값에 저장
+  useEffect(()=>{
+    axios.get(`/api/v1/users/${id}`)
+    .then(res=>{
+      setProfile(res.data)
+    })
+    .catch(error=>console.log(error))
+  },[id])
 
   useEffect(() => {
     if (hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar && isValidLength) {
@@ -63,8 +95,8 @@ function PasswordUpdate(props) {
   }, [hasLowerCase, hasUpperCase, hasNumber, hasSpecialChar, isValidLength])
 
   useEffect(() => {
-    setIsPasswordMatched(newPassword === confirmPassword);
-  }, [newPassword, confirmPassword])
+    setIsPasswordMatched(profile.newPassword === profile.newConfirmPassword);
+  }, [profile.newPassword, profile.newConfirmPassword])
 
   useEffect(() => {
     if (isValidNewPassword && isPasswordMatched) {
@@ -104,7 +136,6 @@ function PasswordUpdate(props) {
             <div className="mt-2.5">
               <input
                 type="password"
-                value={newPassword}
                 onChange={handleNewPasswordChange}
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
@@ -130,7 +161,6 @@ function PasswordUpdate(props) {
               <div className="mt-2.5">
               <input
                 type="password"
-                value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required

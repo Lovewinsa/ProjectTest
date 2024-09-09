@@ -71,7 +71,7 @@ function BsNavBar() {
 
     const completeLogout = () => {
         localStorage.clear();
-        dispatch({ type: "UPDATE_USER", payload: null });
+        dispatch({ type: "LOGOUT_USER", payload: null });
         setIsLoggedIn(false);
         navigate('/');
         window.location.reload();
@@ -115,7 +115,7 @@ function BsNavBar() {
     }, [username]);
     
     useEffect(() => {
-        if (location.pathname === '/home-inter' || location.pathname === '/') {
+        if (location.pathname === '/home-abroad' || location.pathname === '/') {
             setLastVisited(location.pathname);
         }
     }, [location.pathname]);
@@ -175,7 +175,7 @@ function BsNavBar() {
                     <Nav.Link as={NavLink} to="/" onClick={() => setLastVisited('/')}>국내 여행</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
-                    <Nav.Link as={NavLink} to="/home-inter" onClick={() => setLastVisited('/home-inter')}>해외 여행</Nav.Link>
+                    <Nav.Link as={NavLink} to="/home-abroad" onClick={() => setLastVisited('/home-abroad')}>해외 여행</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link as={NavLink} to="/home-mate">여행 메이트</Nav.Link>
@@ -203,7 +203,7 @@ function BsNavBar() {
                             </dt>
                             <dl className={`content ${openSections.domestic ? 'open' : ''}`}>
                                 <div className="ps-3">여행 기록</div>
-                                <div className="ps-3">여행 계획</div>
+                                <div className="ps-3" onClick={()=>navigate("/posts/course")}>여행 계획</div>
                                 <div className="ps-3">여행 메이트</div>
                                 <div className="ps-3">여행 정보</div>
                                 <div className="ps-3">커뮤니티</div>

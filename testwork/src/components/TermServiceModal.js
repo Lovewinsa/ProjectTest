@@ -1,5 +1,5 @@
 import React from "react";
-import '../css/term_modal.css'
+import '../css/TermPrivacyModal.css'
 
 function TermServiceModal({ isOpen, onClose }) {
     if (!isOpen) return null

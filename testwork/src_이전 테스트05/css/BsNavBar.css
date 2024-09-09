@@ -1,0 +1,101 @@
+/* 네비게이션 바 기본 스타일 */
+.custom-navbar {
+  background-color: #fff; /* 네비게이션 바 배경색 흰색 */
+  padding: 10px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-navbar .navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #000; /* 텍스트 색상 검정 */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.custom-navbar .nav-link {
+  color: #000; /* 텍스트 색상 검정 */
+  margin-right: 15px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  padding: 0.5rem 1rem; /* 버튼 내부 여백 조정 */
+}
+
+.custom-navbar .nav-link strong {
+  white-space: nowrap; /* strong 태그 내부 텍스트 줄바꿈 방지 */
+}
+
+.custom-navbar .nav-link:hover {
+  color: #555; /* hover 시 약간 어두운 색상 */
+}
+
+.custom-navbar .toggle-button {
+  display: flex;
+  align-items: center;
+}
+
+.custom-navbar .ml-auto {
+  margin-left: auto;
+}
+
+.custom-navbar .mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* appName 스타일 */
+.appName {
+  display: flex;
+  font-family: 'Orbitron', sans-serif;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  text-align: center;
+  color: #000; /* 텍스트 색상 검정 */
+}
+
+.appName img {
+  width: 60px;
+  height: auto;
+  display: block;
+  margin: 0;
+}
+
+/* 오프캔버스 스타일 */
+.custom-canvas {
+  background-color: #fff; /* 오프캔버스 배경색 흰색 */
+}
+
+/* 리스트 아이템 스타일 */
+.custom-canvas .list-group-item {
+  background-color: #f9f9f9; /* 리스트 아이템 배경색 밝은 회색 */
+  border: #f9f9f9; /* 리스트 아이템 테두리 색 밝은 회색 */
+}
+
+.custom-canvas .list-group-item:hover {
+  background-color: #f0f0f0; /* 리스트 아이템 hover 배경색 조금 더 어두운 회색 */
+}
+
+/* 토글 가능한 컨텐츠 스타일 */
+.content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease;
+  padding-left: 20px;
+}
+
+.content.open {
+  max-height: 300px;
+  transition: max-height 0.5s ease;
+}
+
+.toggle {
+  font-weight: bold;
+  color: #000; /* 텍스트 색상 검정 */
+}

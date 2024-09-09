@@ -69,7 +69,7 @@ const CourseUpdateForm = () => {
                 console.log(res.data)
                 alert("수정했습니다")
                 // 업데이트 후 해당글 자세히보기로 이동
-                navigate(`/course/${id}`);
+                navigate(`/posts/course/${id}`);
             })
             .catch((error) => console.log(error));
     };
@@ -153,7 +153,7 @@ const CourseUpdateForm = () => {
                 <div className="flex justify-between items-center mb-2">
                     <h1 className="text-2xl font-bold mb-4">여행 코스 수정</h1>
                     <button
-                        onClick={() => navigate("/course")}
+                        onClick={() => navigate("/posts/course")}
                         className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
                         목록으로 돌아가기
                     </button>

@@ -29,15 +29,18 @@ const CourseMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex, isSe
         setSelectedPlace(null);
       });
     };
+    const kakaoMapApi = process.env.REACT_APP_KAKAO_MAP_API_KEY
+    console.log(kakaoMapApi)
 
     const script = document.createElement("script");
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=de8bb4ac88880a204a617a3e3f74d387&autoload=false&libraries=services`;
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapApi}&autoload=false&libraries=services`;
     script.async = false; // 스크립트 비동기 로드
     script.onload = () => {
       window.kakao.maps.load(initializeMap); // API 로드 후 초기화 함수 실행
     };
     document.head.appendChild(script);
 
+    
     return () => {
       document.head.removeChild(script);
     };

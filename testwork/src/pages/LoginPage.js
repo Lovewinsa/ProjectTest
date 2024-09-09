@@ -38,7 +38,7 @@ function LoginPage() {
         localStorage.setItem('token', token);
         const result = decodeToken(token.substring(7)); // 'Bearer+' 제거
         const username = result.payload.sub;
-        dispatch({ type: "UPDATE_USER", payload: username });
+        dispatch({ type: "LOGIN_USER", payload: username });
         axios.defaults.headers.common["Authorization"] = token;
         navigate('/'); // 로그인 성공 시 리다이렉트
         window.location.reload();  // 페이지 새로고침

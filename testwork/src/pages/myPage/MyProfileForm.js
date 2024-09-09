@@ -17,7 +17,6 @@ function MyProfileForm(props) {
         username:"",
         nickname:"",
         age:"",
-        name:"",
         gender:"",
         phoneNumber:"",
         email:"",
@@ -50,7 +49,7 @@ function MyProfileForm(props) {
 
     //비밀번호 변경 페이지로 이동
     const toChangePassword = ()=>{
-        navigate("/changePassword")
+        navigate(`/auth/${id}/changePassword`)
     }
 
     // 이벤트 관리부
@@ -106,7 +105,6 @@ function MyProfileForm(props) {
         formData.append("id", profile.id)
         formData.append("username", profile.username)
         formData.append("age", profile.age)
-        formData.append("name", profile.name)
         formData.append("gender", profile.gender)
         formData.append("nickname", profile.nickname)
         formData.append("phoneNumber", profile.phoneNumber)
@@ -230,10 +228,6 @@ const gitHubIcon = (
 
                     {/* 개인 정보 */}
                     <div className="flex space-x-4 bg-gray-200 rounded">
-                        <div className="mb-3 flex-1">
-                            <label htmlFor="name" className="block text-sm font-medium mb-1">name</label>
-                            <input type="text" name="name" value={profile.name} className="block w-full p-2 border border-gray-300 rounded-md" readOnly/>
-                        </div>
                         <div className="mb-3 flex-1">
                             <label htmlFor="age" className="block text-sm font-medium mb-1">age</label>
                             <input type="text" name="age" value={profile.age} className="block w-full p-2 border border-gray-300 rounded-md" readOnly/>

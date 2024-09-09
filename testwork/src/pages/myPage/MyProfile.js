@@ -31,7 +31,7 @@ function MyProfile(props) {
 
     //이벤트 관리 부
     const handleClick = () => {
-        navigate(`/users/${id}/setting`);
+        navigate(`/users/${id}/profile/edit`);
     }    
 
     return (
