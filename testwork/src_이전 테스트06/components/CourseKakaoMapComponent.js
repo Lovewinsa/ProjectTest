@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 
-const CourseMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex, isSelectPlace }) => {
+const CourseKakaoMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex, isSelectPlace }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -30,7 +30,6 @@ const CourseMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex, isSe
       });
     };
     const kakaoMapApi = process.env.REACT_APP_KAKAO_MAP_API_KEY
-    console.log(kakaoMapApi)
 
     const script = document.createElement("script");
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapApi}&autoload=false&libraries=services`;
@@ -240,4 +239,4 @@ const CourseMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex, isSe
   );
 };
 
-export default CourseMapComponent;
+export default CourseKakaoMapComponent;

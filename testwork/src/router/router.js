@@ -14,6 +14,7 @@ import MyProfile from "../pages/myPage/MyProfile";
 import MyProfileForm from "../pages/myPage/MyProfileForm";
 import CompletedSignup from "../pages/CompletedSignup";
 import KakaoRedirect from "../components/KakaoRedirect";
+import GoogleRedirect from "../components/GoogleRedirect";
 import ChangePassword from "../pages/myPage/ChangePassword";
 import MateBoard from "../pages/boards/MateBoard";
 import MateBoardForm from "../pages/boards/MateBoardForm";
@@ -31,8 +32,12 @@ import ExtraPage from "../pages/Utilities/ExtraPage";
 import CourseBoard from "../pages/boards/CourseBoard";
 import CourseBoardForm from "../pages/boards/CourseBoardForm";
 import CourseBoardDetail from "../pages/boards/CourseBoardDetail";
-import CourseUpdateForm from "../pages/boards/CourseUpdateForm";
 import CourseBoardEditForm from "../pages/boards/CourseBoardEditForm";
+import MyPlace from "../pages/myTripTmp/MyPlace"
+import MyPlan from "../pages/myTripTmp/MyPlan"
+import MyRecord from "../pages/myTripTmp/MyRecord"
+import WishMate from "../pages/myTripTmp/WishMate"
+
 
 const routes = [
   // /users/:id
@@ -53,11 +58,18 @@ const routes = [
   { path: "/logout", element: <LogoutPage /> },
   { path: "/completedSignup", element: <CompletedSignup /> },
   { path: "/kakaoLogin/redirect", element: <KakaoRedirect /> },
+  { path: "/googleLogin/redirect", element: <GoogleRedirect /> },
 
   // ### profile setting(보여지는 정보) ###
   { path: "/users/:id", element: <MyPage /> },
   { path: "/users/:id/profile", element: <MyProfile /> },
   { path: "/users/:id/profile/edit", element: <MyProfileForm /> },
+
+  // ### my page 메뉴 설정 ###
+  { path: "/myPlace/:id", element: <MyPlace />},
+  { path: "/myPlan/:id", element: <MyPlan />},
+  { path: "/myRecord/:id", element: <MyRecord />},
+  { path: "/wishMate/:id", element: <WishMate />},
 
   // ### 개인정보 설정(보안, 인증정보) ###
   { path: "/auth/:id/changePassword", element: <ChangePassword /> },

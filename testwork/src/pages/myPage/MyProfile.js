@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import 'holderjs'
 import 'bootstrap/dist/css/bootstrap.css'
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import Mypage from './MyPage';
 
 function MyProfile(props) {
     /*
@@ -22,7 +20,7 @@ function MyProfile(props) {
             console.log(res.data)
             setProfile(res.data)
             if(res.data.profilePicture){
-                setImageData("/upload/images/"+res.data.profilePicture)
+                setImageData(res.data.profilePicture)
             }
         })
         .catch(error=>console.log(error))
@@ -38,7 +36,7 @@ function MyProfile(props) {
         <>
             <div className="container h-screen">
                 <div>
-                    <div className="flex items-center gap-x-6">
+                    <div className="flex items-center gap-x-6 m-3">
                         {
                             imageData
                                 ?
@@ -86,7 +84,7 @@ function MyProfile(props) {
                     <p> 이메일 : {profile.email}</p>
                     <div className="mb-3">
                         <label htmlFor="profileMessage" className="form-label">자기 소개</label>
-                        <textarea name="profileMessage" className="form-control" rows="5" value={profile.profileMessage} readOnly/>
+                        <textarea name="profileMessage" className="form-control" rows="5" defaultValue={profile.profileMessage} readOnly/>
                     </div>
                 </div>
                 {/* 페이지의 정보를 가진 username 과 로그인된 username 이 같으면 ... */}

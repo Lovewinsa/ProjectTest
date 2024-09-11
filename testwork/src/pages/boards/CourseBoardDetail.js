@@ -64,7 +64,7 @@ const CourseBoardDetail = () => {
   // }, [id]);
 
   //로그인된 사용자명이 store에 있는지 읽어와 본다
-  const username = useSelector(state => state.username)
+  const username = useSelector(state => state.userData.username)
 
   return (
     <div className="container">

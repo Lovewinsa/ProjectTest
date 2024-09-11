@@ -7,7 +7,7 @@ function PasswordUpdate(props) {
 
   // const [currentPassword, setCurrentPassword] = useState("");
   // const [newPassword, setNewPassword] = useState("");
-  // const [newConfirmPassword, setNewConfirmPassword] = useState("");
+  // const [confirmPassword, setNewConfirmPassword] = useState("");
 
   const [isValidNewPassword, setIsValidNewPassword] = useState(true);
   const [isPasswordMatched, setIsPasswordMatched] = useState(true);
@@ -39,7 +39,7 @@ function PasswordUpdate(props) {
   const handleCurrentPassword = (e)=>{
     setProfile({
       ...profile,
-      "passowrd" : e.target.value
+      passowrd : e.target.value
     })
 
   }
@@ -59,7 +59,7 @@ function PasswordUpdate(props) {
   const handleConfirmPasswordChange = (e) => {
     setProfile({
       ...profile,
-      newConfirmPassword : e.target.value
+      confirmPassword : e.target.value
     })  
 
   };
@@ -67,7 +67,7 @@ function PasswordUpdate(props) {
   //수정 버튼 핸들러
   const handleChangePassword = async () => {
 
-    axios.put(`/api/v1/auth/${id}/password`, profile)
+    axios.put(`/api/v1/users/${id}/password`, profile)
     .then(res=>{
       console.log(res.data)
       alert("비밀번호 수정 완료")
@@ -95,8 +95,8 @@ function PasswordUpdate(props) {
   }, [hasLowerCase, hasUpperCase, hasNumber, hasSpecialChar, isValidLength])
 
   useEffect(() => {
-    setIsPasswordMatched(profile.newPassword === profile.newConfirmPassword);
-  }, [profile.newPassword, profile.newConfirmPassword])
+    setIsPasswordMatched(profile.newPassword === profile.confirmPassword);
+  }, [profile.newPassword, profile.confirmPassword])
 
   useEffect(() => {
     if (isValidNewPassword && isPasswordMatched) {

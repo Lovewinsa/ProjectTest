@@ -10,7 +10,7 @@ import bootstrapBundleMin from 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import axios from 'axios';
 
 function BsNavBar() {
-    const username = useSelector(state => state.username, shallowEqual);
+    const username = useSelector(state => state.userData.username, shallowEqual);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -145,6 +145,7 @@ function BsNavBar() {
 
             <Navbar className="custom-navbar">
                 <Container>
+                    {/* off-canvas 버튼 */}
                     <button type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop" aria-controls="staticBackdrop">
                         {toggleBtn}
                     </button>
@@ -158,7 +159,7 @@ function BsNavBar() {
                         {isLoggedIn && 
                         <Nav.Link as={NavLink} to={`/users/${profile.id}`}>
                             {profile.profilePicture != null
-                                ? <img src={profile.profilePicture[0]} className='w-[30px] h-[30px] rounded-full' alt="Profile" />
+                                ? <img src={profile.profilePicture} className='w-[30px] h-[30px] rounded-full' alt="Profile" />
                                 : myPageIcon}
                         </Nav.Link>}
                         {isLoggedIn ? (
@@ -169,7 +170,8 @@ function BsNavBar() {
                     </Nav>
                 </Container>
             </Navbar>
-
+            
+            {/* 탭 */}
             <Nav fill variant="tabs" defaultActiveKey="/">
                 <Nav.Item>
                     <Nav.Link as={NavLink} to="/" onClick={() => setLastVisited('/')}>국내 여행</Nav.Link>
@@ -183,6 +185,7 @@ function BsNavBar() {
             </Nav>
 
             <div className="offcanvas offcanvas-start" data-bs-backdrop="static" tabIndex="-1" id="staticBackdrop" aria-labelledby="staticBackdropLabel">
+                {/* 오프 캔버스 헤더 */}
                 <div className="offcanvas-header">
                     <h5 className="offcanvas-title" id="staticBackdropLabel">
                         <button 
@@ -195,15 +198,17 @@ function BsNavBar() {
                     </h5>
                     <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
+
+                {/* 오프 캔버스 바디*/}
                 <div className="offcanvas-body custom-canvas">
                     <ul className="list-group">
                         <li className="list-group-item">
-                            <dt onClick={() => toggleSection('domestic')} className="toggle">
+                            <dt onClick={() => toggleSection('domestic')} className="toggle hover:cursor-pointer mb-3">
                                 국내 여행
                             </dt>
                             <dl className={`content ${openSections.domestic ? 'open' : ''}`}>
                                 <div className="ps-3">여행 기록</div>
-                                <div className="ps-3" onClick={()=>navigate("/posts/course")}>여행 계획</div>
+                                <div className="ps-3 hover:bg-gray-200 hover:cursor-pointer" onClick={()=>navigate("/posts/course")}>여행 계획</div>
                                 <div className="ps-3">여행 메이트</div>
                                 <div className="ps-3">여행 정보</div>
                                 <div className="ps-3">커뮤니티</div>
@@ -211,19 +216,22 @@ function BsNavBar() {
                         </li>
 
                         <li className="list-group-item">
-                            <dt onClick={() => toggleSection('travelMate')} className="toggle">
+                            <dt onClick={() => toggleSection('travelMate')} className="toggle hover:cursor-pointer mb-3">
                                 여행 메이트
                             </dt>
                             <dl className={`content ${openSections.travelMate ? 'open' : ''}`}>
-                                <div className="ps-3">전체 게시판</div>
+                                <div className="ps-3 hover:bg-gray-200 hover:cursor-pointer" onClick={()=>{navigate(`/posts/mate?di=Domestic`)}}>국내 메이트 게시판</div>
+                                <div className="ps-3 hover:bg-gray-200 hover:cursor-pointer" onClick={()=>navigate(`/posts/mate?di=International`)}>해외 메이트 게시판</div>
                             </dl>
                         </li>
 
                         <li className="list-group-item">
-                            <dt onClick={() => toggleSection('myPage')} className="toggle">
+                            <dt onClick={() => toggleSection('myPage')} className="toggle hover:cursor-pointer mb-3">
                                 마이 페이지
                             </dt>
                             <dl className={`content ${openSections.myPage ? 'open' : ''}`}>
+                                {/* 로그인 안되있을 때 마이페이지 메뉴 없애기 or 로그인 페이지로 리다일렉트 */}
+                                <div className="ps-3 hover:bg-gray-200 hover:cursor-pointer" onClick={()=>navigate(`/users/${profile.id}`)} >마이 페이지</div>
                                 <div className="ps-3">여행 기록</div>
                                 <div className="ps-3">여행 계획</div>
                                 <div className="ps-3">관심 메이트</div>

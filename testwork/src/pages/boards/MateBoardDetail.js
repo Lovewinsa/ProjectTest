@@ -11,9 +11,9 @@ import { NavLink } from "react-router-dom";
 function MateBoardDetail(props) {
   const {id} = useParams(); // 게시물 번호
 
-  const username = useSelector(state => state.username, shallowEqual); //로그인된 username
+  const username = useSelector(state => state.userData.username, shallowEqual); //로그인된 username
 
-  const [post, setPost] = useState({tags:""});
+  const [post, setPost] = useState({tags:[]});
   const [isRecruited, setIsRecruited] = useState(false);
 
   // 작성자 프로필 설정
@@ -70,14 +70,16 @@ function MateBoardDetail(props) {
         >
           Mate
         </NavLink>
+
         <div className="flex flex-wrap gap-2 mt-2">
+          {/* 태그s */}
           <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">
             #{post.country}
           </span>
           <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">
             #{post.city}
           </span>
-          {post.tags.split(", ").map((tag, index) => (
+          {post.tags && post.tags.map((tag, index) => (
             <span
               key={index}
               className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center"
@@ -86,6 +88,7 @@ function MateBoardDetail(props) {
             </span>
           ))}
         </div>
+        {/* title */}
         <h5 className="m-3">
           {id}번 <strong>{post.title}</strong>
           <button
@@ -106,8 +109,8 @@ function MateBoardDetail(props) {
         {/* 프로필 */}
         <div className="container my-3">
           <div className="flex items-center gap-x-6">
-            {imageData ? (
-              <img src={imageData} className="w-20 h-20 rounded-full" alt="" />
+            {writerProfile.profilePicture ? (
+              <img src={writerProfile.profilePicture} className="w-20 h-20 rounded-full" alt="" />
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -120,7 +123,7 @@ function MateBoardDetail(props) {
                 <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
                 <path
                   fillRule="evenodd"
-                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
+                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.206 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
                 />
               </svg>
             )}

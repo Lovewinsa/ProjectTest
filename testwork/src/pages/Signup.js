@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -5,6 +7,7 @@ import { useLocation, useNavigate } from 'react-router'
 function Signup() {
   const location = useLocation()
   const { termsService, termsPrivacy, essential } = location.state || {}
+  const navigate = useNavigate()
   //약관동의 필수항목 체크 안하고 접근시 리다이렉트
   useEffect(() => {
     if (!(termsService && termsPrivacy && essential)) {
@@ -20,9 +23,12 @@ function Signup() {
   const [isValidNickname, setIsValidNickname] = useState(true)
   const [isValidEmail, setIsValidEmail] = useState(true)
 
-  //아이디, 닉네임 중복검사
-  const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
-  const [isNicknameAvailable, setIsNicknameAvailable] = useState(true)
+  //아이디, 닉네임 사용중인지
+  const [isUsernameExist, setIsUsernameExist] = useState(false)
+  const [isNicknameExist, setIsNicknameExist] = useState(false)
+  //아이디, 닉네임 중복검사 통과 했는지
+  const [isUsernameUnique, setIsUsernameUnique] = useState(false)
+  const [isNicknameUnique, setIsNicknameUnique] = useState(false)
 
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -43,7 +49,7 @@ function Signup() {
   const [isVerified, setIsVerified] = useState(false)
 
   const [isAllChecked, setIsAllChecked] = useState(false)
-  const navigate = useNavigate()
+
 
   const validateUsername = (value) => {
     // 아이디 : 영어 소문자와 숫자로 이루어진 6~16자리
@@ -69,38 +75,62 @@ function Signup() {
     return regex.test(value) || value === ""
   }
   const updateIsAllChecked = (validUsername, validPassword, passwordMatched, validNickname, validEmail, isVerified) => {
-    setIsAllChecked(validUsername && validPassword && passwordMatched && validNickname && validEmail && isVerified)
+    setIsAllChecked(validUsername && validPassword && passwordMatched && validNickname && validEmail && isVerified && isUsernameUnique && isNicknameUnique)
   }
 
   //아이디, 닉네임 중복검사
-  const checkUsernameAvailability = async (value) => {
-    try {
-      const response = await axios.post(`/api/v1/users/check/${username}`, { username: value })
-      setIsUsernameAvailable(response.data.available)
-    } catch (error) {
-      console.error("중복 확인에 실패했습니다.")
-    }
+  const checkUsernameAvailability = (username) => {
+    axios.post(`/api/v1/users/check/username`, username, {
+      headers: { 'Content-Type': 'text/plain' },
+    })
+      .then((response) => {
+        if (response.data) {
+          setIsUsernameExist(true)
+        } else {
+          alert("사용 가능한 아이디입니다.")
+          setIsUsernameUnique(true)
+          updateIsAllChecked()
+        }
+      })
+      .catch(() => {
+        alert("중복 확인에 실패했습니다.")
+      })
   }
-  const checkNicknameAvailability = async (value) => {
-    try {
-      const response = await axios.post(`/api/v1/users/check/${nickname}`, { nickname: value })
-      setIsNicknameAvailable(response.data.available)
-    } catch (error) {
-      console.error("중복 확인에 실패했습니다.")
-    }
+
+  const checkNicknameAvailability = (nickname) => {
+    axios.post(`/api/v1/users/check/nickname`, nickname, {
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    })
+      .then(response => {
+        if (response.data) {
+          setIsNicknameExist(true)
+        } else {
+          alert("사용 가능한 닉네임 입니다.")
+          setIsNicknameUnique(true)
+          updateIsAllChecked()
+        }
+      })
+      .catch(() => {
+        alert("중복 확인에 실패했습니다.")
+      })
   }
-  const handleCheckUsername = async () => {
+
+
+  const handleCheckUsername = () => {
     if (isValidUsername) {
-      await checkUsernameAvailability(username);
-    }
+      checkUsernameAvailability(username);
+    } else alert("아이디 형식에 맞지 않습니다")
   }
-  const handleCheckNickname = async () => {
+
+  const handleCheckNickname = () => {
     if (isValidUsername) {
-      await checkNicknameAvailability(nickname);
-    }
+      checkNicknameAvailability(nickname);
+    } else alert("닉네임 형식에 맞지 않습니다")
   };
 
-  const usernameHandleChange = async (e) => {
+  const usernameHandleChange = (e) => {
     const value = e.target.value
     setUsername(value)
     const validUsername = validateUsername(value)
@@ -119,6 +149,7 @@ function Signup() {
     const number = /\d/.test(value)
     const specialChar = /[!@#$%^&*]/.test(value)
     const validLength = value.length >= 8 && value.length <= 15
+
     setHasLowerCase(lowerCase)
     setHasUpperCase(upperCase)
     setHasNumber(number)
@@ -128,7 +159,9 @@ function Signup() {
     // 비밀번호 유효성 체크 및 메시지 표시 여부 결정
     const validPassword = lowerCase && upperCase && number && specialChar && validLength
     setIsValidPassword(validPassword)
-    setShowValidationMessage(!validPassword)
+
+    // 비밀번호가 입력되지 않은 경우 메시지 숨기기
+    setShowValidationMessage(value !== "" && !validPassword)
 
     updateIsAllChecked(isValidUsername, validPassword, isValidNickname, isValidEmail, isVerified)
   }
@@ -142,7 +175,7 @@ function Signup() {
     updateIsAllChecked(isValidUsername, isValidPassword, passwordMatched, isValidNickname, isValidEmail, isVerified)
   }
 
-  const nicknameHandleChange = async (e) => {
+  const nicknameHandleChange = (e) => {
     const value = e.target.value
     setNickname(value)
     const validNickname = validateNickname(value)
@@ -152,8 +185,22 @@ function Signup() {
   }
 
   const phoneNumberHandleChange = (e) => {
-    setPhoneNumber(e.target.value)
+    const { value } = e.target;
+    // 숫자만 추출
+    const numericValue = value.replace(/\D/g, '');
+    // 전화번호 형식으로 변환
+    const formattedValue = formatPhoneNumber(numericValue);
+    setPhoneNumber(formattedValue)
   }
+  //전화번호 포맷처리 함수
+  const formatPhoneNumber = (value) => {
+    if (value.length <= 3) return value;
+    if (value.length <= 6) return `${value.slice(0, 3)}-${value.slice(3)}`;
+    if (value.length <= 10) return `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6)}`;
+    return `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7, 11)}`;
+  }
+  //실제 저장용 값('-' 제거)
+  const getUnformattedPhoneNumber = () => phoneNumber.replace(/\D/g, '')
 
   const emailHandleChange = (e) => {
     const value = e.target.value
@@ -169,7 +216,7 @@ function Signup() {
 
   const sendVerificationCode = () => {
     //인증요청 전송 api
-    axios.post('/api/v1/auth/send', phoneNumber)
+    axios.post('/api/v1/auth/phone/send-code', phoneNumber)
       .then((response) => {
         setIsCodeSent(true)
         alert('인증 코드가 전송되었습니다.')
@@ -181,7 +228,7 @@ function Signup() {
   const verifyPhoneNumber = () => {
     const code = verificationCode
     //인증 확인 api
-    axios.post('/api/v1/auth/verify', { phoneNumber, code })
+    axios.post('/api/v1/auth/phone/verify-code', { phoneNumber, code })
       .then((response) => {
         setIsVerified(true)
         updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, isValidNickname, isValidEmail, true)
@@ -192,11 +239,11 @@ function Signup() {
       })
   }
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = (e) => {
     e.preventDefault()
     try {
       //회원가입 api
-      axios.post(`/api/v1/auth/signup`, { username, password, nickname, phoneNumber, email })
+      axios.post(`/api/v1/auth/signup`, { username, password, confirmPassword, nickname, phoneNumber, email })
         .then((response) => {
           // 회원가입 성공시 토큰 발급으로 로그인 처리
           const token = response.data
@@ -223,33 +270,35 @@ function Signup() {
             <label htmlFor="username" className="block text-sm font-semibold leading-6 text-gray-900">
               아이디
             </label>
-            <div className="mt-2.5">
+            <div className="mt-2.5 flex">
               <input
                 id="username"
                 name="username"
                 type="text"
                 value={username}
                 onChange={usernameHandleChange}
-                className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-4/5 rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
               <button
+                type="button"
                 onClick={handleCheckUsername}
-                className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                className="ml-2 w-1/5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                아이디 중복 확인
+                아이디<br />중복 확인
               </button>
-              {!isValidUsername && (
-                <p className="mt-2 text-sm text-red-600">
-                  아이디는 영어 소문자와 숫자로 이루어진 6~16자리여야 합니다.
-                </p>
-              )}
-              {!isUsernameAvailable && (
-                <p className="mt-2 text-sm text-red-600">
-                  이미 사용중인 아이디입니다.
-                </p>
-              )}
             </div>
+            {!isValidUsername && (
+              <p className="mt-2 text-sm text-red-600">
+                아이디는 영어 소문자와 숫자로 이루어진 6~16자리여야 합니다.
+              </p>
+            )}
+            {isUsernameExist && (
+              <p className="mt-2 text-sm text-red-600">
+                이미 사용중인 아이디입니다.
+              </p>
+            )}
+
           </div>
 
           <div className="sm:col-span-6">
@@ -263,22 +312,20 @@ function Signup() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={passwordHandleChange}
-                className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 px-3.5 py-2 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500"
+                className="absolute inset-y-0 right-2 pr-3 flex items-center text-gray-500 h-10 w-10"
               >
                 {showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.013 10.013 0 0012 19.25c-3.45 0-6.6-1.92-8.25-5a10.013 10.013 0 018.25-5 10.013 10.013 0 018.25 5c-.397.72-.932 1.377-1.575 1.925m-2.29 1.69a5.375 5.375 0 01-6.63-.13M13.5 8.625a5.375 5.375 0 016.63-.13" />
-                  </svg>
+                  // 비밀번호 보이기 (Eye Icon)
+                  <FontAwesomeIcon icon={faEye} className="h-5 w-5" />
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.75c3.45 0 6.6 1.92 8.25 5-1.65 3.08-4.8 5-8.25 5a10.013 10.013 0 01-8.25-5c1.65-3.08 4.8-5 8.25-5zM4.75 9.75c.35.56.783 1.077 1.275 1.525m13.725 0c-.492-.448-.925-.965-1.275-1.525" />
-                  </svg>
+                  // 비밀번호 숨기기 (Eye Slash Icon)
+                  <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5" />
                 )}
               </button>
               {showValidationMessage && (
@@ -323,28 +370,29 @@ function Signup() {
             <label htmlFor="nickname" className="block text-sm font-semibold leading-6 text-gray-900">
               닉네임
             </label>
-            <div className="mt-2.5">
+            <div className="mt-2.5 flex">
               <input
                 id="nickname"
                 name="nickname"
                 type="text"
                 value={nickname}
                 onChange={nicknameHandleChange}
-                className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-4/5 rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
               <button
+                type="button"
                 onClick={handleCheckNickname}
-                className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                className="ml-2 w-1/5 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                닉네임 중복 확인
+                닉네임<br />중복 확인
               </button>
               {!isValidNickname && (
                 <p className="mt-2 text-sm text-red-600">
                   닉네임은 한글, 영어 대소문자, 숫자로 이루어진 2~16자리여야 합니다.
                 </p>
               )}
-              {!isNicknameAvailable && (
+              {isNicknameExist && (
                 <p className="mt-2 text-sm text-red-600">
                   이미 사용중인 닉네임 입니다.
                 </p>
@@ -389,7 +437,7 @@ function Signup() {
               />
               <button
                 type="button"
-                onClick={sendVerificationCode}
+                onClick={() => sendVerificationCode(getUnformattedPhoneNumber())}
                 className="ml-4 inline-flex justify-center rounded-md bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 인증 코드 전송
@@ -426,7 +474,7 @@ function Signup() {
 
         <div className="mt-10">
           <button
-            type="submit"
+            type="button"
             className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             disabled={!isAllChecked}  // 인증 성공 후에만 버튼 활성화
             onClick={handleSignUp}

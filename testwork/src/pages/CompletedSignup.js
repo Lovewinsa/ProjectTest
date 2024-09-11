@@ -10,7 +10,7 @@ function CompletedSignup(props) {
     const navigate = useNavigate()
 
     const [profile, setProfile] = useState({})
-    const username = useSelector(state => state.username, shallowEqual)
+    const username = useSelector(state => state.userData.username, shallowEqual)
     
     useEffect(()=>{
         if(!isAllChecked){alert("잘못된 경로입니다")}

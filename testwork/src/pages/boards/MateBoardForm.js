@@ -13,7 +13,7 @@ import { shallowEqual, useSelector } from "react-redux";
 
 function MateBoardForm(props) {
 
-  const username = useSelector(state => state.username, shallowEqual);
+  const username = useSelector(state => state.userData.username, shallowEqual);
 
   const navigate = useNavigate()
 
@@ -29,7 +29,6 @@ function MateBoardForm(props) {
   //태그 관리
   const [tagInput, setTagInput] = useState("");
   const [postTags, setPostTags] = useState([]);
-  const [tags, setTags] = useState();
 
   //테스트 데이터
   // const koreanRegion = ["제주도", "서울", "인천", "부산", "대전", "대구", "강원", "경기", "충북", "충남", "경북", "경남", "전북", "전남" ];
@@ -88,7 +87,7 @@ function MateBoardForm(props) {
   const handleSubmit = async ()=>{
     const updatedPost = {
       ...post,
-      tags : tags,
+      tags : postTags,
       userId : userId,
       writer : nickname
     };
@@ -105,13 +104,9 @@ function MateBoardForm(props) {
 
   useEffect(()=>{
     username ?? navigate("/login");
-
     
   },[username, navigate])
 
-  useEffect(()=>{
-    setTags(postTags.join(", "))
-  },[postTags])
 
   useEffect((post) => {
     
@@ -121,7 +116,7 @@ function MateBoardForm(props) {
           setPost({
             ...post,
             country: domesticInternational === "Domestic" ? "한국" : "",
-            tags:"",
+            tags:[],
             viewCount: 10,
             likeCount: 10,
             rating: 80,
