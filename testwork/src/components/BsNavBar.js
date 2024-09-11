@@ -204,11 +204,11 @@ function BsNavBar() {
                     <ul className="list-group">
                         <li className="list-group-item">
                             <dt onClick={() => toggleSection('domestic')} className="toggle hover:cursor-pointer mb-3">
-                                국내 여행
+                                여행 코스
                             </dt>
                             <dl className={`content ${openSections.domestic ? 'open' : ''}`}>
                                 <div className="ps-3">여행 기록</div>
-                                <div className="ps-3 hover:bg-gray-200 hover:cursor-pointer" onClick={()=>navigate("/posts/course")}>여행 계획</div>
+                                <div className="ps-3 hover:bg-gray-200 hover:cursor-pointer" onClick={()=>navigate("/posts/course?di=Domestic")}>여행 계획</div>
                                 <div className="ps-3">여행 메이트</div>
                                 <div className="ps-3">여행 정보</div>
                                 <div className="ps-3">커뮤니티</div>

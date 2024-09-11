@@ -176,6 +176,7 @@ function Home() {
           </Form>
         </Col>
       </Row>
+      <button onClick={()=>navigate("/scroll")}>무한스크롤</button>
     </Container>
   );
 }
