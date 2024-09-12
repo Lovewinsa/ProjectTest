@@ -12,10 +12,21 @@ function CompletedSignup(props) {
     const [profile, setProfile] = useState({})
     const username = useSelector(state => state.userData.username, shallowEqual)
     
-    useEffect(()=>{
-        if(!isAllChecked){alert("잘못된 경로입니다")}
-        navigate("/")
-    }, [])
+    useEffect(() => {
+        if (!isAllChecked) {
+            alert("잘못된 경로입니다")
+            navigate("/")
+            
+        } else {
+            // window.location.reload()가 한 번만 실행되도록
+            // sessionStorage에 새로고침이 한 번 이루어졌는지 여부를 저장
+            const hasReloaded = sessionStorage.getItem("hasReloaded")
+            if (!hasReloaded) {
+                window.location.reload()
+                sessionStorage.setItem("hasReloaded", "true") // 새로고침 후 플래그 설정
+            }
+        }
+    }, [isAllChecked, navigate])
 
     useEffect(()=>{      
         if(username){

@@ -21,10 +21,10 @@ function Signup() {
 
   const [username, setUsername] = useState('')
   const [nickname, setNickname] = useState('')
-  const [isValidUsername, setIsValidUsername] = useState(true)
-  const [isValidPassword, setIsValidPassword] = useState(true)
-  const [isValidNickname, setIsValidNickname] = useState(true)
-  const [isValidEmail, setIsValidEmail] = useState(true)
+  const [isValidUsername, setIsValidUsername] = useState(false)
+  const [isValidPassword, setIsValidPassword] = useState(false)
+  const [isValidNickname, setIsValidNickname] = useState(false)
+  const [isValidEmail, setIsValidEmail] = useState(false)
 
   //아이디, 닉네임 사용중인지
   const [isUsernameExist, setIsUsernameExist] = useState(false)
@@ -36,13 +36,17 @@ function Signup() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [isPasswordMatched, setIsPasswordMatched] = useState(true)
+  const [isPasswordMatched, setIsPasswordMatched] = useState(false)
   const [hasLowerCase, setHasLowerCase] = useState(false)
   const [hasUpperCase, setHasUpperCase] = useState(false)
   const [hasNumber, setHasNumber] = useState(false)
   const [hasSpecialChar, setHasSpecialChar] = useState(false)
   const [isValidLength, setIsValidLength] = useState(false)
-  const [showValidationMessage, setShowValidationMessage] = useState(false)
+  const [showUsernameValidateMessage, setShowUsernameValidateMessage] = useState(false)
+  const [showPasswordValidateMessage, setShowPasswordValidateMessage] = useState(false)
+  const [showConfirmPasswordValidateMessage, setShowConfirmPasswordValidateMessage] = useState(false)
+  const [showNicknameValidateMessage, setShowNicknameValidateMessage] = useState(false)
+  const [showEmailValidateMessage, setShowEmailValidateMessage] = useState(false)
 
   const [email, setEmail] = useState('')
 
@@ -77,9 +81,22 @@ function Signup() {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     return regex.test(value) || value === ""
   }
-  const updateIsAllChecked = ((validUsername, validPassword, passwordMatched, validNickname, validEmail, isVerified, isUsernameUnique, isNicknameUnique) => {
-    setIsAllChecked(validUsername && validPassword && passwordMatched && validNickname && validEmail && isVerified && isUsernameUnique && isNicknameUnique)
-  })
+  const updateIsAllChecked = (updates = {}) => {
+    const newState = {
+      isValidUsername,
+      isValidPassword,
+      isPasswordMatched,
+      isValidNickname,
+      isValidEmail,
+      isVerified,
+      isUsernameUnique,
+      isNicknameUnique,
+      ...updates
+    }
+  
+    const allChecked = Object.values(newState).every(Boolean)
+    setIsAllChecked(allChecked)
+  }
 
   //아이디, 닉네임 중복검사
   const checkAvailability = (type, value, setExist, setUnique) => {
@@ -89,46 +106,46 @@ function Signup() {
       .then((response) => {
         if (response.data) {
           setExist(true)
+          updateIsAllChecked({ [type === 'username' ? 'isUsernameUnique' : 'isNicknameUnique']: false })
         } else {
           alert(`사용 가능한 ${type === 'username' ? '아이디' : '닉네임'} 입니다.`)
-          setExist(false);
-          setUnique(true);
-          updateIsAllChecked(
-            isValidUsername,
-            isValidPassword,
-            isPasswordMatched,
-            isValidNickname,
-            isValidEmail,
-            isVerified,
-            type === 'username' ? true : isUsernameUnique,
-            type === 'nickname' ? true : isNicknameUnique
-          )
+          setExist(false)
+          setUnique(true)
+          updateIsAllChecked({ [type === 'username' ? 'isUsernameUnique' : 'isNicknameUnique']: true })
         }
       })
       .catch(() => {
         alert("중복 확인에 실패했습니다.")
+        updateIsAllChecked({ [type === 'username' ? 'isUsernameUnique' : 'isNicknameUnique']: false })
       })
   }
 
   const handleCheckUsername = () => {
     if (isValidUsername) {
       checkAvailability('username', username, setIsUsernameExist, setIsUsernameUnique)
-    } else alert("아이디 형식에 맞지 않습니다")
+    } else{
+      alert("아이디 형식에 맞지 않습니다")
+      updateIsAllChecked({ isUsernameUnique: false })
+    }
   }
 
   const handleCheckNickname = () => {
     if (isValidNickname) {
       checkAvailability('nickname', nickname, setIsNicknameExist, setIsNicknameUnique)
-    } else alert("닉네임 형식에 맞지 않습니다")
-  };
+    } else{
+      alert("닉네임 형식에 맞지 않습니다")
+      updateIsAllChecked({ isNicknameUnique: false })
+    }
+  }
 
   const usernameHandleChange = (e) => {
     const value = e.target.value
     setUsername(value)
     const validUsername = validateUsername(value)
     setIsValidUsername(validUsername)
-    setIsUsernameUnique(false) //중복체크 후 데이터 변경 방지
-    updateIsAllChecked(validUsername, isValidPassword, isPasswordMatched, isValidNickname, isValidEmail, isVerified, isUsernameUnique, isNicknameUnique)
+    setShowUsernameValidateMessage(value !== "" && !validUsername)
+   
+    updateIsAllChecked({ isValidUsername: validUsername, isUsernameUnique: false })
   }
 
   const passwordHandleChange = (e) => {
@@ -153,9 +170,9 @@ function Signup() {
     setIsValidPassword(validPassword)
 
     // 비밀번호가 입력되지 않은 경우 메시지 숨기기
-    setShowValidationMessage(value !== "" && !validPassword)
+    setShowPasswordValidateMessage(value !== "" && !validPassword)
 
-    updateIsAllChecked(isValidUsername, validPassword, isPasswordMatched, isValidNickname, isValidEmail, isVerified, isUsernameUnique, isNicknameUnique)
+    updateIsAllChecked({ isValidPassword: validPassword })
   }
   //비밀번호 확인
   const confirmPasswordHandleChange = (e) => {
@@ -164,7 +181,10 @@ function Signup() {
     const passwordMatched = validateConfirmPassword(value)
     setIsPasswordMatched(passwordMatched)
 
-    updateIsAllChecked(isValidUsername, isValidPassword, passwordMatched, isValidNickname, isValidEmail, isVerified, isUsernameUnique, isNicknameUnique)
+    // 비밀번호 확인이 입력되지 않은 경우 메시지 숨기기
+    setShowConfirmPasswordValidateMessage(value !== "" && !passwordMatched)
+
+    updateIsAllChecked({ isPasswordMatched: passwordMatched})
   }
 
   const nicknameHandleChange = (e) => {
@@ -172,9 +192,9 @@ function Signup() {
     setNickname(value)
     const validNickname = validateNickname(value)
     setIsValidNickname(validNickname)
-    setIsNicknameUnique(false)
+    setShowNicknameValidateMessage(value !== "" && !validNickname)
 
-    updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, validNickname, isValidEmail, isVerified, isUsernameUnique, isNicknameUnique)
+    updateIsAllChecked({ isValidNickname: validNickname})
   }
 
   const phoneNumberHandleChange = (e) => {
@@ -184,6 +204,8 @@ function Signup() {
     // 전화번호 형식으로 변환
     const formattedValue = formatPhoneNumber(numericValue);
     setPhoneNumber(formattedValue)
+
+    updateIsAllChecked()
   }
   //전화번호 포맷처리 함수
   const formatPhoneNumber = (value) => {
@@ -200,11 +222,14 @@ function Signup() {
     const validEmail = validateEmail(value)
     setEmail(value)
     setIsValidEmail(validEmail)
-    updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, isValidNickname, validEmail, isVerified)
+    setShowEmailValidateMessage(value !== "" && !validEmail)
+
+    updateIsAllChecked({isValidEmail: validEmail})
   }
 
   const verificationCodeHandleChange = (e) => {
     setVerificationCode(e.target.value)
+    updateIsAllChecked()
   }
 
   const sendVerificationCode = () => {
@@ -219,12 +244,11 @@ function Signup() {
       })
   }
   const verifyPhoneNumber = () => {
-    const code = verificationCode
     //인증 확인 api
-    axios.post('/api/v1/auth/phone/verify-code', { phoneNumber, code })
+    axios.post('/api/v1/auth/phone/verify-code', { phoneNumber, code:verificationCode })
       .then((response) => {
         setIsVerified(true)
-        updateIsAllChecked(isValidUsername, isValidPassword, isPasswordMatched, isValidNickname, isValidEmail, true, isUsernameUnique, isNicknameUnique)
+        updateIsAllChecked({isVerified: true})
         alert('휴대폰 번호가 성공적으로 인증되었습니다.')
       })
       .catch((error) => {
@@ -234,31 +258,41 @@ function Signup() {
 
   const processToken = (token) => {
     if (token.startsWith("Bearer+")) {
-      localStorage.setItem("token", token);
-      const result = decodeToken(token.substring(7));
+      localStorage.setItem("token", token)
+      const result = decodeToken(token.substring(7))
 
       const userData = {
         id: result.payload.id,
         username: result.payload.username,
         nickname: result.payload.nickname,
         profilePicture: result.payload.profilePicture,
-      };
+      }
 
       const loginStatus = {
         isLogin: true,
         role: result.payload.role,
-      };
+      }
 
-      dispatch({ type: "LOGIN_USER", payload: { userData, loginStatus } });
-      axios.defaults.headers.common["Authorization"] = token;
-      navigate("/completedSignup", { state: { isAllChecked } });
+      dispatch({ type: "LOGIN_USER", payload: { userData, loginStatus } })
+      axios.defaults.headers.common["Authorization"] = token
+      navigate("/completedSignup", { state: { isAllChecked } })
     }
-  };
+  }
 
   const handleSignUp = (e) => {
     e.preventDefault()
+    if(!isAllChecked){
+      alert("모든 항목을 올바르게 입력해주세요.")
+      return
+    }
     //회원가입 api
-    axios.post(`/api/v1/auth/signup`, { username, password, confirmPassword, nickname, phoneNumber, email })
+    axios.post(`/api/v1/auth/signup`, {
+      username,
+      password,
+      confirmPassword,
+      nickname,
+      phoneNumber: getUnformattedPhoneNumber(),
+      email })
       .then((response) => {
         processToken(response.data)
       })
@@ -296,7 +330,7 @@ function Signup() {
                 아이디<br />중복 확인
               </button>
             </div>
-            {!isValidUsername && (
+            {showUsernameValidateMessage && (
               <p className="mt-2 text-sm text-red-600">
                 아이디는 영어 소문자와 숫자로 이루어진 6~16자리여야 합니다.
               </p>
@@ -335,7 +369,7 @@ function Signup() {
                   <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5" />
                 )}
               </button>
-              {showValidationMessage && (
+              {showPasswordValidateMessage && (
                 <div className="mt-2 text-sm">
                   <p>비밀번호는 영어
                     <span className={hasLowerCase ? 'text-blue-600' : 'text-red-600'}> 소문자</span>,
@@ -363,7 +397,7 @@ function Signup() {
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
-              {!isPasswordMatched && (
+              {showConfirmPasswordValidateMessage && (
                 <div className="mt-2 text-sm">
                   <p className="mt-2 text-sm text-red-600">
                     비밀번호가 일치하지 않습니다.
@@ -395,7 +429,7 @@ function Signup() {
                 닉네임<br />중복 확인
               </button>
             </div>
-            {!isValidNickname && (
+            {showNicknameValidateMessage && (
               <p className="mt-2 text-sm text-red-600">
                 닉네임은 한글, 영어 대소문자, 숫자로 이루어진 2~16자리여야 합니다.
               </p>
@@ -421,7 +455,7 @@ function Signup() {
                 className="block w-full rounded-md border-0 px-3.5 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 required
               />
-              {!isValidEmail && (
+              {showEmailValidateMessage && (
                 <p className="mt-2 text-sm text-red-600">
                   이메일 형식에 맞게 작성해야 합니다.
                 </p>

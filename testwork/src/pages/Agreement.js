@@ -62,11 +62,18 @@ function Agreement() {
     }
 
     return (
-        <div className="container p-4" style={{maxWidth:"500px"}}>
+        <div className="container p-4" style={{ maxWidth: "500px" }}>
             <form action="" className="space-y-4">
-                <div className="flex items-center space-x-2">
-                    <input onChange={handleAllAgreementsChange} type="checkbox" name='checkAll' checked={allAgreed} className='checkAll' />
-                    <span className="font-semibold">전체 동의하기</span>
+                <div className="flex items-center space-x-2" onClick={handleAllAgreementsChange}>
+                    <input
+                        onClick={(e) => e.stopPropagation()} // input 클릭 시 div의 onClick 이벤트 중단
+                        onChange={handleAllAgreementsChange}
+                        type="checkbox"
+                        name='checkAll'
+                        checked={allAgreed}
+                        className='checkAll'
+                    />
+                    <span className="font-semibold cursor-pointer">전체 동의하기</span>
                 </div>
                 <div className="text-sm text-gray-600">이용약관, 개인정보 수집 및 이용, xxx(필수), xxx(선택)에 모두 동의합니다.</div>
                 <ul className="space-y-4">
@@ -126,7 +133,7 @@ function Agreement() {
                                 essential: agreements.essential
                             }
                         })
-                    }} disabled={isDisabled} className="mt-4 w-full bg-blue-500 text-white py-2 rounded-md disabled:bg-gray-300">제출</button>
+                    }} disabled={isDisabled} className={`block w-full rounded-md ${isDisabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-500'} px-3.5 py-2.5 text-center text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600`}>제출</button>
                 </div>
             </form>
         </div>

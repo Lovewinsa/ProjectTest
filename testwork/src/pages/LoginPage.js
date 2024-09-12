@@ -35,25 +35,27 @@ function LoginPage() {
   }, [navigate]);
 
   const processToken = (token) => {
-    localStorage.setItem("token", token);
-    const result = decodeToken(token.substring(7));
+    if (token.startsWith("Bearer+")) {
+      localStorage.setItem("token", token);
+      const result = decodeToken(token.substring(7));
 
-    const userData = {
-      id: result.payload.id,
-      username: result.payload.username,
-      nickname: result.payload.nickname,
-      profilePicture: result.payload.profilePicture,
-    };
+      const userData = {
+        id: result.payload.id,
+        username: result.payload.username,
+        nickname: result.payload.nickname,
+        profilePicture: result.payload.profilePicture,
+      };
 
-    const loginStatus = {
-      isLogin: true,
-      role: result.payload.role,
-    };
+      const loginStatus = {
+        isLogin: true,
+        role: result.payload.role,
+      };
 
-    dispatch({ type: "LOGIN_USER", payload: { userData, loginStatus } });
-    axios.defaults.headers.common["Authorization"] = token;
-    navigate("/");
-    window.location.reload();
+      dispatch({ type: "LOGIN_USER", payload: { userData, loginStatus } });
+      axios.defaults.headers.common["Authorization"] = token;
+      navigate("/");
+      window.location.reload();
+    }
   };
 
   const handleLogin = () => {
