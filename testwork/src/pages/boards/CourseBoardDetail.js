@@ -31,6 +31,10 @@ const CourseBoardDetail = () => {
   const [totalPageCount, setTotalPageCount] = useState(0)
   //현재 로딩중인지 여부
   const [isLoading, setLoading] = useState(false)
+  //댓글 내용 상태값
+  const [commentInnerText, setCommentInnerText] = useState("")
+  //댓글 글자수 제한
+  const maxLength = 3000;
 
   //검색 키워드 관련 처리
   const [params, setParams] = useSearchParams()
@@ -68,7 +72,7 @@ const CourseBoardDetail = () => {
     const query = new URLSearchParams(params).toString()
     //글 정보 가져오기
     axios.get(`/api/v1/posts/${id}?${query}`)
-      .then((res) => {
+      .then(res => {
         console.log(res.data)
         const postData = res.data
         setPost(postData)
@@ -86,11 +90,11 @@ const CourseBoardDetail = () => {
         const resUserId = postData.userId
         return axios.get(`/api/v1/users/${resUserId}`)
       })
-      .then((res) => {
+      .then(res => {
         const writerData = res.data
         setWriterProfile(writerData)
       })
-      .catch((error) => {
+      .catch(error => {
         console.log("데이터를 가져오지 못했습니다.", error)
       })
   }, [id]) //경로 파라미터가 변경될 때 서버로부터 데이터 다시 받기
@@ -167,10 +171,6 @@ const CourseBoardDetail = () => {
       })
   }
 
-
-
-  const [commentInnerText, setCommentInnerText] = useState()
-  const maxLength = 3000;
 
 
 
@@ -292,6 +292,7 @@ const CourseBoardDetail = () => {
           </div>
         </div>
 
+            {/* post에 days가 정의되어있지 않아서 오류나서 주석처리, 추 후 postData로 처리할거라고 함
         <div className="space-y-6 mt-6 mb-6">
           {post.days.map((day, dayIndex) => (
             <div key={dayIndex} className="border p-4 rounded-lg bg-white shadow">
@@ -310,7 +311,7 @@ const CourseBoardDetail = () => {
               ))}
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* 댓글 list */}
         <div className="border-b border-gray-200 py-4">
