@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import styled from "styled-components";
+
 
 function MyPage() {
   const userId = useSelector((state) => state.userData.id, shallowEqual); // 접속된 사용자의 id

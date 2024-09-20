@@ -436,145 +436,126 @@ const CourseBoardDetail = () => {
         {/* 댓글 목록 */}
         <div className="mt-6 space-y-6">
           <ul className="space-y-4">
-            {commentList.map((item, index) => (
-              <li
-                key={item.id}
-                ref={item.ref}
-                className={`flex items-start space-x-4 bg-white shadow-md p-4 rounded-lg ${item.id !== item.parentCommentId ? 'pl-12' : ''}`}
-              >
-                {item.status==="DELETED" ? <p>삭제된 댓글입니다</p> :
-                  <div>
-                  {/* 프로필 사진 또는 기본 아이콘 */}
-                  {item.profilePicture === null ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-12 h-12 text-gray-400"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                    >
-                      <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.206 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
-                      />
-                    </svg>
-                  ) : (
-                    <img
-                      src={writerProfile.profilePicture}
-                      className="w-12 h-12 rounded-full"
-                      alt="프로필"
-                    />
-                  )}
-                </div>
-
-
-                }
-                
-                
-
-                {/* 댓글 요소들 */}
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-bold text-gray-900">{item.writer}</span>
-                      {item.id !== item.parentCommentId && (
-                        <i className="ml-2 text-gray-500">@{item.toUsername}</i>
-                      )}
-                      <small className="ml-4 text-gray-400">{item.createdAt}</small>
-                    </div>
-
-                    {/* 답글 버튼 */}
-                    <button
-                      className="ml-4 text-blue-500 hover:text-blue-700 text-sm"
-                      onClick={(e) => {
-                        const text = e.target.innerText;
-                        if (text === '답글') {
-                          e.target.innerText = '취소';
-                          const replyForm = item.ref.current.querySelector('.replyCommentForm');
-                          replyForm.classList.remove('hidden');
-                          replyForm.classList.add('flex');
-                        } else {
-                          e.target.innerText = '답글';
-                          const replyForm = item.ref.current.querySelector('.replyCommentForm');
-                          replyForm.classList.remove('flex');
-                          replyForm.classList.add('hidden');
-                        }
-                      }}
-                    >
-                      답글
-                    </button>
-                  </div>
-
-                  {/* 댓글 내용 */}
-                  <pre className="whitespace-pre-wrap bg-gray-100 p-3 rounded-md mt-2">
-                    {item.content}
-                  </pre>
-
-                  {/* 수정 및 삭제 버튼 */}
-                  {item.writer === loggedInUsername && (
-                    <div className="flex items-center mt-2 space-x-2">
-                      <button
-                        className="text-yellow-500 hover:text-yellow-700 text-sm"
-                        onClick={(e) => {
-                          const text = e.target.innerText;
-                          if (text === '수정') {
-                            e.target.innerText = '수정취소';
-                            const updateForm = item.ref.current.querySelector('.updateCommentForm');
-                            updateForm.classList.remove('hidden');
-                            updateForm.classList.add('flex');
-                          } else {
-                            e.target.innerText = '수정';
-                            const updateForm = item.ref.current.querySelector('.updateCommentForm');
-                            updateForm.classList.remove('flex');
-                            updateForm.classList.add('hidden');
-                          }
-                        }}
-                      >
-                        수정
-                      </button>
-
-                      <button
-                        className="text-red-500 hover:text-red-700 text-sm"
-                        onClick={() => handleCommentDelete(item.id, item.ref)}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  )}
-
-                  {/* 대댓글 작성 폼 */}
-                  <div className="border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden">
-                    <form className="replyCommentForm" onSubmit={handleCommentSubmit}>
-                      <textarea
-                        className="border border-white rounded w-full h-24 p-2"
-                        placeholder="답글을 남겨보세요"
-                        value={commentInnerText}
-                        maxLength={maxLength}
-                        onChange={(e) => setCommentInnerText(e.target.value)}
-                      />
-                      <div className="absolute top-2 right-2 text-gray-500 text-sm">
-                        {commentInnerText.length}/{maxLength}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <button
-                          type="submit"
-                          className="text-blue-500 hover:text-blue-700 font-semibold"
-                          onClick={() => commentIndex = index + 1}
+            {
+              commentList.map((item, index) => (
+                <li
+                  key={item.id}
+                  ref={item.ref}
+                  //댓글의 번호가 댓글의 그룹번호와 다르면 들여쓰기 css 추가
+                  className={`${item.id !== item.parentCommentId ? "pl-12" : ""}`}
+                >
+                  {item.status === "DELETED" ? <p>삭제된 댓글입니다</p> :
+                    <dl>
+                      <dt className="mb-4">
+                        {item.profilePicture === null ? (
+                          <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-12 h-12 text-gray-400"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
                         >
-                          등록
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+                          <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                          <path
+                            fillRule="evenodd"
+                            d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.206 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
+                          />
+                        </svg>
+                        ) : (
+                          <img
+                            src={writerProfile.profilePicture}
+                            className="w-20 h-20 rounded-full"
+                            alt=""
+                          />
+                        )}
+                        <span className="font-bold ml-2">{item.writer}</span>
+                        {item.id !== item.parentCommentId ? (
+                          <i className="ml-1 text-gray-500">@{item.toUsername}</i>
+                        ) : null}
+                        <small className="ml-4 text-gray-400">{item.createdAt}</small>
 
-                  {/* 댓글 수정 폼 */}
-                  {item.writer === loggedInUsername && (
-                    <div className="border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden updateCommentForm">
-                      <form onSubmit={handleCommentUpdate}>
+                        {/* 답글 버튼 */}
+                        <button
+                          className="ml-4 text-blue-500 hover:text-blue-700 replyBtn"
+                          onClick={(e) => {
+                            const text = e.target.innerText
+                            if (text === "답글") {
+                              e.target.innerText = "취소"
+                              const replyForm = item.ref.current.querySelector(".replyCommentForm")
+
+                              replyForm.classList.remove("hidden")
+                              replyForm.classList.add("flex")
+                            } else {
+                              e.target.innerText = "답글"
+                              const replyForm = item.ref.current.querySelector(".replyCommentForm")
+
+                              replyForm.classList.remove("flex")
+                              replyForm.classList.add("hidden")
+                            }
+                          }}
+                        >
+                          답글
+                        </button>
+
+                        {item.writer === loggedInUsername && (
+                          <>
+                            {/* 수정 버튼 */}
+                            <button
+                              className="ml-2 text-yellow-500 hover:text-yellow-700 updateBtn"
+                              onClick={(e) => {
+                                const text = e.target.innerText
+                                if (text === "수정") {
+                                  e.target.innerText = "수정취소"
+                                  const updateForm = item.ref.current.querySelector(".replyCommentForm")
+
+                                  updateForm.classList.remove("hidden")
+                                  updateForm.classList.add("flex")
+                                } else {
+                                  e.target.innerText = "수정"
+                                  const updateForm = item.ref.current.querySelector(".replyCommentForm")
+
+                                  updateForm.classList.remove("flex")
+                                  updateForm.classList.add("hidden")
+                                }
+                              }}
+                            >
+                              수정
+                            </button>
+
+                            {/* 삭제 버튼 */}
+                            <button
+                              className="ml-2 text-red-500 hover:text-red-700"
+                              onClick={() => {
+                                handleCommentDelete(item.id, item.ref)
+                              }}
+                            >
+                              삭제
+                            </button>
+                          </>
+                        )}
+                      </dt>
+                      <dd className="ml-8">
+                        <pre className="whitespace-pre-wrap">{item.content}</pre>
+                      </dd>
+                    </dl>
+                  }
+
+                  {/* 대댓글 폼 */}
+                  <div className="border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden">
+                    <div className="font-bold">대댓다는 아이디{writerProfile.nickname}</div>
+                    <form
+                      className="replyCommentForm"
+                      onSubmit={handleCommentSubmit}
+                      action={`/api/v1/posts/${post.id}/comments`}
+                      method="post"
+                    >
+                      <div className="relative">
+                        <input type="hidden" name="id" defaultValue={post.id} />
+                        <input type="hidden" name="toUsername" defaultValue={item.writer} />
+                        <input type="hidden" name="parentCommentId" defaultValue={item.parentCommentId} />
                         <textarea
-                          name="content"
                           className="border border-white rounded w-full h-24 p-2"
-                          defaultValue={item.content}
+                          placeholder="댓글을 남겨보세요"
+                          value={commentInnerText}
                           maxLength={maxLength}
                           onChange={(e) => setCommentInnerText(e.target.value)}
                         />
@@ -586,23 +567,69 @@ const CourseBoardDetail = () => {
                             type="submit"
                             className="text-blue-500 hover:text-blue-700 font-semibold"
                             onClick={() => {
-                              const updateForm = item.ref.current.querySelector('.updateCommentForm');
-                              updateForm.classList.remove('flex');
-                              updateForm.classList.add('hidden');
+                              //대댓글 폼 display를 none으로
+                              const replyForm = item.ref.current.querySelector(".replyCommentForm")
+                              replyForm.classList.remove("flex")
+                              replyForm.classList.add("hidden")
+                              //취소였던 대댓글 버튼 text 변환
+                              item.ref.current.querySelector(".replyBtn").innerText = "답글"
+                              //대댓글은 이 폼이 속해있는 댓글의 인덱스 바로 다음 인덱스에 추가
+                              commentIndex = index + 1
                             }}
                           >
-                            수정 확인
+                            등록
                           </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* 댓글 수정 폼 */}
+                  {item.writer === loggedInUsername &&
+                    <div className="border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden">
+                      <div className="font-bold">수정폼{writerProfile.nickname}</div>
+                      <form
+                        className="updateCommentForm"
+                        onSubmit={handleCommentUpdate}
+                        action={`/api/v1/posts/${id}/comments/${item.id}`}
+                      >
+                        <div className="relative">
+                          <input type="hidden" name="id" defaultValue={item.id} />
+                          <textarea
+                            name="content"
+                            className="border border-white rounded w-full h-24 p-2"
+                            defaultValue={item.content}
+                            maxLength={maxLength}
+                            onChange={(e) => setCommentInnerText(e.target.value)}
+                          />
+                          <div className="absolute top-2 right-2 text-gray-500 text-sm">
+                            {commentInnerText.length}/{maxLength}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <button
+                              type="submit"
+                              className="text-blue-500 hover:text-blue-700 font-semibold"
+                              onClick={() => {
+                                //수정 폼 display를 none으로
+                                const updateForm = item.ref.current.querySelector(".updateCommentForm")
+                                updateForm.classList.remove("flex")
+                                updateForm.classList.add("hidden")
+
+                                item.ref.current.querySelector(".updateBtn").innerText = "수정"
+                              }}
+                            >
+                              수정확인
+                            </button>
+                          </div>
                         </div>
                       </form>
                     </div>
-                  )}
-                </div>
-              </li>
-            ))}
+                  }
+                </li>
+              ))
+            }
           </ul>
         </div>
-
         {/* 댓글 더보기 버튼 */}
         <div className="grid grid-cols-1 md:grid-cols-2 mx-auto mb-5">
           <button
