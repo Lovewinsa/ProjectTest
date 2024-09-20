@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { shallowEqual, useSelector } from "react-redux";
-import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, NavLink, useSearchParams } from "react-router-dom";
 
 function MateBoard() {
   //배열 안에서 객체로 관리
@@ -12,10 +11,39 @@ function MateBoard() {
   // searchPrams 에 di 값이 있으면 그 값으로 없다면 Domestic 으로 설정
   // *이후에 di 값이 영향을 미치지는않지만 계속 남아있음
   const [domesticInternational, setDomesticInternational] = useState();
+  
   const [pageTurn, setPageTurn] = useState("to International"); // 페이지 전환 버튼
   const [whereAreYou, setWhereAreYou] = useState(null);
 
-  //이벤트 관리부
+  // searchParams 가 바뀔때마다 실행된다. 
+  // searchParams 가 없다면 초기값 "Domestic" 있다면 di 란 key 값의 데이터를 domesticInternational에 전달한다
+  useEffect(() => {
+    const diValue = searchParams.get("di") || "Domestic";
+    setDomesticInternational(diValue);
+  }, [searchParams]);
+
+  // domesticInternational 가 바뀔때마다 실행된다.
+  // to D~ I~ Button 을 누를때 or 새로운 요청이 들어왔을때
+  useEffect(() => {
+    axios
+      .get("/api/v1/posts/mate")
+      .then((res) => {
+        
+        const filteredData = res.data.list.filter((item) => {
+          return domesticInternational === "Domestic" ? item.country === "한국" : item.country !== "한국";
+        });
+        
+        setPageData(filteredData);
+
+        setWhereAreYou(domesticInternational === "Domestic" ? "국내 여행 메이트 페이지" : "해외 여행 메이트 페이지");
+        setPageTurn(domesticInternational === "Domestic" ? "to International" : "to Domestic");
+      })
+      .catch((error) => console.log(error));
+  }, [domesticInternational]);
+
+  // -------------이벤트 관리부
+
+  // 국내/해외 변경 버튼 핸들러-
   const handleButtonClick = () => {
     if (domesticInternational === "International") {
       // 국내 상태에서 눌렀을 때
@@ -25,41 +53,7 @@ function MateBoard() {
       setDomesticInternational("International");
     }
   };
-  
-  useEffect(()=>{
-    // searchParams 가 바뀔때마다 실행된다.
-    // searchParams 가 없다면 초기값 "Domestic" 있다면 di 란 key 값의 데이터를 domesticInternational에 전달한다
-    const diValue = searchParams.get("di") || "Domestic";
-    setDomesticInternational(diValue);
-  },[searchParams])
 
-  useEffect(() => {
-    // domesticInternational 가 바뀔때마다 실행된다.
-    // to D~ I~ Button 을 누를때 or 새로운 요청이 들어왔을때 
-    axios
-      .get("/api/v1/posts/mate")
-      .then((res) => {
-        const filteredData = res.data.filter((item) => {
-          return domesticInternational === "Domestic"
-            ? item.country === "한국"
-            : item.country !== "한국";
-        });
-
-        setPageData(filteredData);
-
-        setWhereAreYou(
-          domesticInternational === "Domestic"
-            ? "국내 여행 메이트 페이지"
-            : "해외 여행 메이트 페이지"
-        );
-        setPageTurn(
-          domesticInternational === "Domestic"
-            ? "to International"
-            : "to Domestic"
-        );
-      })
-      .catch((error) => console.log(error));
-  }, [domesticInternational]);
 
   return (
     <>

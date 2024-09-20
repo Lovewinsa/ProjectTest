@@ -1,0 +1,68 @@
+/* 전체 페이지 스타일링 */
+.login-list-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+    text-align: center; /* 텍스트 가운데 정렬 */
+}
+
+/* 제목 스타일링 */
+.login-list-page h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 기본 로그인 링크 스타일링 */
+.login-list-page .nav-link {
+    display: block;
+    margin: 10px 0;
+    padding: 8px 16px; /* 버튼 크기를 줄임 */
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px; /* 텍스트 크기를 조금 줄임 */
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.login-list-page .nav-link:hover {
+    background-color: #0056b3;
+}
+
+/* 구글 로그인 컴포넌트와 회원가입 링크 스타일링 */
+.login-list-page .google-auth-login {
+    margin: 20px 0;
+}
+
+/* 회원가입 안내 텍스트 스타일링 */
+.login-list-page p {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* 클릭 텍스트가 포함된 링크 스타일링 */
+.login-list-page p .nav-link {
+    display: inline-block;
+    margin-left: 5px;
+    padding: 5px 10px;
+    background-color: transparent; /* 배경색 제거 */
+    color: #007bff;
+    text-decoration: underline;
+    font-size: 16px; /* 텍스트 크기를 16px로 설정 */
+    font-weight: bold;
+    border: none;
+    transition: color 0.3s ease; /* 텍스트 색상 변경 효과 추가 */
+}
+
+.login-list-page p .nav-link:hover {
+    color: #0056b3; /* 마우스 오버 시 텍스트 색상만 변경 */
+    background-color: transparent; /* 배경색 유지 */
+}

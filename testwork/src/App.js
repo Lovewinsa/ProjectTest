@@ -1,6 +1,6 @@
 import { useOutlet } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.css';
-import BsNavBar from './components/BsNavBar';
+import NavBar from './components/NavBar';
 import Footer from './components/Footer';
 
 function App() {
@@ -8,7 +8,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <BsNavBar />
+      <NavBar />
       <div className="main-content">
         {currentOutlet}
       </div>

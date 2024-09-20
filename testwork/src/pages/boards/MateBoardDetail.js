@@ -1,98 +1,81 @@
-
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { Button, Card } from "react-bootstrap";
 import { shallowEqual, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import { NavLink } from "react-router-dom";
 
-
-
 function MateBoardDetail(props) {
-  const {id} = useParams(); // 게시물 번호
+  const { id } = useParams(); // 게시물 번호
+  const username = useSelector((state) => state.userData.username, shallowEqual); // 로그인된 username
+  const userId = useSelector((state) => state.userData.id, shallowEqual); // 로그인된 user의 id
 
-  const username = useSelector(state => state.userData.username, shallowEqual); // 로그인된 username
-  const userId = useSelector(state => state.userData.id, shallowEqual) // 로그인된 user의 id
-  const [userProfile, setUserProfile] = useState({}) //로그인된 user 의 profile
+  const navigate = useNavigate();
 
-  const [post, setPost] = useState({tags:[]});
+  const [post, setPost] = useState({ tags: [] });
   const [isRecruited, setIsRecruited] = useState(false);
 
   // 작성자 프로필 설정
   const [writerProfile, setWriterProfile] = useState({});
 
   //좋아요 버튼 설정
-  const [isLiked, setIsLiked] = useState(false)
+  const [isLiked, setLiked] = useState(false);
 
-  const navigate = useNavigate()
+  //덧글 관련 설정 ( to do )
+  const [commentList, setCommentList] = useState([]);
+  const [totalCommentPages, setTotalCommentPages] = useState(0);
 
-  const buttonClasses = ` btn btn-sm ${
-    isRecruited ? "btn-secondary" : "btn-success"
+  // 버튼 스타일 - 신청 전/후 색상 변경
+  const likeButtonClasses = `px-4 py-2 text-sm font-medium rounded-md ${
+    isRecruited ? "bg-gray-200 text-gray-800" : "bg-green-500 text-white"
   }`;
-
-  const handleRecruit = (e) => {
-    setIsRecruited(!isRecruited);
-  };
-
-  const handleClick = () => {
-    navigate(`/users/${writerProfile.id}/profile`);
-  }
-
-  const handleLike = ()=>{
-      if(username){
-      axios.post(`/api/v1/posts/${id}/likes`, {postId : post.id, userId : userProfile.id})
-      .then(res=>{
-        setIsLiked(!isLiked)
-        setPost({
-          ...post,
-          likeCount:post.likeCount+1
-        })
-      })
-      .catch((error)=>{
-        console.log(error)
-        alert(error.response.data)
-      })
-    } else {
-      alert("로그인을 해주세요")
-    }
-
-  }
 
   useEffect(() => {
     axios
       .get(`/api/v1/posts/${id}`)
       .then((res) => {
-        //글 정보 전달 확인
-        setPost(res.data);
+        console.log(res.data);
 
-        const userId = res.data.userId  
-
-        //유저 정보 받아서 state 값으로 저장
-        axios.get(`/api/v1/users/${userId}`)
-        .then(res=>{
-            //유저 정보 전달 확인
-            setWriterProfile(res.data)
-      })
-        .catch(error=>console.log(error))
+        setPost(res.data.dto);
+        setLiked(res.data.dto.like);
+        setWriterProfile(res.data.userProfileInfo);
+        setCommentList(res.data.commentList);
+        setTotalCommentPages(res.data.totalCommentPages);
       })
       .catch((error) => console.log(error));
   }, [id]);
 
-// 로그인된 유저 정보 불러오기
-  useEffect(()=>{
-    if(username){
-      
-      axios.get(`/api/v1/users/username/${username}`)
-      .then(res=>{
-        setUserProfile(res.data) 
-      })
-      .catch(error=>{
-        console.log(error)
-      })
-  }
-  },[username])
+  // 신청하기 클릭
+  const handleRecruit = (e) => {
+    setIsRecruited(!isRecruited);
+  };
+
+  // 프로필 보기 클릭
+  const handleClickProfile = () => {
+    navigate(`/users/${writerProfile.id}/profile`);
+  };
+
+  //좋아요 버튼 클릭
+  const handleLike = () => {
+    if (username) {
+      axios
+        .post(`/api/v1/posts/${id}/likes`, { postId: post.id, userId: userId })
+        .then((res) => {
+          setLiked(!isLiked);
+          setPost({
+            ...post,
+            likeCount: post.likeCount + 1,
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+          alert(error.response.data);
+        });
+    } else {
+      alert("로그인을 해주세요");
+    }
+  };
 
   return (
     <>
@@ -100,36 +83,30 @@ function MateBoardDetail(props) {
         <NavLink
           to={{
             pathname: "/posts/mate",
-            search: post.country === "한국" ? "?di=Domestic" : "?di=International"
+            search: post.country === "한국" ? "?di=Domestic" : "?di=International",
           }}
         >
           Mate
         </NavLink>
 
+        {/* 태그s */}
         <div className="flex flex-wrap gap-2 mt-2">
-          {/* 태그s */}
-          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">
-            #{post.country}
-          </span>
-          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">
-            #{post.city}
-          </span>
-          {post.tags && post.tags.map((tag, index) => (
-            <span
-              key={index}
-              className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center"
-            >
-              {tag}
-            </span>
-          ))}
+          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">#{post.country}</span>
+          <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">#{post.city}</span>
+          {post.tags &&
+            post.tags.map((tag, index) => (
+              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center">
+                {tag}
+              </span>
+            ))}
         </div>
+
         {/* title */}
         <h5 className="m-3">
           {id}번 <strong>{post.title}</strong>
-          {/* title / 좋아요 버튼 / 좋아요,조회수 */}
+          {/* title / 좋아요 버튼 / 좋아요,조회수, 덧글수 */}
           {/* 내 게시물이 아닌경우에만 좋아요 버튼 보여주기 */}
-          {         
-            userId !== post.userId && 
+          {userId !== post.userId && (
             <button
               className={`mx-3 ${
                 isLiked ? "bg-pink-600" : "bg-pink-400"
@@ -138,14 +115,24 @@ function MateBoardDetail(props) {
               disabled={isLiked}
               onClick={handleLike}
             >
-              <FontAwesomeIcon icon={faHeart} className="mr-2"/>
-              Like
+              <FontAwesomeIcon icon={faHeart} className="mr-2" />
+              {isLiked ? "unLike" : "Like"}
             </button>
-          }
+          )}
+          {/* 조회수, 좋아요, 덧글 수 */}
           <span className="text-sm text-gray-500">
-            <span className="mx-3"><FontAwesomeIcon icon={faEye} className="h-5 w-5 mr-2" />{post.viewCount}</span>
-            <span className="mr-3"><FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-2"/>{post.likeCount}</span>
-            <span className="mr-3"><FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-2"/>{post.likeCount}</span>
+            <span className="mx-3">
+              <FontAwesomeIcon icon={faEye} className="h-5 w-5 mr-2" />
+              {post.viewCount}
+            </span>
+            <span className="mr-3">
+              <FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-2" />
+              {post.likeCount}
+            </span>
+            <span className="mr-3">
+              <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-2" />
+              {post.commentCount}
+            </span>
           </span>
         </h5>
 
@@ -180,8 +167,9 @@ function MateBoardDetail(props) {
             </div>
             <div>
               <button
-                className="btn btn-secondary btn-sm"
-                onClick={handleClick}
+                type="button"
+                className="text-white bg-gray-500 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
+                onClick={handleClickProfile}
               >
                 프로필 보기
               </button>
@@ -195,36 +183,48 @@ function MateBoardDetail(props) {
         <br />
         <br />
 
+        {/* Froala Editor 내용 */}
+        {/* to do : dangerouslySetInnterHTML 외에 다른방법 찾기 */}
         <div dangerouslySetInnerHTML={{ __html: post.content }}></div>
 
-        <Card style={{ width: "18rem" }}>
-          <Card.Body>
-            <Card.Title>
-              {post.country} / {post.city}
-            </Card.Title>
-            <Card.Subtitle className="mb-2 text-muted">
-              태그 / {post.tags}
-            </Card.Subtitle>
-            <Card.Text>저녁 7시 30분 tmp 역 앞 test 카페</Card.Text>
-            <Button className={buttonClasses} onClick={handleRecruit}>
-              {isRecruited ? "취소하기" : "신청하기"}
-            </Button>
-          </Card.Body>
-        </Card>
+        {/* 카드 */}
+        <div className="mt-20 max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900">
+            {post.country} / {post.city}
+          </h5>
+
+          <div className="mb-3 flex flex-wrap gap-2">
+            <p className="text-sm text-gray-500">Tags.</p>
+            {post.tags &&
+              post.tags.map((tag, index) => (
+                <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center">
+                  {tag}
+                </span>
+              ))}
+          </div>
+
+          <p className="mb-3 font-semibold text-gray-600">저녁 7시 30분 -역 앞 -카페</p>
+
+          <button className={likeButtonClasses} onClick={handleRecruit}>
+            {isRecruited ? "취소하기" : "신청하기"}
+          </button>
+        </div>
       </div>
 
       {
         // 로그인된 username 과 post의 userId 로 불러온 작성자 아이디가 동일하면 랜더링
         userId === post.userId && (
           <div className="container mt-3">
-            <Button
-              className="m-1"
+            <button
+              type="button"
+              className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               onClick={() => navigate(`/posts/mate/${id}/edit`)}
             >
               수정
-            </Button>
-            <Button
-              className="m-1"
+            </button>
+            <button
+              type="button"
+              className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               onClick={() => {
                 axios
                   .delete(`/api/v1/posts/${id}`)
@@ -239,7 +239,7 @@ function MateBoardDetail(props) {
               }}
             >
               삭제
-            </Button>
+            </button>
           </div>
         )
       }

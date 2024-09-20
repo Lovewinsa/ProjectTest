@@ -22,6 +22,8 @@ const CourseBoardDetail = () => {
   const [isLiked, setIsLiked] = useState(false)
   //글 하나의 정보 상태값으로 관리
   const [post, setPost] = useState({ tags: [], days: [{ places: [""], dayMemo: "" }] })
+  //게시물 작성자가 맞는지 여부
+  const isWriter = userId === post.userId
 
   //댓글 목록을 상태값으로 관리
   const [commentList, setCommentList] = useState([])
@@ -37,39 +39,17 @@ const CourseBoardDetail = () => {
   const maxLength = 3000;
 
   //검색 키워드 관련 처리
-  const [params, setParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   //Confirm 모달을 띄울지 여부를 상태값으로 관리
   const [confirmShow, setConfirmShow] = useState(false)
   //action 발행하기 위해
   const dispatch = useDispatch()
   const navigate = useNavigate();
 
-  // const post = {
-  //   writer: 'aaaa',
-  //   title: '여행 제목',
-  //   country: '대한민국',
-  //   city: '서울',
-  //   tags: ['#여행', '#서울'],
-  //   days: [
-  //     {
-  //       dayMemo: '첫날 메모',
-  //       places: [
-  //         { place_name: '경복궁', placeMemo: '궁전 방문' },
-  //         { place_name: '인사동', placeMemo: '전통 문화 체험' },
-  //       ],
-  //     },
-  //     {
-  //       dayMemo: '둘째날 메모',
-  //       places: [
-  //         { place_name: '남산타워', placeMemo: '야경 감상' },
-  //       ],
-  //     },
-  //   ],
-  // };
 
   useEffect(() => {
     //검색 키워드 정보도 같이 보내기
-    const query = new URLSearchParams(params).toString()
+    const query = new URLSearchParams(searchParams).toString()
     //글 정보 가져오기
     axios.get(`/api/v1/posts/${id}?${query}`)
       .then(res => {
@@ -88,6 +68,7 @@ const CourseBoardDetail = () => {
         setTotalPageCount(res.data.totalPageCount)
 
         const resUserId = postData.userId
+        
         return axios.get(`/api/v1/users/${resUserId}`)
       })
       .then(res => {
@@ -96,8 +77,9 @@ const CourseBoardDetail = () => {
       })
       .catch(error => {
         console.log("데이터를 가져오지 못했습니다.", error)
+        alert("게시물을 불러오는 중 문제가 발생했습니다.")
       })
-  }, [id]) //경로 파라미터가 변경될 때 서버로부터 데이터 다시 받기
+  }, [id, searchParams]) //경로 파라미터가 변경될 때 서버로부터 데이터 다시 받기
 
   //글 삭제를 눌렀을 때 호출되는 함수
   const deleteHandleYes = () => {
@@ -257,10 +239,6 @@ const CourseBoardDetail = () => {
   }
 
 
-
-
-
-
   return (
     <div className="container">
       <NavLink
@@ -316,7 +294,7 @@ const CourseBoardDetail = () => {
           {/* title / 좋아요 버튼 / 좋아요,조회수 */}
           {/* 내 게시물이 아닌경우에만 좋아요 버튼 보여주기 */}
           {
-            userId !== post.userId &&
+            !isWriter &&
             <button
               className={`mx-3 ${isLiked ? "bg-pink-600" : "bg-pink-400"
                 } text-white active:bg-emerald-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}

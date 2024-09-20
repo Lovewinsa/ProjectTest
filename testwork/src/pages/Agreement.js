@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import TermServiceModal from '../components/TermServiceModal';
 import TermPrivacyModal from '../components/TermPrivacyModal';
 
-
 function Agreement() {
     const [allAgreed, setAllAgreed] = useState(false)
     const [agreements, setAgreements] = useState({

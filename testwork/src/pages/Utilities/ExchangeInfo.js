@@ -4,6 +4,7 @@ function ExchangeInfo() {
     const [exchangeRates, setExchangeRates] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [krwAmount, setKrwAmount] = useState(1000); // 기본값 1000 한화
 
     // 한화를 기준으로 환율 가져오기
     useEffect(() => {
@@ -62,24 +63,44 @@ function ExchangeInfo() {
         KWD: '쿠웨이트 디나르 (KWD)'
     };
 
+    const handleKrwAmountChange = (e) => {
+        setKrwAmount(e.target.value); // 사용자가 입력한 값을 설정
+    };
+
     return (
-        <div>
-            <h1>환율 정보 (기준: 한화)</h1>
-            {loading && <p>Loading...</p>}
-            {error && <p>{error}</p>}
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold text-center mb-4">환율 정보</h1>
+
+            {/* 한화 입력칸 */}
+            <div className="mb-4 text-center">
+                <label htmlFor="krwAmount" className="mr-2">한국 돈 (KRW):</label>
+                <input
+                    id="krwAmount"
+                    type="number"
+                    value={krwAmount}
+                    onChange={handleKrwAmountChange}
+                    className="border px-2 py-1"
+                />
+            </div>
+
+            {loading && <p className="text-center">Loading...</p>}
+            {error && <p className="text-red-500 text-center">{error}</p>}
             {!loading && exchangeRates && (
-                <table border="1">
+                <table className="min-w-full bg-white border border-gray-300">
                     <thead>
                         <tr>
-                            <th>화폐</th>
-                            <th>환율 (기준: KRW)</th>
+                            <th className="py-2 px-4 border-b bg-gray-200 text-left">화폐</th>
+                            <th className="py-2 px-4 border-b bg-gray-200 text-left">환율 (기준: {krwAmount} KRW)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {Object.keys(exchangeRates).map((currency) => (
                             <tr key={currency}>
-                                <td>{currencyNames[currency] || currency}</td>
-                                <td>{Math.round(exchangeRates[currency] * 100) / 100}</td> {/* 소수점 첫 번째 자리까지만 */}
+                                <td className="py-2 px-4 border-b">{currencyNames[currency] || currency}</td>
+                                <td className="py-2 px-4 border-b">
+                                    {/* 입력한 KRW 값에 따라 각 화폐로 변환된 값 */}
+                                    {Math.round((krwAmount * exchangeRates[currency]) * 100) / 100} {currency}
+                                </td>
                             </tr>
                         ))}
                     </tbody>

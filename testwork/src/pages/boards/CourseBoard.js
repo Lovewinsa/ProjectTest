@@ -11,8 +11,9 @@ function CourseBoard() {
     condition: "",
     keyword: ""
   })
-  
-  const [searchParams, setSearchParams] = useSearchParams({})
+
+  // "/posts/course?pageNum=x"에서 pageNum을 추출하기 위한 Hook
+  const [searchParams, setSearchParams] = useSearchParams({ pageNum: 1 })
 
   //국내 페이지, 해외 페이지
   const [domesticInternational, setDomesticInternational] = useState(searchParams.get("di") || "Domestic")
@@ -27,19 +28,20 @@ function CourseBoard() {
   };
 
   //글 목록 새로 읽어오는 함수
-  const refreshPageInfo = () => {
+  const refreshPageInfo = (pageNum) => {
     //검색 기능과 관련된 query 문자열 읽어오기
     const query = new URLSearchParams(searchState).toString()
-    axios.get(`/api/v1/posts/course?${query}`)//
+    axios.get(`/api/v1/posts/course?pageNum=${pageNum}&${query}`)//
       .then(res => {
         //국내코스, 해외코스 필터
-        const filteredPageInfo = res.data.filter((item) => {
+        console.log(res.data.list)
+        const filteredPageInfo = res.data.list.filter((item) => {
           return domesticInternational === "Domestic" ? item.country === "한국" : item.country !== "한국"
         })
         //서버로부터 응답된 데이터 state에 넣기
         setPageInfo(filteredPageInfo)
 
-        setDesiredCountry(domesticInternational === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지");
+        setDesiredCountry(domesticInternational === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지")
         setPageTurn(domesticInternational === "Domestic" ? "해외로" : "국내로")
       })
       .catch(error => {
@@ -48,9 +50,28 @@ function CourseBoard() {
   }
 
   useEffect(() => {
-    
-    refreshPageInfo()
-  }, [domesticInternational])
+    let pageNum = searchParams.get("pageNum")
+    if (pageNum == null) pageNum = 1
+    refreshPageInfo(pageNum)
+  }, [domesticInternational, searchParams])
+
+
+  // //페이징 UI를 만들 때 사용할 배열 리턴하는 함수
+  // function range(start, end) {
+  //   const result = []
+  //   for (let i = start; i <= end; i++) {
+  //     result.push(i)
+  //   }
+  //   return result
+  // }
+
+  // //페이지를 변경하는 함수
+  // const move = (pageNum = 1) => {
+  //   //검색조건에 맞는 query 문자열 얻어내기
+  //   const query = new URLSearchParams(searchState).toString()
+  //   navigate(`/posts/course?pageNum=${pageNum}&${query}`)
+  // }
+
 
   //원하는 글 정보 조건검색
   const conditionalSearch = () => {
@@ -73,6 +94,8 @@ function CourseBoard() {
       condition: "",
       keyword: ""
     })
+    // //1페이지 내용이 보여지게
+    // move(1)
   }
 
 
@@ -130,7 +153,7 @@ function CourseBoard() {
         <tbody className="text-center divide-y">
           {pageInfo.map((item) => (
             <tr key={item.id}>
-            {/*  className="bg-white hover:bg-gray-100" */}
+              {/*  className="bg-white hover:bg-gray-100" */}
               <td>{item.id}</td>
               <td className="text-left" >
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -159,7 +182,7 @@ function CourseBoard() {
         <strong>{pageInfo.totalRow}</strong>개의 글이 있습니다
       </p>
     </div>
-  );
+  )
 }
 
-export default CourseBoard;
+export default CourseBoard
