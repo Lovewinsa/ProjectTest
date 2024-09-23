@@ -37,6 +37,8 @@ const CourseBoardDetail = () => {
   const [isLoading, setLoading] = useState(false)
   //원글의 댓글 내용 상태값
   const [commentInnerText, setCommentInnerText] = useState("")
+  //dropdown 상태 정의
+  const [dropdownIndex, setDropdownIndex] = useState(null)
   // 각 답글 폼 상태를 관리하는 배열
   const [replyTexts, setReplyTexts] = useState({})
   // 각 수정 폼 상태를 관리하는 배열
@@ -59,22 +61,23 @@ const CourseBoardDetail = () => {
     axios
       .get(`/api/v1/posts/${id}?${query}`)
       .then((res) => {
-        console.log(res.data)
+
         const postData = res.data.dto
         setPost(postData)
-
+        console.log(postData)
+        console.log(res.data.commentList)
         //댓글 목록이 존재하는지 확인 후, 배열에 ref라는 방 추가
         const list = Array.isArray(res.data.commentList)
           ? res.data.commentList.map((item) => {
-              item.ref = createRef()
-              return item
-            })
+            item.ref = createRef()
+            return item
+          })
           : []
         //댓글 목록
         setCommentList(list)
         //전체 댓글 페이지의 개수를 상태값으로 넣어주기
-        setTotalPageCount(res.data.totalPageCount || 0)
-
+        console.log(res.data.totalCommentPages)
+        setTotalPageCount(res.data.totalCommentPages)
         //게시물 작성자의 정보
         const resUserId = postData.userId || null
         if (!resUserId) {
@@ -159,20 +162,28 @@ const CourseBoardDetail = () => {
     }))
   }
 
+  // 드롭다운 토글 함수
+  const toggleDropdown = (index) => {
+    if (dropdownIndex === index) {
+      // 같은 인덱스를 다시 클릭하면 드롭다운을 닫음
+      setDropdownIndex(null)
+    } else {
+      // 새로운 인덱스를 클릭하면 해당 드롭다운을 열음
+      setDropdownIndex(index)
+    }
+  }
+
+  // 신고 처리 함수
+  const handleReportComment = (commentId) => {
+    // 신고 기능 구현
+    alert(`댓글 ID ${commentId}가 신고되었습니다.`)
+    // 추가로 서버에 신고 요청을 보내는 로직을 여기에 추가
+  }
+
   //댓글 등록
   const handleCommentSubmit = (e) => {
     e.preventDefault()
-    //만일 로그인하지 않았으면
-    if (!loggedInUsername) {
-      //로그인 모달 띄운다
-      const payload = {
-        show: true,
-        message: "댓글 저장을 위해 로그인이 필요 합니다!",
-      }
-      //로그인창을 띄우는 action 을 발행하면서 payload 를 전달한다.
-      dispatch({ type: "LOGIN_MODAL", payload })
-      return
-    }
+
     //댓글 정보
     const data = {
       postId: id,
@@ -181,9 +192,10 @@ const CourseBoardDetail = () => {
       profilePicture: loggedInProfilePicture,
       content: e.target.content.value,
       parentCommentId: e.target.parentCommentId?.value || "",
-      toUsername: e.target.toUsername.value,
+      toUsername: e.target.toUsername?.value || "",
       status: "PUBLIC",
     }
+
     axios
       .post(`/api/v1/posts/${post.id}/comments`, data)
       .then((res) => {
@@ -192,12 +204,46 @@ const CourseBoardDetail = () => {
         const newComment = res.data
         //댓글의 정보에 ref라는 방을 추가하고 거기에 참조값을 담을 object넣어준다
         newComment.ref = createRef()
-        //이 댓글을 commentIndex에 끼워 넣기
-        commentList.splice(commentIndex, 0, res.data)
         //새로운 배열을 만들면서 기존 배열에 저장된 아이템을 펼쳐 놓아서 상태값을 변경
-        setCommentList([...commentList])
+        setCommentList([...commentList, newComment])
         //댓글 입력한 textarea 초기화
-        e.target.content.value = ""
+        setCommentInnerText("")
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+  }
+
+  //답글 등록
+  const handleReplySubmit = (e, parentId) => {
+    e.preventDefault()
+    const data = {
+      postId: id,
+      userId: loggedInUserId,
+      writer: loggedInNickname,
+      profilePicture: loggedInProfilePicture,
+      content: replyTexts[parentId],
+      toUsername: e.target.toUsername.value,
+      parentCommentId: e.target.parentCommentId.value,
+      status: "PUBLIC"
+    }
+
+    axios.post(`/api/v1/posts/${post.id}/comments`, data)
+      .then((res) => {
+        
+        const replyComment = res.data
+        setCommentList((prevList) => {
+          return prevList.map((comment) => {
+            console.log(comment)
+            console.log(parentId)
+            if (comment.id === parentId) {
+              
+              return { ...comment, replies: [...comment.replies, replyComment] }
+            }
+            return comment
+          })
+        })
+        setReplyTexts((prev) => ({ ...prev, [parentId]: "" }))
       })
       .catch((error) => {
         console.log(error)
@@ -205,7 +251,7 @@ const CourseBoardDetail = () => {
   }
 
   //댓글 삭제
-  const handleCommentDelete = (commentId, ref) => {
+  const handleDeleteComment = (commentId, ref) => {
     axios
       .delete(`/api/v1/posts/${id}/comments/${commentId}`)
       .then((res) => {
@@ -222,11 +268,12 @@ const CourseBoardDetail = () => {
   }
 
   //댓글 수정 버튼
-  const handleCommentUpdate = (e) => {
+  const handleUpdateComment = (e) => {
     e.preventDefault()
     const action = e.target.action
     const updatedData = {
-      postId: id,
+      id: e.target.commentId.value,
+      postId: e.target.id.value,
       userId: loggedInUserId,
       writer: loggedInUserId,
       profilePicture: loggedInProfilePicture,
@@ -234,16 +281,19 @@ const CourseBoardDetail = () => {
       parentCommentId: e.target.parentCommentId?.value || "",
       toUsername: e.target.toUsername.value,
       status: "PUBLIC",
+      createdAt: e.target.createdAt.value,
     }
     axios
       .put(action, updatedData)
       .then((res) => {
-        //수정한 댓글 정보
-        console.log(res.data)
         //수정한 댓글 UI에 반영
         const newCommentList = commentList.map((item) => {
-          if (item.id === res.data.id) {
-            item.content = res.data.content
+          if (item.id === parseInt(e.target.commentId.value)) {
+            //수정된 댓글을 기존 배열의 위치에서 업데이트
+            return {
+              ...item,
+              content: e.target.content.value
+            }
           }
           return item
         })
@@ -266,12 +316,15 @@ const CourseBoardDetail = () => {
       //마지막 페이지가 아니라면
       //로딩 상태로 바꿔준다
       setLoading(true)
+      //요청할 댓글의 게시물id
+      const postId = id
       //요청할 댓글의 페이지
       const page = pageNum + 1
       //서버에 데이터 추가 요청
       axios
-        .get(`/cafes/${id}/comments?pageNum=${page}`)
+        .get(`/api/v1/posts/${postId}/comments?pageNum=${page}`)
         .then((res) => {
+          console.log(res.data)
           //res.data에는 댓글 목록과 전체 페이지 개수가 들어있다.
           //댓글 목록에 ref를 추가한 새로운 배열을 얻어내서
           const newList = res.data.commentList.map((item) => {
@@ -281,7 +334,7 @@ const CourseBoardDetail = () => {
           //현재까지 출력된 댓글 목록에 새로운 댓글 목록을 추가해 새로운 배열로 상태값 변경
           //댓글 목록 데이터 변경하기
           setCommentList([...commentList, ...newList])
-          setTotalPageCount(res.data.totalPageCount)
+          setTotalPageCount(res.data.totalCommentPages)
           //증가된 페이지 번호도 반영
           setPageNum(page)
 
@@ -348,9 +401,8 @@ const CourseBoardDetail = () => {
           {/* 내 게시물이 아닌경우에만 좋아요 버튼 보여주기 */}
           {!isWriter && (
             <button
-              className={`mx-3 ${
-                isLiked ? "bg-pink-600" : "bg-pink-400"
-              } text-white active:bg-emerald-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
+              className={`mx-3 ${isLiked ? "bg-pink-600" : "bg-pink-400"
+                } text-white active:bg-emerald-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
               type="button"
               disabled={isLiked}
               onClick={handleLike}>
@@ -432,9 +484,9 @@ const CourseBoardDetail = () => {
         </div> */}
 
         {/* 원글의 댓글 작성 form */}
-        <div className="border-3 rounded-lg p-3 mt-4 mb-6 bg-white">
+        <div className={`border-3 rounded-lg p-3 mt-4 mb-6 bg-white ${!loggedInUsername ? 'hidden' : ''}`}>
           <div className="font-bold text-lg">{loggedInNickname}</div>
-          <form className="commentForm" onSubmit={handleCommentSubmit}>
+          <form onSubmit={handleCommentSubmit}>
             <div className="relative">
               {/* 원글의 id */}
               <input type="hidden" name="id" defaultValue={post.id} />
@@ -476,34 +528,89 @@ const CourseBoardDetail = () => {
                 {item.status === "DELETED" ? (
                   <p>삭제된 댓글입니다</p>
                 ) : (
-                  <div className="flex-1">
-                    {/* 프로필 사진 또는 기본 아이콘 */}
-                    <div>
-                      {item.profilePicture === null ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-10 h-10 text-gray-400"
-                          viewBox="0 0 16 16"
-                          fill="currentColor">
-                          <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                          <path
-                            fillRule="evenodd"
-                            d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.206 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
-                          />
-                        </svg>
-                      ) : (
-                        <img src={writerProfile.profilePicture} className="w-10 h-10 rounded-full" alt="프로필" />
-                      )}
-                    </div>
-
+                  <>
                     {/* 댓글 요소들 */}
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex items-end">
+                          {/* 프로필 사진 또는 기본 아이콘 */}
+                          {item.profilePicture === null ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-10 h-10 text-gray-400"
+                              viewBox="0 0 16 16"
+                              fill="currentColor">
+                              <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                              <path
+                                fillRule="evenodd"
+                                d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.206 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
+                              />
+                            </svg>
+                          ) : (
+                            <img src={writerProfile.profilePicture} className="w-10 h-10 rounded-full" alt="프로필" />
+                          )}
                           <span className="font-bold text-gray-900">{item.writer}</span>
-                          {item.id !== item.parentCommentId && <i className="ml-2 text-gray-500">@{item.toUsername}</i>}
-                          <small className="ml-4 text-gray-400">{item.createdAt}</small>
                         </div>
+                        {/* Dropdown 메뉴 */}
+                        <div className="relative inline-block text-left">
+                          <button
+                            onClick={() => toggleDropdown(index)}
+                            className="flex items-center p-2 text-gray-500 rounded hover:text-gray-700">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-6 h-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 6v.01M12 12v.01M12 18v.01"
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Dropdown 내용 */}
+                          {dropdownIndex === index && (
+                            <div className="absolute right-0 w-40 mt-2 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg">
+                              <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                <button
+                                  className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                  onClick={() => {
+                                    setDropdownIndex(null)
+                                    handleReportComment(item.id)
+                                  }}>
+                                  신고
+                                </button>
+                                {item.writer === loggedInNickname && (
+                                  <>
+                                    <button
+                                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setDropdownIndex(null)
+                                        const updateForm = item.ref.current.querySelector(".updateCommentForm")
+                                        updateForm.classList.remove("hidden")
+                                      }}>
+                                      수정
+                                    </button>
+                                    <button
+
+                                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setDropdownIndex(null)
+                                        handleDeleteComment(item.id)
+                                      }}>
+                                      삭제
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                       </div>
 
                       {/* 댓글 내용 */}
@@ -511,6 +618,7 @@ const CourseBoardDetail = () => {
 
                       {/* 답글 및 기타 버튼 */}
                       <div className="mt-2 text-sm text-gray-500">
+                        <small className="ml-4 text-gray-400">{item.createdAt}</small>
                         <button
                           className="ml-4 text-blue-500 hover:text-blue-700 text-sm"
                           onClick={(e) => {
@@ -527,39 +635,12 @@ const CourseBoardDetail = () => {
                           }}>
                           답글
                         </button>
-                        {/* 수정 및 삭제 버튼 */}
-                        {item.writer === loggedInNickname && (
-                          <>
-                            <button
-                              className="mr-2 text-blue-500 hover:text-blue-700 text-sm"
-                              onClick={(e) => {
-                                const text = e.target.innerText
-                                const updateForm = item.ref.current.querySelector(".updateCommentForm")
-
-                                if (text === "수정") {
-                                  e.target.innerText = "수정취소"
-                                  updateForm.classList.remove("hidden")
-                                } else {
-                                  e.target.innerText = "수정"
-                                  updateForm.classList.add("hidden")
-                                }
-                              }}>
-                              수정
-                            </button>
-
-                            <button
-                              className="text-blue-500 hover:text-blue-700 text-sm"
-                              onClick={() => handleCommentDelete(item.id, item.ref)}>
-                              삭제
-                            </button>
-                          </>
-                        )}
                       </div>
 
                       {/* 답글 작성 폼 */}
-                      <div className="replyCommentForm w-full border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden">
+                      <div className="replyCommentForm border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden">
                         <div className="font-bold text-lg">{loggedInNickname}</div>
-                        <form onSubmit={handleCommentSubmit}>
+                        <form onSubmit={(e)=> handleReplySubmit(e, item.id)}>
                           <div className="relative">
                             {/* 원글의 작성자 */}
                             <input type="hidden" name="id" defaultValue={post.id} />
@@ -574,7 +655,10 @@ const CourseBoardDetail = () => {
                               placeholder="답글을 남겨보세요"
                               value={replyTexts[index] || ""}
                               maxLength={maxLength}
-                              onChange={(e) => handleReplyTextChange(index, e.target.value)}
+                              onChange={(e) => {
+                                handleReplyTextChange(index, e.target.value)
+                                setReplyTexts((prev) => ({ ...prev, [item.id]: e.target.value }))
+                              }}
                             />
                             <div className="char-limit absolute top-2 right-2 text-gray-500 text-sm">
                               {replyTexts[index]?.length || 0}/{maxLength}
@@ -584,27 +668,38 @@ const CourseBoardDetail = () => {
                             <button
                               type="submit"
                               className="text-blue-500 hover:text-blue-700 font-semibold"
-                              onClick={() => (commentIndex = index + 1)}>
-                              등록
+                              onClick={() => {
+                                (commentIndex = index + 1)
+                                const replyForm = item.ref.current.querySelector(".replyCommentForm")
+                                replyForm.classList.add("hidden")
+                              }}>
+                              답글 등록
                             </button>
                           </div>
                         </form>
                       </div>
 
                       {/* 댓글 수정 폼 */}
-
                       <div className="updateCommentForm border-3 rounded-lg p-3 mt-4 mb-6 bg-white hidden">
                         <div className="font-bold text-lg">{loggedInNickname}</div>
-                        <form onSubmit={handleCommentUpdate}>
-                          <textarea
-                            name="content"
-                            className="border border-white rounded w-full h-24 p-2"
-                            value={editTexts[index] || item.content}
-                            maxLength={maxLength}
-                            onChange={(e) => handleEditTextChange(index, e.target.value)}
-                          />
-                          <div className="absolute top-2 right-2 text-gray-500 text-sm">
-                            {editTexts[index]?.length || 0}/{maxLength}
+                        <form action={`/api/v1/posts/${id}/comments/${item.id}`} onSubmit={handleUpdateComment}>
+                          <div className="relative">
+                            <input type="hidden" name="commentId" defaultValue={item.id} />
+                            <input type="hidden" name="id" defaultValue={item.postId} />
+                            <input type="hidden" name="toUsername" defaultValue={item.toUsername} />
+                            <input type="hidden" name="status" />
+                            <input type="hidden" name="createdAt" defaultValue={item.createdAt} />
+                            <input type="hidden" name="parentCommentId" defaultValue={item.parentCommentId} />
+                            <textarea
+                              name="content"
+                              className="border border-white rounded w-full h-24 p-2"
+                              defaultValue={item.content}
+                              maxLength={maxLength}
+                              onChange={(e) => handleEditTextChange(index, e.target.value)}
+                            />
+                            <div className="absolute top-2 right-2 text-gray-500 text-sm">
+                              {editTexts[index]?.length || 0}/{maxLength}
+                            </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <button
@@ -620,7 +715,7 @@ const CourseBoardDetail = () => {
                         </form>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </li>
             ))}
@@ -630,9 +725,8 @@ const CourseBoardDetail = () => {
         {/* 댓글 더보기 버튼 */}
         <div className="grid grid-cols-1 md:grid-cols-2 mx-auto mb-5">
           <button
-            className={`bg-green-500 text-white py-2 px-4 rounded ${
-              isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
-            }`}
+            className={`bg-green-500 text-white py-2 px-4 rounded ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+              }`}
             disabled={isLoading}
             onClick={handleMoreComment}>
             {isLoading ? (
