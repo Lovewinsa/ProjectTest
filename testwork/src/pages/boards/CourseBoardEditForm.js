@@ -2,23 +2,28 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
+import { shallowEqual, useSelector } from "react-redux";
 
 
 const CourseBoardEditForm = () => {
-    const [title, setTitle] = useState("");
-    const [country, setCountry] = useState("");
-    const [city, setCity] = useState("");
-    const [tagInput, setTagInput] = useState("");
-    const [postTags, setTags] = useState([]);
-    const [days, setDays] = useState([{ places: [""], dayMemo: "" }]);
-    const [postType, setPostType] = useState("");
-    const [selectedDayIndex, setSelectedDayIndex] = useState(null);
-    const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null);
-    const [savedPlaces, setSavedPlaces] = useState([]);
-    const [isSelectPlace, setIsSelectPlace] = useState(false);
+    const userId = useSelector((state) => state.userData.id, shallowEqual)
+    const nickname = useSelector((state) => state.userData.nickname, shallowEqual)
+    const username = useSelector((state) => state.userData.username, shallowEqual)
 
-    const navigate = useNavigate();
-    const { id } = useParams();  // URL에서 게시물 ID를 가져옴
+    const [title, setTitle] = useState("")
+    const [country, setCountry] = useState("")
+    const [city, setCity] = useState("")
+    const [tagInput, setTagInput] = useState("")
+    const [postTags, setTags] = useState([])
+    const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
+    const [postType, setPostType] = useState("")
+    const [selectedDayIndex, setSelectedDayIndex] = useState(null)
+    const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
+    const [savedPlaces, setSavedPlaces] = useState([])
+    const [isSelectPlace, setIsSelectPlace] = useState(false)
+
+    const navigate = useNavigate()
+    const { id } = useParams()  // URL에서 게시물 ID를 가져옴
 
     // 나라별 도시 목록
     const citiesByCountry = {
@@ -37,32 +42,36 @@ const CourseBoardEditForm = () => {
         Russia: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
         SouthAfrica: ["케이프타운", "요하네스버그", "더반", "프리토리아"],
         // Add more countries and cities as needed
-    };
+    }
 
-    const cities = citiesByCountry[country] || [];
+    const cities = citiesByCountry[country] || []
 
     useEffect(() => {
         // 기존 게시물 데이터를 가져와 초기화
         axios.get(`/api/v1/posts/course/${id}`)
-            .then((response) => {
-                const { title, country, city, tags, postData } = response.data;
-                setTitle(title);
-                setCountry(country);
-                setCity(city);
-                setTags(tags.split(", "));
-                setDays(postData);
+            .then((res) => {
+                const { title, country, city, tags, postData } = res.data
+                setTitle(title)
+                setCountry(country)
+                setCity(city)
+                setTags(tags.split(", "))
+                setDays(postData)
             })
-            .catch((error) => console.log(error));
+            .catch((error) => console.log(error))
     }, [id]);
 
     const handleSubmit = () => {
         const tags = postTags.join(", ");
         const post = {
+            userId,
+            writer:nickname,
+            type:"COURSE",
             title,
             country,
             city,
             tags,
             postData: days,
+            status: "PUBLIC"
         };
 
         axios.put(`/api/v1/posts/course/${id}`, post)  // PUT 요청으로 업데이트

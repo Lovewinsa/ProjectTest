@@ -36,7 +36,7 @@ function CourseBoard() {
         //국내코스, 해외코스 필터
         console.log(res.data.list)
         const filteredPageInfo = res.data.list.filter((item) => {
-          return domesticInternational === "Domestic" ? item.country === "한국" : item.country !== "한국"
+          return domesticInternational === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
         })
         //서버로부터 응답된 데이터 state에 넣기
         setPageInfo(filteredPageInfo)
@@ -54,23 +54,6 @@ function CourseBoard() {
     if (pageNum == null) pageNum = 1
     refreshPageInfo(pageNum)
   }, [domesticInternational, searchParams])
-
-
-  // //페이징 UI를 만들 때 사용할 배열 리턴하는 함수
-  // function range(start, end) {
-  //   const result = []
-  //   for (let i = start; i <= end; i++) {
-  //     result.push(i)
-  //   }
-  //   return result
-  // }
-
-  // //페이지를 변경하는 함수
-  // const move = (pageNum = 1) => {
-  //   //검색조건에 맞는 query 문자열 얻어내기
-  //   const query = new URLSearchParams(searchState).toString()
-  //   navigate(`/posts/course?pageNum=${pageNum}&${query}`)
-  // }
 
 
   //원하는 글 정보 조건검색
@@ -100,7 +83,7 @@ function CourseBoard() {
 
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 max-w-[900px]">
       <Link
         to={{ pathname: "/posts/course/new", search: `?di=${domesticInternational}` }}
         className="text-blue-500">여행코스 계획하기
@@ -147,13 +130,11 @@ function CourseBoard() {
             <th>작성자</th>
             <th>작성일</th>
             <th>조회수</th>
-            {/* className="p-3 font-bold uppercase bg-gray-200 text-gray-600 border-b border-gray-300" */}
           </tr>
         </thead>
         <tbody className="text-center divide-y">
           {pageInfo.map((item) => (
             <tr key={item.id}>
-              {/*  className="bg-white hover:bg-gray-100" */}
               <td>{item.id}</td>
               <td className="text-left" >
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -171,7 +152,7 @@ function CourseBoard() {
               {/* className="p-3 border-b border-gray-300" */}
               <td>{item.likeCount}</td>
               <td>{item.writer}</td>
-              <td>{item.updatedAt ? item.updatedAt : item.createdAt}</td>
+              <td>{item.updatedAt ? item.updatedAt.slice(0, 10) : item.createdAt.slice(0, 10)}</td>
               <td>{item.viewCount}</td>
             </tr>
           ))}
