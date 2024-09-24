@@ -3,11 +3,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { setActive } from "@material-tailwind/react/components/Tabs/TabsContext";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 
 function FollowerFolloweeModal({id, ff, onClose}) {
-  const navigate = useNavigate();
-
   const [followerList, setFollowerList] = useState([]);
   const [followeeList, setFolloweeList] = useState([]);
 
@@ -88,14 +86,13 @@ function FollowerFolloweeModal({id, ff, onClose}) {
                 <li
                   key={follower.userId}
                   className="flex justify-between gap-x-6 py-4"
-                  onClick={()=>{ navigate(`/users/${follower.userId}/profile`)}}
-                  >
+                >
                   <div className="flex min-w-0 gap-x-4">
                     <img
                       alt=""
                       src={follower.profilePicture}
                       className="h-12 w-12 flex-none rounded-full bg-gray-50"
-                      />
+                    />
                     <div className="min-w-0 flex-auto">
                       <p className="text-sm font-semibold leading-6 text-gray-900">
                         {follower.nickname}
@@ -111,9 +108,8 @@ function FollowerFolloweeModal({id, ff, onClose}) {
             {activeTab === "followee" &&
               followeeList.map((followee) => (
                 <li
-                key={followee.userId}
-                className="flex justify-between gap-x-6 py-4"
-                onClick={()=>{ navigate(`/users/${followee.userId}/profile`)}}
+                  key={followee.userId}
+                  className="flex justify-between gap-x-6 py-4"
                 >
                   <div className="flex min-w-0 gap-x-4">
                     <img

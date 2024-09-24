@@ -188,7 +188,7 @@ function MateBoardDetail(props) {
         <div dangerouslySetInnerHTML={{ __html: post.content }}></div>
 
         {/* 카드 */}
-        <div className="mt-20 max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow">
+        <div className="mt-20 max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
           <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900">
             {post.country} / {post.city}
           </h5>

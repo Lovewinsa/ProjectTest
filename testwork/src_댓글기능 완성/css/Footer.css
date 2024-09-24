@@ -1,0 +1,49 @@
+/* 전체 레이아웃 설정 */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    /* 페이지 내용이 부족할 경우 최소 높이를 계산하여 푸터가 아래에 오도록 함 */
+    min-height: calc(100vh - 150px); /* 150px은 푸터의 높이로 설정 */
+}
+
+/* 푸터 스타일링 */
+.Footer {
+    height: 150px;  /* 푸터 높이를 150px로 설정 */
+    background-color: #ffffff; /* 푸터 배경색 흰색 */
+    text-align: center;
+    color: #000000; /* 텍스트 색상 검정 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
+    margin-top: auto;
+    width: 100%; /* 푸터가 전체 너비를 차지하도록 설정 */
+}
+
+.Footer img.logo {
+    width: 40px;  /* 이미지 크기를 줄임 */
+    height: auto;
+    margin-bottom: 10px; /* 이미지와 텍스트 사이의 간격 추가 */
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.Footer p {
+    padding: 0 15px; /* 텍스트가 잘리지 않도록 패딩 추가 */
+    word-wrap: break-word; /* 텍스트 줄바꿈을 강제하여 글자 잘림 방지 */
+    line-height: 1.4; /* 텍스트 줄 간격을 조금 더 넓게 설정 */
+    margin: 5px 0; /* 텍스트 간 간격을 추가하여 가독성 향상 */
+}
