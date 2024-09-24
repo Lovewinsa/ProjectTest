@@ -274,7 +274,10 @@ function NavBar() {
               </button>
               {openSections.domestic && (
                 <div className="pl-4">
-                  <div>여행 기록</div>
+                  <div>
+                    <NavLink to={"/testcard"} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                      테스트
+                    </NavLink></div>
                   <div>
                     <NavLink to={"/posts/course"} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                       여행 계획

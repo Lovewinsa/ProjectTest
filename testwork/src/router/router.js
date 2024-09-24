@@ -38,6 +38,7 @@ import MyRecord from "../pages/myTripTmp/MyRecord"
 import WishMate from "../pages/myTripTmp/WishMate"
 import Alarm from "../pages/Alarm";
 import ChatRoom from "../components/ChatRoom";
+import TestCardPage from "../pages/boards/TestCardPage";
 
 
 const routes = [
@@ -87,6 +88,7 @@ const routes = [
   { path: "/posts/course/new", element: <CourseBoardForm /> },
   { path: "/posts/course/:id/edit", element: <CourseBoardEditForm/> },
   { path: "/posts/course/:id/detail", element: <CourseBoardDetail /> },
+  { path: "/testcard", element: <TestCardPage/>},
 
   // ### 부가 기능 ###
 
