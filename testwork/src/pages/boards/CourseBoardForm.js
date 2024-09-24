@@ -2,9 +2,15 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
+import { shallowEqual, useSelector } from "react-redux";
 
 
 const CourseBoardForm = () => {
+  
+  const userId = useSelector((state) => state.userData.id, shallowEqual);
+  const nickname = useSelector((state) => state.userData.nickname, shallowEqual);
+  const username = useSelector((state) => state.userData.username, shallowEqual);
+
   const [title, setTitle] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -47,11 +53,15 @@ const CourseBoardForm = () => {
   const handleSubmit = () => {
 
     const post = {
+      userId,
+      writer: nickname, 
+      type: "COURSE",
       title,
       country,
       city,
       tags,
       postData: days,
+      status: "PUBLIC",
     };
 
     console.log(post);

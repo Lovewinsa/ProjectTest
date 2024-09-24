@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import axios from "axios";
 import { decodeToken } from "jsontokens";
 import "../css/LoginPage.css";
-import { Nav } from "react-bootstrap";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 
 function LoginPage() {
   const [loginData, setLoginData] = useState({
@@ -15,6 +16,34 @@ function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const stompClient = useRef(null);  // WebSocket 연결 객체
+  const [messages, setMessages] = useState([]);  // 메시지 목록
+
+   // WebSocket 연결 함수
+   const connectWebSocket = (roomId) => {
+    const socket = new SockJS('/api/ws');
+    stompClient.current = new Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000,
+
+      onConnect: () => {
+        stompClient.current.subscribe(`/topic/room/${roomId}`, (messageOutput) => {
+          const newMessage = JSON.parse(messageOutput.body);
+          setMessages((prevMessages) => [...prevMessages, newMessage]);
+        });
+      },
+
+      onStompError: (error) => {
+        console.error('STOMP error:', error);
+      },
+
+      onWebSocketClose: () => {
+        console.log('WebSocket connection closed.');
+      }
+    });
+    stompClient.current.activate();
+  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,6 +51,12 @@ function LoginPage() {
       ...prevState,
       [name]: value,
     }));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
   };
 
   useEffect(() => {
@@ -43,7 +78,7 @@ function LoginPage() {
         id: result.payload.id,
         username: result.payload.username,
         nickname: result.payload.nickname,
-        profilePicture: "https://dudszofpa0onq.cloudfront.net/" + result.payload.profilePicture,
+        profilePicture: result.payload.profilePicture,
       };
 
       const loginStatus = {
@@ -53,6 +88,10 @@ function LoginPage() {
 
       dispatch({ type: "LOGIN_USER", payload: { userData, loginStatus } });
       axios.defaults.headers.common["Authorization"] = token;
+
+      // WebSocket 연결
+      connectWebSocket();
+
       navigate("/");
       window.location.reload();
     }
@@ -99,6 +138,7 @@ function LoginPage() {
             value={loginData.username}
             placeholder="User Name..."
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
           />
           <label htmlFor="password">Password</label>
           <input
@@ -108,6 +148,7 @@ function LoginPage() {
             value={loginData.password}
             placeholder="Password..."
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
           />
           {error && <div style={{ color: "red" }}>{error}</div>}
           <button onClick={handleLogin} className="login-button">
@@ -118,9 +159,9 @@ function LoginPage() {
         <button onClick={handleGoogleLogin}>구글 로그인</button>
         <p>
           회원가입 하지 않으셨다면
-          <Nav.Link as={NavLink} to="/agreement">
+          <Link as={NavLink} to="/agreement">
             클릭
-          </Nav.Link>
+          </Link>
         </p>
       </div>
     </div>

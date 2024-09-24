@@ -4,7 +4,6 @@ import App from "../App";
 import Home from "../pages/Home";
 import Sample from "../pages/Sample";
 import HomeAbroad from "../pages/HomeAbroad";
-import HomeMate from "../pages/HomeMate";
 import Signup from "../pages/Signup";
 import Agreement from "../pages/Agreement";
 import LoginPage from "../pages/LoginPage";
@@ -38,6 +37,7 @@ import MyPlan from "../pages/myTripTmp/MyPlan"
 import MyRecord from "../pages/myTripTmp/MyRecord"
 import WishMate from "../pages/myTripTmp/WishMate"
 import Alarm from "../pages/Alarm";
+import ChatRoom from "../components/ChatRoom";
 
 
 const routes = [
@@ -49,7 +49,6 @@ const routes = [
   // ### home ###
   { path: "/", element: <Home /> },
   { path: "/home-abroad", element: <HomeAbroad /> },
-  { path: "/home-mate", element: <HomeMate /> },
 
   // ### sign up, login, logout ... ###
   { path: "/sample", element: <Sample /> },
@@ -100,7 +99,10 @@ const routes = [
   { path: "/diary", element: <TravelDiary /> },
   { path: "/languageTip", element: <LanguageCultureTips /> },
   { path: "/extra", element: <ExtraPage /> },
-  { path: "/alarm", element: <Alarm />}
+  { path: "/alarm", element: <Alarm />},
+
+  { path:"/chatroom", element: <ChatRoom/>},
+  { path:"/chatroom/:id", element: <ChatRoom/>}
 ];
 
 const router = createBrowserRouter([

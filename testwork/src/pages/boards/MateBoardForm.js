@@ -7,7 +7,6 @@ import "froala-editor/css/froala_editor.pkgd.min.css";
 
 import axios from "axios";
 import FroalaEditor from "react-froala-wysiwyg";
-import { Button } from "react-bootstrap";
 import { shallowEqual, useSelector } from "react-redux";
 
 function MateBoardForm(props) {
@@ -221,9 +220,9 @@ function MateBoardForm(props) {
           ></FroalaEditor>
         </div>
       </div>
-      <Button type="button" onClick={handleSubmit}>
+      <button onClick={handleSubmit}>
         제출
-      </Button>
+      </button>
     </>
   );
 }
