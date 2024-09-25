@@ -1,10 +1,11 @@
 import axios from "axios"
-import React, { createRef, useEffect, useState } from "react"
+import React, { createRef, useEffect, useRef, useState } from "react"
 import { shallowEqual, useDispatch, useSelector } from "react-redux"
 import { NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import ConfirmModal from "../../components/ConfirmModal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons"
+import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
 
 //새로 등록한 댓글을 추가할 인덱스
 let commentIndex = 0
@@ -42,11 +43,14 @@ const CourseBoardDetail = () => {
   const [commentInnerText, setCommentInnerText] = useState("")
   //dropdown 상태 정의
   const [dropdownIndex, setDropdownIndex] = useState(null)
+  //dropdown 참조값
+  const dropdownRefs = useRef([])
   // 각 답글 폼 상태를 관리하는 배열
   const [replyTexts, setReplyTexts] = useState({})
   // 각 수정 폼 상태를 관리하는 배열
   const [editTexts, setEditTexts] = useState({})
 
+  const mapStyle = { width: "50%", height: "30%" }
   //검색 키워드 관련 처리
   const [searchParams, setSearchParams] = useSearchParams()
   //Confirm 모달을 띄울지 여부를 상태값으로 관리
@@ -67,11 +71,10 @@ const CourseBoardDetail = () => {
     axios
       .get(`/api/v1/posts/${id}?${query}`)
       .then((res) => {
+        console.log(res.data.dto.postData)
 
         const postData = res.data.dto
         setPost(postData)
-        console.log(postData)
-        console.log(res.data.dto.postData)
         //댓글 목록이 존재하는지 확인 후, 배열에 ref라는 방 추가
         const list = Array.isArray(res.data.commentList)
           ? res.data.commentList.map((item) => {
@@ -105,6 +108,16 @@ const CourseBoardDetail = () => {
         alert("게시물을 불러오는 중 문제가 발생했습니다.")
       })
   }, [id, searchParams]) //경로 파라미터가 변경될 때 서버로부터 데이터 다시 받기
+
+  useEffect(() => {
+    // 마운트될 때 클릭 이벤트를 추가
+    document.addEventListener("mousedown", handleClickOutside)
+
+    // 언마운트될 때 이벤트 리스너 제거
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [dropdownIndex])
 
   //글 삭제를 눌렀을 때 호출되는 함수
   const deleteHandleYes = () => {
@@ -180,13 +193,21 @@ const CourseBoardDetail = () => {
   }
 
   // 드롭다운 토글 함수
-  const toggleDropdown = (index) => {
+  const toggleDropdown = (e, index) => {
+    e.stopPropagation()
     if (dropdownIndex === index) {
       // 같은 인덱스를 다시 클릭하면 드롭다운을 닫음
       setDropdownIndex(null)
     } else {
       // 새로운 인덱스를 클릭하면 해당 드롭다운을 열음
       setDropdownIndex(index)
+    }
+  }
+
+  // 부모 요소에 클릭 이벤트를 추가하여 드롭다운 닫기 처리
+  const handleClickOutside = (event) => {
+    if (dropdownIndex !== null && dropdownRefs.current[dropdownIndex] && !dropdownRefs.current[dropdownIndex].contains(event.target)) {
+      setDropdownIndex(null)
     }
   }
 
@@ -481,6 +502,7 @@ const CourseBoardDetail = () => {
               {(day.places || [{ place_name: "", placeMemo: "" }]).map((place, placeIndex) => (
                 <div key={placeIndex} className="mb-4">
                   <h3 className="font-semibold mb-2">{placeIndex + 1}번 장소</h3>
+                  <SavedPlacesKakaoMapComponent savedPlaces={day.places} />
                   <p className="border p-2 w-full bg-white mb-2">{place.place_name || "장소명이 없습니다"}</p>
                   <label className="block font-semibold">장소 메모</label>
                   <p className="border p-2 w-full bg-white">{place.placeMemo || "메모가 없습니다"}</p>
@@ -556,14 +578,16 @@ const CourseBoardDetail = () => {
                                 />
                               </svg>
                             ) : (
-                              <img src={writerProfile.profilePicture} className="w-10 h-10 rounded-full" alt="프로필" />
+                              <img src={item.profilePicture} className="w-10 h-10 rounded-full" alt="프로필" />
                             )}
                             <span className="font-bold text-gray-900">{item.writer}</span>
                           </div>
+
+
                           {/* Dropdown 메뉴 */}
-                          <div className="relative inline-block text-left">
+                          <div className="relative inline-block text-left" ref={(el) => (dropdownRefs.current[index] = el)}>
                             <button
-                              onClick={() => toggleDropdown(index)}
+                              onClick={(e) => toggleDropdown(e, index)}
                               className="flex items-center p-2 text-gray-500 rounded hover:text-gray-700">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -605,7 +629,6 @@ const CourseBoardDetail = () => {
                                         수정
                                       </button>
                                       <button
-
                                         className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
                                         onClick={() => {
                                           setDropdownIndex(null)
@@ -657,10 +680,10 @@ const CourseBoardDetail = () => {
                             {/* 원글의 작성자 */}
                             <input type="hidden" name="id" defaultValue={post.id} />
                             {/* 답글 대상자 username */}
-                            <input type="hidden" name="toUsername" defaultValue={item.writer} />
+                            <input type="hidden" name="toUsername" defaultValue={item.toUsername} />
                             <input type="hidden" name="status" />
                             {/* 댓글의 그룹번호(=답글 대상 댓글의 id) */}
-                            <input type="hidden" name="parentCommentId" defaultValue={item.id} />
+                            <input type="hidden" name="parentCommentId" defaultValue={item.parentCommentId} />
                             <textarea
                               name="content"
                               className="border border-white rounded w-full h-24 p-2"
