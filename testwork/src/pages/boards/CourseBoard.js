@@ -147,7 +147,7 @@ function CourseBoard() {
                       </span>
                     ))}
                 </div>
-                <Link to={`/posts/course/${item.id}/detail`}>{item.title}</Link>
+                <Link to={`/posts/course/${item.id}/detail?di=${domesticInternational}`}>{item.title}</Link>
               </td>
               {/* className="p-3 border-b border-gray-300" */}
               <td>{item.likeCount}</td>

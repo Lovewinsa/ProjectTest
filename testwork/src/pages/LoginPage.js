@@ -128,6 +128,9 @@ function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-container">
+        <div>
+          <img className="w-48 h-auto mx-auto mb-5" src="/img/TripDuologo.png" alt="logo" />
+        </div>
         <h2>로그인</h2>
         <div className="login-form">
           <label htmlFor="username">User Name</label>

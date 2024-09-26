@@ -2,44 +2,28 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 function ExtraPage() {
-    return (
-        <div className="borderbox">
-        <ul className="myPage">
-          <li className="myPageList">
-            <h3><Link to="/checklist"><strong>체크리스트</strong>()</Link></h3>
-            <p><Link to="/checklist"><br /></Link></p>
+  const utilities = [
+    { title: '체크리스트', path: '/checklist' },
+    { title: '환율 정보', path: '/exchange' },
+    { title: '여행경비 계산기', path: '/calculator' },
+    { title: '여행 플래너', path: '/planner' },
+  ];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {utilities.map((utility, index) => (
+          <li key={index} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <Link to={utility.path} className="block p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{utility.title}</h3>
+              <p className="text-gray-600">자세히 보기</p>
+            </Link>
           </li>
-          <li className="myPageList">
-            <h3><Link to="/exchangeInfo"><strong>환율 정보</strong>()</Link></h3>
-            <p><Link to="/exchangeInfo"></Link></p>
-          </li>
-          <li className="myPageList">
-            <h3><Link to="/safetyInfo"><strong>안전 정보</strong>()</Link></h3>
-            <p><Link to="/safetyInfo"></Link></p>
-          </li>
-          <li className="myPageList">
-            <h3><Link to="/calculator"><strong>여행경비 계산기</strong></Link></h3>
-            <p><Link to="/calculator"></Link></p>
-          </li>
-          <li className="myPageList">
-            <h3><Link to="/planner"><strong>여행 플레너</strong></Link></h3>
-            <p><Link to="/planner"></Link></p>
-          </li>
-          <li className="myPageList">
-            <h3><Link to="/recommendations"><strong>여행 추천 장소</strong></Link></h3>
-            <p><Link to="/recommendations"></Link></p>
-          </li>
-          <li className="myPageList">
-            <h3><Link to="/diary"><strong>여행 일기</strong></Link></h3>
-            <p><Link to="/diary"></Link></p>
-          </li>
-          <li className="myPageList">
-            <h3><Link to="/languageTip"><strong>여행 대화문화 팁</strong></Link></h3>
-            <p><Link to="/languageTip"></Link></p>
-          </li>
-        </ul>
-      </div>
-    );
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default ExtraPage;
+

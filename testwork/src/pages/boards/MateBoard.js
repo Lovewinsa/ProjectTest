@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useSearchParams } from "react-router-dom";
+import Calendar from "react-calendar"; 
+import 'react-calendar/dist/Calendar.css';
 
 function MateBoard() {
    //배열 안에서 객체로 관리
@@ -12,12 +14,12 @@ function MateBoard() {
   
   // 사용자가 입력한 검색 조건을 저장하기 위한 상태
   const [searchCriteria, setSearchCriteria] = useState({
+    country: "",
     city: "",
     startDate: "",
     endDate: "",
-    location: "",
-    title: "",
-    writer: ""
+    keyword: "",
+    condition: "title", // 검색 옵션: 제목 또는 작성자
   });
 
   // searchPrams 에 di 값이 있으면 그 값으로 없다면 Domestic 으로 설정
@@ -27,6 +29,55 @@ function MateBoard() {
   // 페이지 전환 버튼
   const [whereAreYou, setWhereAreYou] = useState(null);
   const [sortBy, setSortBy] = useState("latest"); // 정렬 기준 초기값 설정
+  // 달력에서 선택된 날짜 범위 저장
+  const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
+
+  // 검색 기준 변경 핸들러
+const handleConditionChange = (e) => {
+  setSearchCriteria({
+    ...searchCriteria,
+    condition: e.target.value,
+    keyword: ""
+  });
+};
+
+  // 검색 조건 입력 변화에 대한 처리 함수
+  const handleSearchChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria({ ...searchCriteria, [name]: value });
+  };
+
+// 제목 또는 작성자 검색 쿼리 처리
+  const handleQueryChange = (e) => {
+    const value = e.target.value;
+    setSearchCriteria({
+      ...searchCriteria,
+      keyword: value, // 검색어를 keyword로 저장
+    });
+  };
+
+  
+  // 날짜 초기화
+  const handleDateReset = () => {
+    setSelectedDateRange([null, null]); // 날짜 범위를 현재 날짜로 초기화
+    setSearchCriteria({
+      ...searchCriteria,
+      startDate: "", // 시작 날짜 초기화
+      endDate: "",   // 종료 날짜 초기화
+    });
+  };
+
+  // 달력에서 날짜를 선택할 때 호출되는 함수
+  const handleDateChange = (dateRange) => {
+    setSelectedDateRange(dateRange);
+    setIsCalendarOpen(false); // 날짜 선택 후 캘린더 닫기
+    setSearchCriteria({
+      ...searchCriteria,
+      startDate: dateRange[0] ? dateRange[0].toLocaleDateString('ko-KR') : "", 
+      endDate: dateRange[1] ? dateRange[1].toLocaleDateString('ko-KR') : "",   
+    });
+  };
 
   // searchParams 가 바뀔때마다 실행된다. 
   // searchParams 가 없다면 초기값 "Domestic" 있다면 di 란 key 값의 데이터를 domesticInternational에 전달한다
@@ -35,13 +86,12 @@ function MateBoard() {
     const city = searchParams.get("city") || ""; // 도시 가져오기
     const startDate = searchParams.get("startDate") || ""; // 시작 날짜 가져오기
     const endDate = searchParams.get("endDate") || ""; // 종료 날짜 가져오기
-    const location = searchParams.get("location") || ""; // 위치 가져오기
-    const title = searchParams.get("title") || ""; // 제목 가져오기
-    const writer = searchParams.get("writer") || ""; // 작성자 가져오기
-
+    const country = searchParams.get("country") || ""; // 국가 가져오기
+    const keyword = searchParams.get("keyword") || "";
 
     setDomesticInternational(diValue);
-    setSearchCriteria({ city, startDate, endDate, location, title, writer }); // 검색 조건 설정
+    setSearchCriteria({ city, startDate, endDate, country, keyword, condition: searchCriteria.condition}); // 검색 조건 설정
+// 국내/국제 값 업데이트 
   }, [searchParams]);
 
   // domesticInternational 가 바뀔때마다 실행된다.
@@ -54,20 +104,51 @@ function MateBoard() {
         const matchesDomesticInternational = domesticInternational === "Domestic" ? item.country === "한국" : item.country !== "한국"; 
         if (!matchesDomesticInternational) return false;
 
+        const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true; 
+        if (!matchesCountry) return false;
+
         const matchesCity = searchCriteria.city ? item.city.includes(searchCriteria.city) : true; 
         if (!matchesCity) return false;
 
-        const matchesTitle = searchCriteria.title ? item.title.includes(searchCriteria.title) : true; // 제목 필터링
-        if (!matchesTitle) return false;
+        // 조건에 따라 제목 또는 작성자를 필터링
+          const matchesKeyword =
+          searchCriteria.condition === "title"
+            ? item.title.includes(searchCriteria.keyword)
+            : searchCriteria.condition === "writer"
+            ? item.writer.includes(searchCriteria.keyword)
+            : searchCriteria.condition === "content"
+            ? item.content.includes(searchCriteria.keyword)
+            : searchCriteria.condition === "title_content"
+            ? item.title.includes(searchCriteria.keyword) || item.content.includes(searchCriteria.keyword)
+            
+            : true;
+      
+          if (!matchesKeyword) return false;
 
-        const matchesWriter = searchCriteria.writer ? item.writer.includes(searchCriteria.writer) : true; // 작성자 필터링
-        if (!matchesWriter) return false;
-
-        const matchesStartDate = searchCriteria.startDate ? item.startDate >= searchCriteria.startDate : true; 
-        if (!matchesStartDate) return false;
-
-        const matchesEndDate = searchCriteria.endDate ? item.endDate <= searchCriteria.endDate : true; 
-        return matchesEndDate;
+        // 선택한 startDate와 endDate 범위에 포함되는 항목만 필터링
+        const matchesDateRange = (item) => {
+          const itemStartDate = new Date(item.startDate);
+          const itemEndDate = new Date(item.endDate);
+          const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null;
+          const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null;
+        
+          // 검색 범위의 날짜가 설정되지 않았으면 모든 게시물 표시
+          if (!searchStartDate && !searchEndDate) {
+            return true;
+          }
+        
+          // 검색 범위에 날짜가 설정되었을 경우 날짜 범위 체크
+          return (
+            (itemStartDate < searchEndDate && itemEndDate > searchStartDate) ||
+            (itemStartDate <= searchStartDate && itemEndDate >= searchStartDate) ||
+            (itemStartDate <= searchEndDate && itemEndDate >= searchEndDate)
+          );
+        };
+        
+        // 필터링 적용
+        if (!matchesDateRange(item)) return false;
+        
+        return true;
       });
       const sorted = filtered.sort((a, b) => {
         if (sortBy === "latest") {
@@ -79,7 +160,7 @@ function MateBoard() {
         }
         return 0; // 기본값
       });
-      setPageData(filtered);
+      setPageData(sorted);
       setWhereAreYou(domesticInternational === "Domestic" ? "국내 여행 메이트 페이지" : "해외 여행 메이트 페이지");
       setPageTurn(domesticInternational === "Domestic" ? "to International" : "to Domestic");
     })
@@ -100,21 +181,14 @@ function MateBoard() {
     });
   };
 
-  // 검색 조건 입력 변화에 대한 처리 함수
-  const handleSearchChange = (e) => {
-    const { name, value } = e.target;
-    setSearchCriteria({ ...searchCriteria, [name]: value });
-  };
-
   // 새로운 검색을 시작하는 함수
   const handleSearch = () => {
     setSearchParams({
-      location: searchCriteria.location,
+      country: searchCriteria.country,
       city: searchCriteria.city,
       startDate: searchCriteria.startDate,
       endDate: searchCriteria.endDate,
-      title: searchCriteria.title,
-      writer: searchCriteria.writer, 
+      keyword: searchCriteria.keyword, 
       di: domesticInternational,
     });
   };
@@ -124,7 +198,7 @@ function MateBoard() {
 
   return (
     <div className="container mx-auto p-4">
-      <NavLink to={{ pathname: "/posts/mate/new", search: `?di=${domesticInternational}` }}>새글 작성</NavLink>
+      <Link to={{ pathname: "/posts/mate/new", search: `?di=${domesticInternational}` }}>새글 작성</Link>
       <button className="border border-1 bg-light-green-200" onClick={handleButtonClick}>
         {pageTurn}
       </button>
@@ -135,8 +209,8 @@ function MateBoard() {
         {domesticInternational === "International" && ( // 국제 검색일 때 위치 입력 필드 렌더링
           <input
             type="text"
-            name="location"
-            value={searchCriteria.location}
+            name="country"
+            value={searchCriteria.country}
             onChange={handleSearchChange}
             placeholder="국가"
             className="border px-2 py-1 mx-2"
@@ -150,37 +224,57 @@ function MateBoard() {
           placeholder="도시"
           className="border px-2 py-1 mx-2"
         />
-        <input
-          type="text"
-          name="title"
-          value={searchCriteria.title}
-          onChange={handleSearchChange}
-          placeholder="제목"
-          className="border px-2 py-1 mx-2"
-        />
-        <input
-          type="text"
-          name="writer"
-          value={searchCriteria.writer}
-          onChange={handleSearchChange}
-          placeholder="작성자"
-          className="border px-2 py-1 mx-2"
-        />
+        
+        {/* 제목/작성자 검색 옵션 선택 */}
+        <div className="flex items-center mb-2">
+          <select value={searchCriteria.condition} onChange={handleConditionChange} className="border px-2 py-1 mx-2">
+            <option value="title">제목</option>
+            <option value="writer">작성자</option>
+            <option value="content">내용</option>
+            <option value="title+writer">제목 + 내용</option>
+          </select>
+        </div>
 
         <input
-          type="date"
-          name="startDate"
-          value={searchCriteria.startDate}
-          onChange={handleSearchChange}
+          type="text"
+          name={searchCriteria.condition} // 동적으로 이름 설정
+          value={searchCriteria[searchCriteria.condition]} // 검색 타입에 따라 값 설정
+          onChange={handleQueryChange}
+          placeholder={searchCriteria.condition === "title" ? "제목" : "작성자"}
           className="border px-2 py-1 mx-2"
         />
-        <input
-          type="date"
-          name="endDate"
-          value={searchCriteria.endDate}
-          onChange={handleSearchChange}
-          className="border px-2 py-1 mx-2"
-        />
+        <div>
+          {/* 날짜 선택 버튼 */}
+          <button
+            onClick={() => setIsCalendarOpen(!isCalendarOpen)} // 버튼 클릭 시 캘린더 표시/숨김 토글
+            className="bg-blue-500 text-white px-4 py-2 mb-4"
+          >
+            {selectedDateRange[0] && selectedDateRange[1] // 날짜가 선택되었을 때
+              ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
+              : "날짜 선택"}  {/* 날짜가 선택되지 않았을 때 */}
+          </button>
+
+          {/* 날짜 초기화 버튼 */}
+          <button onClick={handleDateReset} className="bg-red-500 text-white px-4 py-2 ml-2">
+            날짜 초기화
+          </button>
+          <button onClick={() => {
+            console.log(searchCriteria)
+          }}>
+              test 
+
+          </button>
+          {/* 캘린더 표시 여부에 따라 렌더링 */}
+          {isCalendarOpen && (
+            <div className="absolute z-50 bg-white shadow-lg p-2">
+              <Calendar
+                selectRange={true}
+                onChange={handleDateChange}
+                value={selectedDateRange || [new Date(), new Date()]}  // 초기값 또는 선택된 날짜 범위
+              />
+            </div>
+          )}
+        </div>
         <button onClick={handleSearch} className="bg-blue-500 text-white px-4 py-2">
           검색
         </button>
@@ -238,3 +332,4 @@ function MateBoard() {
 }
 
 export default MateBoard;
+

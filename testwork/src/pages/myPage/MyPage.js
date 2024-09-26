@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
+import BlockModal from "../../components/BlockModal";
 
 function MyPage() {
   const userId = useSelector((state) => state.userData.id, shallowEqual); // 접속된 사용자의 id
@@ -11,20 +12,22 @@ function MyPage() {
   const navigate = useNavigate();
   const [imageData, setImageData] = useState(null);
 
+  // 차단 목록 모달 상태 관리
+  const [isBlockModalOpen, setBlockModalOpen] = useState(false);
   // 접속된 사용자가 없거나 본인이 아니라면 home 으로 리다일렉트
   useEffect(() => {
     axios
       .get(`/api/v1/users/${id}`)
       .then((res) => {
-        if (!userId || userId !== res.data.userId) {
+        if (!userId || userId !== res.data.userProfileInfo.userId) {
           alert("잘못된 접근입니다.");
           navigate(`/`);
         }
 
-        setProfile(res.data);
+        setProfile(res.data.userProfileInfo);
 
-        if (res.data.profilePicture) {
-          setImageData(res.data.profilePicture);
+        if (res.data.userProfileInfo.profilePicture) {
+          setImageData(res.data.userProfileInfo.profilePicture);
         }
       })
       .catch((error) => console.log(error));
@@ -33,6 +36,15 @@ function MyPage() {
   // 프로필 보기 클릭
   const handleClick = () => {
     navigate(`/users/${id}/profile`);
+  };
+
+  // 차단 목록 모달 open
+  const handleOpenBlockModal = () => {
+    setBlockModalOpen(true);
+  };
+  // 차단 목록 모달 close
+  const handleCloseBlockModal = () => {
+    setBlockModalOpen(false);
   };
 
   return (
@@ -116,6 +128,20 @@ function MyPage() {
             <p>관심있는 지역, 음식점들을 관리할 수 있습니다.</p>
           </li>
         </ul>
+      </div>
+
+      {isBlockModalOpen && <BlockModal id={id} onClose={handleCloseBlockModal} />}
+
+      <div className="mt-20">
+        <p className=" cursor-pointer" onClick={handleOpenBlockModal}>
+          <strong>차단 목록</strong>
+        </p>
+        <p>
+          <strong>보안</strong>
+        </p>
+        <p>로그인 기록</p>
+        <p>내 활동 기록</p>
+        <p>회원 탈퇴</p>
       </div>
     </>
   );

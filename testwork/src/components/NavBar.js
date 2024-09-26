@@ -170,7 +170,8 @@ function NavBar() {
           className="font-bold text-2xl absolute left-1/2 transform -translate-x-1/2"
           onClick={handleTripDuoClick}
         >
-          TripDuo
+        {/* w-25 이상 설정시 네비게이션 바 밖으로 나옴 */}
+        <img className="w-24 h-auto" src="/img/TripDuologo.png" alt="logo" />
         </button>
 
         <div className="flex space-x-4">
@@ -274,10 +275,7 @@ function NavBar() {
               </button>
               {openSections.domestic && (
                 <div className="pl-4">
-                  <div>
-                    <NavLink to={"/testcard"} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
-                      테스트
-                    </NavLink></div>
+                  <div>여행 기록</div>
                   <div>
                     <NavLink to={"/posts/course"} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                       여행 계획

@@ -6,6 +6,8 @@ import ConfirmModal from "../../components/ConfirmModal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons"
 import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
+import SavedPlacesGoogleMapComponent from "../../components/SavedPlacesGoogleMapComponent"
+
 
 //새로 등록한 댓글을 추가할 인덱스
 let commentIndex = 0
@@ -51,8 +53,9 @@ const CourseBoardDetail = () => {
   const [editTexts, setEditTexts] = useState({})
 
   const mapStyle = { width: "50%", height: "30%" }
-  //검색 키워드 관련 처리
-  const [searchParams, setSearchParams] = useSearchParams()
+  //검색 키워드, 국내외 관련 처리
+  const [searchParams] = useSearchParams()
+  const domesticInternational = searchParams.get("di")
   //Confirm 모달을 띄울지 여부를 상태값으로 관리
   const [confirmShow, setConfirmShow] = useState(false)
   //action 발행하기 위해
@@ -91,6 +94,7 @@ const CourseBoardDetail = () => {
         if (!resUserId) {
           throw new Error("게시물 작성자의 정보가 없습니다.")
         }
+        
 
         return axios
           .get(`/api/v1/users/${resUserId}`)
@@ -102,6 +106,8 @@ const CourseBoardDetail = () => {
             console.log("작성자 정보를 불러오지 못했습니다.", error)
             alert("작성자 정보를 불러오는 중 문제가 발생했습니다.")
           })
+
+
       })
       .catch((error) => {
         console.log("데이터를 가져오지 못했습니다.", error)
@@ -499,10 +505,19 @@ const CourseBoardDetail = () => {
                 <label className="block font-semibold">Day Memo</label>
                 <p className="border p-2 w-3/4 bg-white">{day.dayMemo || "메모가 없습니다"}</p>
               </div>
-              {(day.places || [{ place_name: "", placeMemo: "" }]).map((place, placeIndex) => (
+              {
+              
+              (day.places || [{ place_name: "", placeMemo: "" }]).map((place, placeIndex) => (
+                
                 <div key={placeIndex} className="mb-4">
                   <h3 className="font-semibold mb-2">{placeIndex + 1}번 장소</h3>
-                  <SavedPlacesKakaoMapComponent savedPlaces={day.places} />
+                  {
+                    domesticInternational === "Domestic" ?
+                    <SavedPlacesKakaoMapComponent savedPlaces={day.places} />
+                    :
+                    <SavedPlacesGoogleMapComponent savedPlaces={day.places} />
+                  }
+                  {/* <SavedPlacesKakaoMapComponent savedPlaces={day.places} /> */}
                   <p className="border p-2 w-full bg-white mb-2">{place.place_name || "장소명이 없습니다"}</p>
                   <label className="block font-semibold">장소 메모</label>
                   <p className="border p-2 w-full bg-white">{place.placeMemo || "메모가 없습니다"}</p>

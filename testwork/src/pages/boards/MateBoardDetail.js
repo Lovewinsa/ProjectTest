@@ -21,6 +21,7 @@ function MateBoardDetail(props) {
 
   //좋아요 버튼 설정
   const [isLiked, setLiked] = useState(false);
+  const [likeId, setLikeId] = useState();
 
   //덧글 관련 설정 ( to do )
   const [commentList, setCommentList] = useState([]);
@@ -59,19 +60,40 @@ function MateBoardDetail(props) {
   //좋아요 버튼 클릭
   const handleLike = () => {
     if (username) {
-      axios
+      if(!isLiked){
+        // isLiked = false 좋아요 누르지 않음
+        axios
         .post(`/api/v1/posts/${id}/likes`, { postId: post.id, userId: userId })
         .then((res) => {
-          setLiked(!isLiked);
+          setLiked(true);
+          //view 페이지에서만 숫자 변경
           setPost({
             ...post,
             likeCount: post.likeCount + 1,
+          });
+          setLikeId(res.data)
+        })
+        .catch((error) => {
+          console.log(error);
+          alert(error.response.data);
+        });
+      }else if(isLiked){
+        // isLiked = true 좋아요 누름
+        axios
+        .delete(`/api/v1/posts/${id}/likes/${userId}`)
+        .then((res) => {
+          setLiked(false);
+          //view 페이지에서만 숫자 변경
+          setPost({
+            ...post,
+            likeCount: post.likeCount - 1,
           });
         })
         .catch((error) => {
           console.log(error);
           alert(error.response.data);
         });
+      }
     } else {
       alert("로그인을 해주세요");
     }
@@ -105,6 +127,7 @@ function MateBoardDetail(props) {
         <h5 className="m-3">
           {id}번 <strong>{post.title}</strong>
           {/* title / 좋아요 버튼 / 좋아요,조회수, 덧글수 */}
+
           {/* 내 게시물이 아닌경우에만 좋아요 버튼 보여주기 */}
           {userId !== post.userId && (
             <button
@@ -112,7 +135,6 @@ function MateBoardDetail(props) {
                 isLiked ? "bg-pink-600" : "bg-pink-400"
               } text-white active:bg-emerald-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
               type="button"
-              disabled={isLiked}
               onClick={handleLike}
             >
               <FontAwesomeIcon icon={faHeart} className="mr-2" />

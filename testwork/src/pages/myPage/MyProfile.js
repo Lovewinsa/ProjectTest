@@ -1,18 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { shallowEqual, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faPersonCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import "../../css/MyProfile.css";
 import FollowerFolloweeModal from "../../components/FollowerFolloweeModal";
-import BlockModal from "../../components/BlockModal";
 
 function MyProfile(props) {
   // to do : cur_location, rating, last_login
   const { id } = useParams(); // 프로필 사용자의 id
   const userId = useSelector((state) => state.userData.id, shallowEqual); // 접속된 사용자의 id
   const nickname = useSelector((state) => state.userData.nickname, shallowEqual); // 접속된 사용자의 nickname
+  // 접족된 사용자와 profile 의 사용자가 같은지
   const [isProfileOwner, setProfileOwner] = useState(false);
 
   const navigate = useNavigate();
@@ -28,9 +28,6 @@ function MyProfile(props) {
   //프로필 토글 관리
   const dropdownMenuRef = useRef();
 
-  // 차단 상태 관린
-  const [blockStatus, setBlockStatue] = useState(false);
-
   // 리뷰 작성 관련
   const [userReview, setUserReview] = useState({
     reviewerId: id,
@@ -42,8 +39,9 @@ function MyProfile(props) {
   // 팔로잉/팔로워 모달 상태관리
   const [isModalOpen, setModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState();
-  // 차단 목록 모달 상태 관리
-  const [isBlockModalOpen, setBlockModalOpen] = useState(false);
+
+  // 차단 상태 관린
+  const [blockStatus, setBlockStatue] = useState(false);
 
   // 버튼 스타일 - 신청 전/후 색상 변경
   const followButtonClasses = `px-4 py-2 text-sm font-medium rounded-md ${
@@ -58,14 +56,16 @@ function MyProfile(props) {
       .get(`/api/v1/users/${id}`)
       .then((res) => {
         //불러온 사용자의 정보 저장
-        setProfile(res.data);
+        setProfile(res.data.userProfileInfo);
         console.log(res.data);
+
         //불러온 사용자의 정보에 프로필 사진이 있다면 imageData 에 설정
-        if (res.data.profilePicture) {
-          setImageData(res.data.profilePicture);
+        if (res.data.userProfileInfo.profilePicture) {
+          setImageData(res.data.userProfileInfo.profilePicture);
         }
-        // 접속된 사용자의 정보가 있고,
-        if (userId === res.data.userId) {
+
+        // 접속된 사용자와 프로필 사용자의 id 가 같으면 Owner = true
+        if (userId === res.data.userProfileInfo.userId) {
           setProfileOwner(true);
         }
       })
@@ -89,14 +89,6 @@ function MyProfile(props) {
     setModalOpen(false);
   };
 
-  // 차단 목록 모달 open
-  const handleOpenBlockModal = () => {
-    setBlockModalOpen(true);
-  };
-  // 차단 목록 모달 close
-  const handleCloseBlockModal = () => {
-    setBlockModalOpen(false);
-  };
   // 토스트 메세지
   const toastOn = () => {
     toastMessageRef.current.classList.add("active");
@@ -111,7 +103,7 @@ function MyProfile(props) {
       // 차단 중이지 않은 경우 (blockStatus = false)
       if (window.confirm(`${profile.nickname}님을 차단하시겠습니까?`)) {
         axios
-          .post(`/api/v1/users/${id}/block/${userId}`)
+          .post(`/api/v1/users/${userId}/block/${id}`)
           .then((res) => {
             console.log(res.data);
             setBlockStatue(true);
@@ -123,7 +115,7 @@ function MyProfile(props) {
       // 차단 중인 경우 (blockStatus = true)
       if (window.confirm(`차단을 해제하시겠습니까?`)) {
         axios
-          .post(`/api/v1/users/${id}/block/${userId}`)
+          .post(`/api/v1/users/${userId}/block/${id}`)
           .then((res) => {
             console.log(res.data);
             setBlockStatue(false);
@@ -211,12 +203,15 @@ function MyProfile(props) {
 
   return (
     <>
+    {
+      isProfileOwner &&
       <button
         type="button"
         className="mb-20 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
-      >
-        <Link to={`/users/${id}`}>마이 페이지</Link>
+        onClick={()=>{navigate(`/users/${id}`)}}
+      >마이 페이지
       </button>
+    }
       {/* 전체 div */}
       <div className="flex-col">
         {blockStatus && (
@@ -228,10 +223,8 @@ function MyProfile(props) {
 
         {/* 프로필 부분 전체 */}
         <div className="relative flex-col ">
-
           {/* 세로로 가운데, 아이템들 수평 간격 6px 마진 3  */}
           <div className="flex items-center gap-x-6 m-3 justify-center">
-
             {/* 프로필 이미지 핸들링 */}
             {imageData ? (
               <img src={imageData} className="w-20 h-20 rounded-full" alt="" />
@@ -288,50 +281,49 @@ function MyProfile(props) {
               </div>
             )}
             {/* Toggle 버튼 (신고/차단) 프로필 주인이 아닐시에만 랜더링*/}
-            {
-              !isProfileOwner &&
+            {!isProfileOwner && (
               <div className="flex items-center dropdown-wrapper">
-              <button
-                onClick={handleClickToggle}
-                data-dropdown-toggle="dropdownDots"
-                className="dropdown-button inline-flex items-center p-2 text-sm font-medium text-center text-gray-600 bg-white rounded-lg hover:bg-gray-100 focus:ring-1focus:outline-none focus:ring-gray-50"
-                type="button"
+                <button
+                  onClick={handleClickToggle}
+                  data-dropdown-toggle="dropdownDots"
+                  className="dropdown-button inline-flex items-center p-2 text-sm font-medium text-center text-gray-600 bg-white rounded-lg hover:bg-gray-100 focus:ring-1focus:outline-none focus:ring-gray-50"
+                  type="button"
                 >
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  viewBox="0 0 4 15"
-                >
-                  <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-                </svg>
-              </button>
+                  <svg
+                    className="w-5 h-5"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor"
+                    viewBox="0 0 4 15"
+                  >
+                    <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                  </svg>
+                </button>
 
-              <div
-                id="dropdownDots"
-                ref={dropdownMenuRef}
-                className="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-40 dropdown-inner"
-              >
-                <div className="py-2 text-sm text-gray-700" aria-labelledby="dropdownMenuIconButton">
-                  <p onClick={handleCopy} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                    프로필 링크
-                  </p>
-                  <p onClick={handleBlock} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                    {!blockStatus ? (
-                      <>차단</>
-                    ) : (
-                      <>
-                        <FontAwesomeIcon icon={faCheck} />
-                        차단됨
-                      </>
-                    )}
-                  </p>
-                  <p className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">신고</p>
+                <div
+                  id="dropdownDots"
+                  ref={dropdownMenuRef}
+                  className="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-40 dropdown-inner"
+                >
+                  <div className="py-2 text-sm text-gray-700" aria-labelledby="dropdownMenuIconButton">
+                    <p onClick={handleCopy} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                      프로필 링크
+                    </p>
+                    <p onClick={handleBlock} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                      {!blockStatus ? (
+                        <>차단</>
+                      ) : (
+                        <>
+                          <FontAwesomeIcon icon={faCheck} />
+                          차단됨
+                        </>
+                      )}
+                    </p>
+                    <p className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">신고</p>
+                  </div>
                 </div>
               </div>
-            </div>
-        }
+            )}
           </div>
 
           {/* 팔로우/팔로우 카운트 뷰 + 팝업 페이지 */}
@@ -352,10 +344,9 @@ function MyProfile(props) {
             </button>
           </div>
         </div>
-        
+
         {/* MODAL */}
         {isModalOpen && <FollowerFolloweeModal id={id} ff={modalTab} onClose={handleCloseModal} />}
-        {isBlockModalOpen && <BlockModal id={id} onClose={handleCloseBlockModal} />}
 
         {/* sns 아이콘 */}
         <div className="mt-3 flex justify-center">
@@ -374,7 +365,11 @@ function MyProfile(props) {
           </a>
           <span> {profile.socialLinks} </span>
 
-          <a className="ml-5 h-8 w-8 rounded-full outline-none focus:outline-none" type="button" href={profile.socialLinks}>
+          <a
+            className="ml-5 h-8 w-8 rounded-full outline-none focus:outline-none"
+            type="button"
+            href={profile.socialLinks}
+          >
             <svg
               className="fill-current transition duration-700 ease-in-out text-gray-700 hover:text-green-600"
               role="img"
@@ -423,21 +418,6 @@ function MyProfile(props) {
             </div>
           </form>
         </div>
-
-        {/* 페이지의 정보를 가진 username 과 로그인된 username 이 같으면 ... */}
-        {isProfileOwner && (
-          <div className="mt-20">
-            <p className=" cursor-pointer" onClick={handleOpenBlockModal}>
-              <strong>차단 목록</strong>
-            </p>
-            <p>
-              <strong>보안</strong>
-            </p>
-            <p>로그인 기록</p>
-            <p>내 활동 기록</p>
-            <p>회원 탈퇴</p>
-          </div>
-        )}
       </div>
     </>
   );
