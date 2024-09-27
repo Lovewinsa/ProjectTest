@@ -17,10 +17,7 @@ const CourseBoardEditForm = () => {
     const [tagInput, setTagInput] = useState("")
     const [postTags, setPostTags] = useState([])
     const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
-    //카카오 지도의 중심 좌표를 저장하는 상태값
-    const [kakaoMapCenterLocation, setKakaoMapCenterLocation] = useState(null)
-    //구글 지도의 중심 좌표를 저장하는 상태값
-    const [googleMapCenterLocation, setGoogleMapCenterLocation] = useState(null)
+    
     const [selectedDayIndex, setSelectedDayIndex] = useState(null)
     const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
     const [savedPlaces, setSavedPlaces] = useState([])
@@ -62,13 +59,11 @@ const CourseBoardEditForm = () => {
                 setPostTags(tags)
                 setDays(postData)
 
-
             })
             .catch((error) => console.log(error))
     }, [id]);
 
     const handleSubmit = () => {
-        const tags = postTags
         const post = {
             userId,
             writer: nickname,
@@ -76,7 +71,7 @@ const CourseBoardEditForm = () => {
             title,
             country,
             city,
-            tags,
+            tags : postTags,
             postData: days,
             status: "PUBLIC"
         };
@@ -322,7 +317,9 @@ const CourseBoardEditForm = () => {
                             {day.places.map((place, placeIndex) => (
                                 <div key={placeIndex} className="mb-4">
                                     <div className="flex items-center space-x-2">
-                                        <span className="w-20">{placeIndex + 1}번 장소</span>
+                                        <span className="w-20">
+                                        {placeIndex + 1}번 장소: {place.place_name || "장소 없음"}
+                                        </span>
                                         <button
                                             type="button"
                                             className="text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-4 py-2.5 text-center"
