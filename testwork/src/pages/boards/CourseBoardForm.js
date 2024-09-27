@@ -1,12 +1,13 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
 import { shallowEqual, useSelector } from "react-redux";
+import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent";
 
 
 const CourseBoardForm = () => {
-  
+
   const userId = useSelector((state) => state.userData.id, shallowEqual);
   const nickname = useSelector((state) => state.userData.nickname, shallowEqual);
   const username = useSelector((state) => state.userData.username, shallowEqual);
@@ -46,6 +47,10 @@ const CourseBoardForm = () => {
 
   const [isSelectPlace, setIsSelectPlace] = useState(false);
 
+  //검색 키워드, 국내외 관련 처리
+  const [searchParams] = useSearchParams()
+  const domesticInternational = searchParams.get("di")
+
   const navigate = useNavigate();
 
   useEffect(() => { }, []);
@@ -54,7 +59,7 @@ const CourseBoardForm = () => {
 
     const post = {
       userId,
-      writer: nickname, 
+      writer: nickname,
       type: "COURSE",
       title,
       country,
@@ -406,12 +411,23 @@ const CourseBoardForm = () => {
                 &times;
               </div>
             </div>
-            <CourseKakaoMapComponent
-              onSave={handleSavePlace}
-              selectedDayIndex={selectedDayIndex}
-              selectedPlaceIndex={selectedPlaceIndex}
-              isSelectPlace={isSelectPlace}
-            />
+            {
+              domesticInternational === "Domestic" ?
+                <CourseKakaoMapComponent
+                  onSave={handleSavePlace}
+                  selectedDayIndex={selectedDayIndex}
+                  selectedPlaceIndex={selectedPlaceIndex}
+                  isSelectPlace={isSelectPlace}
+                />
+                :
+                <CourseGoogleMapComponent
+                  onSave={handleSavePlace}
+                  selectedDayIndex={selectedDayIndex}
+                  selectedPlaceIndex={selectedPlaceIndex}
+                  isSelectPlace={isSelectPlace}
+                />
+            }
+
           </div>
         </div>
       )}

@@ -59,7 +59,6 @@ const CourseBoardDetail = () => {
   //Confirm 모달을 띄울지 여부를 상태값으로 관리
   const [confirmShow, setConfirmShow] = useState(false)
   //action 발행하기 위해
-  const dispatch = useDispatch()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -94,7 +93,7 @@ const CourseBoardDetail = () => {
         if (!resUserId) {
           throw new Error("게시물 작성자의 정보가 없습니다.")
         }
-        
+
 
         return axios
           .get(`/api/v1/users/${resUserId}`)
@@ -181,6 +180,11 @@ const CourseBoardDetail = () => {
       alert("로그인을 해주세요")
     }
   }
+
+  //맵에 전달할 장소정보 하나로 모으기
+  const allPlaces = post.postData && post.postData.length > 0
+    ? post.postData.reduce((acc, day) => acc.concat(day.places), [])
+    : []
 
   // 답글 텍스트 상태 업데이트
   const handleReplyTextChange = (index, value) => {
@@ -497,35 +501,38 @@ const CourseBoardDetail = () => {
         </div>
 
         {/* Day 목록 */}
-        <div className="space-y-6 mt-6 mb-6">
-          {(post.postData || [{ dayMemo: "", places: [{ place_name: "", placeMemo: "" }] }]).map((day, dayIndex) => (
-            <div key={dayIndex} className="border p-4 rounded-lg bg-white shadow">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-6">
+          {(post.postData || [{ dayMemo: "", places: [] }]).map((day, dayIndex) => (
+            <div key={dayIndex} className="bg-white rounded-lg shadow-md p-4">
               <h2 className="text-xl font-semibold mb-4">Day {dayIndex + 1}</h2>
               <div className="mb-4">
                 <label className="block font-semibold">Day Memo</label>
-                <p className="border p-2 w-3/4 bg-white">{day.dayMemo || "메모가 없습니다"}</p>
+                <p className="border p-2 w-3/4 bg-gray-100">{day.dayMemo || "메모가 없습니다"}</p>
               </div>
-              {
-              
-              (day.places || [{ place_name: "", placeMemo: "" }]).map((place, placeIndex) => (
-                
-                <div key={placeIndex} className="mb-4">
-                  <h3 className="font-semibold mb-2">{placeIndex + 1}번 장소</h3>
-                  {
-                    domesticInternational === "Domestic" ?
-                    <SavedPlacesKakaoMapComponent savedPlaces={day.places} />
-                    :
-                    <SavedPlacesGoogleMapComponent savedPlaces={day.places} />
-                  }
-                  {/* <SavedPlacesKakaoMapComponent savedPlaces={day.places} /> */}
-                  <p className="border p-2 w-full bg-white mb-2">{place.place_name || "장소명이 없습니다"}</p>
-                  <label className="block font-semibold">장소 메모</label>
-                  <p className="border p-2 w-full bg-white">{place.placeMemo || "메모가 없습니다"}</p>
-                </div>
-              ))}
+              {day.places && day.places.length > 0 ? (
+                day.places.map((place, placeIndex) => (
+                  <div key={placeIndex} className="mb-4 border rounded-lg p-2 bg-gray-50">
+                    <h3 className="font-semibold mb-2">{placeIndex + 1}번 장소</h3>
+                    <p className="border p-2 w-full bg-white mb-2">{place.place_name || "장소명이 없습니다"}</p>
+                    <label className="block font-semibold">장소 메모</label>
+                    <p className="border p-2 w-full bg-white">{place.placeMemo || "메모가 없습니다"}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">장소가 없습니다.</p>
+              )}
             </div>
           ))}
+          
         </div>
+        <div>
+            {
+              domesticInternational === "Domestic" ?
+                <SavedPlacesKakaoMapComponent savedPlaces={allPlaces} />
+                :
+                <SavedPlacesGoogleMapComponent savedPlaces={allPlaces} />
+            }
+          </div>
 
 
         {/* 원글의 댓글 작성 form */}
