@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 
-const SavedPlacesMapComponent = ({ savedPlaces }) => {
+const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
   const mapRef = useRef(null)
   const [map, setMap] = useState(null)
   const [markers, setMarkers] = useState([])
 
   useEffect(() => {
-
     const initializeMap = () => {
       if (!window.kakao || !window.kakao.maps) {
         console.error("Kakao Maps API is not loaded.")
@@ -75,6 +74,14 @@ const SavedPlacesMapComponent = ({ savedPlaces }) => {
     }
   }, [map, savedPlaces])
 
+  useEffect(() => {
+    // centerLocation이 업데이트될 때마다 지도 중심 이동
+    if (map && centerLocation) {
+      const { Ma, La } = centerLocation;
+      const newCenter = new window.kakao.maps.LatLng(Ma, La);
+      map.setCenter(newCenter);
+    }
+  }, [map, centerLocation]);
 
   return (
     <div className="flex flex-col w-full h-full">

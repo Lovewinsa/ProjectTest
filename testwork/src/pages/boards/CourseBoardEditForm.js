@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
 import { shallowEqual, useSelector } from "react-redux";
+import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent";
 
 
 const CourseBoardEditForm = () => {
@@ -14,9 +15,12 @@ const CourseBoardEditForm = () => {
     const [country, setCountry] = useState("")
     const [city, setCity] = useState("")
     const [tagInput, setTagInput] = useState("")
-    const [postTags, setTags] = useState([])
+    const [postTags, setPostTags] = useState([])
     const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
-    const [postType, setPostType] = useState("")
+    //카카오 지도의 중심 좌표를 저장하는 상태값
+    const [kakaoMapCenterLocation, setKakaoMapCenterLocation] = useState(null)
+    //구글 지도의 중심 좌표를 저장하는 상태값
+    const [googleMapCenterLocation, setGoogleMapCenterLocation] = useState(null)
     const [selectedDayIndex, setSelectedDayIndex] = useState(null)
     const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
     const [savedPlaces, setSavedPlaces] = useState([])
@@ -48,24 +52,27 @@ const CourseBoardEditForm = () => {
 
     useEffect(() => {
         // 기존 게시물 데이터를 가져와 초기화
-        axios.get(`/api/v1/posts/course/${id}`)
+        axios.get(`/api/v1/posts/${id}/update`)
             .then((res) => {
+                console.log(res.data.postData)
                 const { title, country, city, tags, postData } = res.data
                 setTitle(title)
                 setCountry(country)
                 setCity(city)
-                setTags(tags.split(", "))
+                setPostTags(tags)
                 setDays(postData)
+
+
             })
             .catch((error) => console.log(error))
     }, [id]);
 
     const handleSubmit = () => {
-        const tags = postTags.join(", ");
+        const tags = postTags
         const post = {
             userId,
-            writer:nickname,
-            type:"COURSE",
+            writer: nickname,
+            type: "COURSE",
             title,
             country,
             city,
@@ -74,12 +81,11 @@ const CourseBoardEditForm = () => {
             status: "PUBLIC"
         };
 
-        axios.put(`/api/v1/posts/course/${id}`, post)  // PUT 요청으로 업데이트
+        axios.put(`/api/v1/posts/${id}`, post)  // PUT 요청으로 업데이트
             .then((res) => {
-                console.log(res.data)
                 alert("수정했습니다")
                 // 업데이트 후 해당글 자세히보기로 이동
-                navigate(`/posts/course/${id}`);
+                navigate(`/posts/course/${id}/detail`);
             })
             .catch((error) => console.log(error));
     };
@@ -90,13 +96,13 @@ const CourseBoardEditForm = () => {
         if (value.endsWith(" ") && value.trim() !== "") {
             const newTag = value.trim();
             if (newTag !== "#" && newTag.startsWith("#") && !postTags.includes(newTag)) {
-                setTags([...postTags, newTag]);
+                setPostTags([...postTags, newTag]);
                 setTagInput("");
             }
         }
     };
 
-    const removeTag = (tagToRemove) => setTags(postTags.filter((tag) => tag !== tagToRemove));
+    const removeTag = (tagToRemove) => setPostTags(postTags.filter((tag) => tag !== tagToRemove));
 
     const addDay = () => setDays([...days, { places: [""], dayMemo: "" }]);
 
@@ -157,105 +163,106 @@ const CourseBoardEditForm = () => {
     };
 
     return (
-        <div className="container">
-            {/* Travel course editing form */}
-            <div className="flex flex-col h-screen bg-gray-100 p-6 overflow-auto">
-                <div className="flex justify-between items-center mb-2">
-                    <h1 className="text-2xl font-bold mb-4">여행 코스 수정</h1>
+        <div className="container mx-auto p-6 max-w-[900px]">
+            <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-3xl font-semibold text-gray-800">여행 코스 수정</h1>
                     <button
                         onClick={() => navigate("/posts/course")}
-                        className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+                        className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
                         목록으로 돌아가기
                     </button>
                     <button
-                        className="text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-5 py-2.5 text-center"
+                        className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
                         onClick={handleSubmit}>
                         수정 완료
                     </button>
                 </div>
+
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="title" className="block font-semibold">
+                        <label htmlFor="title" className="block text-lg font-medium text-gray-700">
                             제목
                         </label>
                         <input
-                            className="border p-2 w-1/2"
+                            className="border-gray-300 rounded-md p-2 w-full"
                             type="text"
                             id="title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
                     </div>
-                    {/* 나라와 도시 선택 */}
-                    <div>
-                        <label htmlFor="country" className="block font-semibold">
-                            여행할 나라
-                        </label>
-                        <select
-                            className="border p-2 w-1/4"
-                            id="country"
-                            value={country}
-                            onChange={(e) => {
-                                setCountry(e.target.value);
-                                setCity("");  // 도시 초기화
-                            }}
-                        >
-                            <option value="">나라를 선택하세요</option>
 
-                            <optgroup label="아시아">
-                                <option value="Korea">대한민국</option>
-                                <option value="Japan">일본</option>
-                                <option value="China">중국</option>
-                                <option value="India">인도</option>
-                            </optgroup>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label htmlFor="country" className="block text-lg font-medium text-gray-700">
+                                나라
+                            </label>
+                            <select
+                                className="border-gray-300 rounded-md p-2 w-full"
+                                id="country"
+                                value={country}
+                                onChange={(e) => {
+                                    setCountry(e.target.value);
+                                    setCity("");
+                                }}>
+                                <option value="">나라를 선택하세요</option>
+                                <optgroup label="아시아">
+                                    <option value="Korea">대한민국</option>
+                                    <option value="Japan">일본</option>
+                                    <option value="China">중국</option>
+                                    <option value="India">인도</option>
+                                </optgroup>
 
-                            <optgroup label="유럽">
-                                <option value="UK">영국</option>
-                                <option value="Germany">독일</option>
-                                <option value="France">프랑스</option>
-                                <option value="Italy">이탈리아</option>
-                            </optgroup>
+                                <optgroup label="유럽">
+                                    <option value="UK">영국</option>
+                                    <option value="Germany">독일</option>
+                                    <option value="France">프랑스</option>
+                                    <option value="Italy">이탈리아</option>
+                                </optgroup>
 
-                            <optgroup label="북아메리카">
-                                <option value="USA">미국</option>
-                                <option value="Canada">캐나다</option>
-                            </optgroup>
+                                <optgroup label="북아메리카">
+                                    <option value="USA">미국</option>
+                                    <option value="Canada">캐나다</option>
+                                </optgroup>
 
-                            <optgroup label="남아메리카">
-                                <option value="Brazil">브라질</option>
-                            </optgroup>
+                                <optgroup label="남아메리카">
+                                    <option value="Brazil">브라질</option>
+                                </optgroup>
 
-                            <optgroup label="오세아니아">
-                                <option value="Australia">호주</option>
-                            </optgroup>
+                                <optgroup label="오세아니아">
+                                    <option value="Australia">호주</option>
+                                </optgroup>
 
-                            <optgroup label="기타">
-                                <option value="Russia">러시아</option>
-                                <option value="SouthAfrica">남아프리카 공화국</option>
-                            </optgroup>
-                        </select>
+                                <optgroup label="기타">
+                                    <option value="Russia">러시아</option>
+                                    <option value="SouthAfrica">남아프리카 공화국</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label htmlFor="city" className="block text-lg font-medium text-gray-700">
+                                도시
+                            </label>
+                            <select
+                                className="border-gray-300 rounded-md p-2 w-full"
+                                id="city"
+                                value={city}
+                                onChange={(e) => setCity(e.target.value)}
+                                disabled={!country}>
+                                <option value="">도시를 선택하세요</option>
+                                {cities.map((cityOption) => (
+                                    <option key={cityOption} value={cityOption}>
+                                        {cityOption}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
+
                     <div>
-                        <label htmlFor="city" className="block font-semibold">
-                            여행할 도시
-                        </label>
-                        <select
-                            className="border p-2 w-1/4"
-                            id="city"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            disabled={!country}  // 나라가 선택되지 않으면 비활성화
-                        >
-                            <option value="">도시를 선택하세요</option>
-                            {cities.map((cityOption) => (
-                                <option key={cityOption} value={cityOption}>
-                                    {cityOption}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label htmlFor="tags" className="block font-semibold">
+                        <label htmlFor="tags" className="block text-lg font-medium text-gray-700">
                             태그
                         </label>
                         <input
@@ -263,20 +270,16 @@ const CourseBoardEditForm = () => {
                             value={tagInput}
                             onChange={handleTagInput}
                             placeholder="#태그 입력 후 스페이스바"
-                            className="border p-2 w-1/3"
+                            className="border-gray-300 rounded-md p-2 w-full"
                         />
                         <div className="flex flex-wrap gap-2 mt-2">
                             {postTags.map((tag, index) => (
-                                <span
-                                    key={index}
-                                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center"
-                                >
+                                <span key={index} className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
                                     {tag}
                                     <button
-                                        className="ml-2 p-0 h-4 w-4 text-black flex items-center justify-center"
-                                        onClick={() => removeTag(tag)}
-                                    >
-                                        <span className="text-sm font-bold">&times;</span>
+                                        className="ml-2 text-gray-600 hover:text-gray-900"
+                                        onClick={() => removeTag(tag)}>
+                                        &times;
                                     </button>
                                 </span>
                             ))}
@@ -284,53 +287,57 @@ const CourseBoardEditForm = () => {
                     </div>
                 </div>
 
-                {/* Travel plan */}
-                <div className="space-y-6 mt-6">
+                <div className="mt-6 space-y-6">
                     {days.map((day, dayIndex) => (
-                        <div key={dayIndex} className="border p-4 rounded-lg bg-white shadow">
+                        <div key={dayIndex} className="bg-gray-50 p-4 rounded-lg shadow-inner">
                             <div className="flex justify-between items-center mb-2">
                                 <h2 className="text-xl font-semibold">Day {dayIndex + 1}</h2>
-                                <button
-                                    className={`text-white bg-red-600 hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${days.length === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
-                                    onClick={() => removeDay(dayIndex)}
-                                    disabled={days.length === 1}>
-                                    Day 삭제
-                                </button>
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={addDay}
+                                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                        Day 추가
+                                    </button>
+                                    <button
+                                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                                        onClick={() => removeDay(dayIndex)}>
+                                        Day 삭제
+                                    </button>
+                                </div>
                             </div>
-                            {/* Day Memo */}
+
                             <div className="mb-4">
-                                <label htmlFor={`dayMemo-${dayIndex}`} className="block font-semibold">
+                                <label htmlFor={`dayMemo-${dayIndex}`} className="block text-lg font-medium text-gray-700">
                                     Day Memo
                                 </label>
                                 <textarea
-                                    className="border p-2 w-3/4 h-32 resize-none"
+                                    className="border-gray-300 rounded-md p-2 w-full"
                                     id={`dayMemo-${dayIndex}`}
                                     value={day.dayMemo || ""}
                                     onChange={(e) => handleDayMemoChange(dayIndex, e.target.value)}
                                     placeholder="메모를 입력하세요..."
                                 />
                             </div>
-                            {/* Places */}
+
                             {day.places.map((place, placeIndex) => (
-                                <div key={placeIndex}>
-                                    <div className="flex items-center space-x-2 mb-2">
+                                <div key={placeIndex} className="mb-4">
+                                    <div className="flex items-center space-x-2">
                                         <span className="w-20">{placeIndex + 1}번 장소</span>
                                         <button
                                             type="button"
                                             className="text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-4 py-2.5 text-center"
-                                            onClick={() => handlePlaceSelection(dayIndex, placeIndex)}
-                                        >
+                                            onClick={() => handlePlaceSelection(dayIndex, placeIndex)}>
                                             장소 선택
                                         </button>
                                         <div className="flex-grow flex items-center">
                                             <input
                                                 value={place.place_name || ""}
-                                                className="flex-grow border p-2"
+                                                className="flex-grow border-gray-300 rounded-md p-2"
                                                 disabled
                                             />
-                                            <div className="w-1/4 ml-2">
+                                            <div className="ml-2 w-1/4">
                                                 <button
-                                                    className={`text-white bg-red-600 hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                    className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
                                                     onClick={() => removePlace(dayIndex, placeIndex)}
                                                     disabled={day.places.length === 1}>
                                                     삭제
@@ -339,20 +346,11 @@ const CourseBoardEditForm = () => {
                                         </div>
                                     </div>
                                     <div className="mb-2">
-                                        {postType === "" && (
-                                            <>
-                                                <label htmlFor="inputImages" className="text-sm">
-                                                    이미지 추가
-                                                </label>
-
-                                                <input type="file" name="inputImages" id="inputImages" />
-                                            </>
-                                        )}
-                                        <label htmlFor={`placeMemo-${dayIndex}-${placeIndex}`} className="text-sm">
+                                        <label htmlFor={`placeMemo-${dayIndex}-${placeIndex}`} className="text-sm text-gray-700">
                                             장소 메모
                                         </label>
                                         <input
-                                            className="flex-grow border p-2 w-full"
+                                            className="border-gray-300 rounded-md p-2 w-full"
                                             type="text"
                                             id={`placeMemo-${dayIndex}-${placeIndex}`}
                                             value={place.placeMemo || ""}
@@ -363,40 +361,43 @@ const CourseBoardEditForm = () => {
                             ))}
                             <button
                                 onClick={() => addPlace(dayIndex)}
-                                className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded">
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                                 장소 추가
                             </button>
                         </div>
                     ))}
-                    <button onClick={addDay} className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded">
-                        Day 추가
-                    </button>
                 </div>
             </div>
 
-            {/* 모달 팝업 */}
             {isSelectPlace && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-2/3 max-w-4xl" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
                         <div className="flex justify-between items-center mb-4">
-                            <div className="flex text-xl text-black-600 font-bold justify-center my-3">
-                                Day {selectedDayIndex + 1} : {selectedPlaceIndex + 1}번 장소 선택 중
-                            </div>
-
-                            <div
-                                onClick={() => setIsSelectPlace(false)} // Close modal
-                                className="text--600 cursor-pointer hover:text-red-800 text-3xl font-bold"
+                            <div className="text-xl font-bold">Day {selectedDayIndex + 1} : {selectedPlaceIndex + 1}번 장소 선택 중</div>
+                            <button
+                                onClick={() => setIsSelectPlace(false)}
+                                className="text-red-600 hover:text-red-800 text-3xl font-bold"
                                 aria-label="Close"
                             >
                                 &times;
-                            </div>
+                            </button>
                         </div>
-                        <CourseKakaoMapComponent
-                            onSave={handleSavePlace}
-                            selectedDayIndex={selectedDayIndex}
-                            selectedPlaceIndex={selectedPlaceIndex}
-                            isSelectPlace={isSelectPlace}
-                        />
+
+                        {country === "Korea" ? (
+                            <CourseKakaoMapComponent
+                                onSave={handleSavePlace}
+                                selectedDayIndex={selectedDayIndex}
+                                selectedPlaceIndex={selectedPlaceIndex}
+                                isSelectPlace={isSelectPlace}
+                            />
+                        ) : (
+                            <CourseGoogleMapComponent
+                                onSave={handleSavePlace}
+                                selectedDayIndex={selectedDayIndex}
+                                selectedPlaceIndex={selectedPlaceIndex}
+                                isSelectPlace={isSelectPlace}
+                            />
+                        )}
                     </div>
                 </div>
             )}

@@ -67,10 +67,10 @@ function MateBoardDetail(props) {
         .then((res) => {
           setLiked(true);
           //view 페이지에서만 숫자 변경
-          setPost({
-            ...post,
-            likeCount: post.likeCount + 1,
-          });
+          setPost((prevPost) => ({
+            ...prevPost,
+            likeCount: prevPost.likeCount + 1,
+          }))
           setLikeId(res.data)
         })
         .catch((error) => {
