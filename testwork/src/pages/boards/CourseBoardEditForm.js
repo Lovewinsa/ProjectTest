@@ -11,13 +11,27 @@ const CourseBoardEditForm = () => {
     const nickname = useSelector((state) => state.userData.nickname, shallowEqual)
     const username = useSelector((state) => state.userData.username, shallowEqual)
 
-    const [title, setTitle] = useState("")
-    const [country, setCountry] = useState("")
-    const [city, setCity] = useState("")
-    const [tagInput, setTagInput] = useState("")
-    const [postTags, setPostTags] = useState([])
-    const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
-    
+    // postInfo 하나의 state로 통합 관리
+    const [postInfo, setPostInfo] = useState({
+        id: "",
+        userId: "",
+        writer: "",
+        type: "COURSE",
+        title: "",
+        postData: [{ places: [], dayMemo: "" }],
+        country: "",
+        city: "",
+        tags: [],
+        status: "PUBLIC"
+    })
+
+    // const [title, setTitle] = useState("")
+    // const [country, setCountry] = useState("")
+    // const [city, setCity] = useState("")
+    // const [tagInput, setTagInput] = useState("")
+    // const [postTags, setPostTags] = useState([])
+    // const [postData, setPostData] = useState([{ places: [""], dayMemo: "" }])
+
     const [selectedDayIndex, setSelectedDayIndex] = useState(null)
     const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
     const [savedPlaces, setSavedPlaces] = useState([])
@@ -45,38 +59,21 @@ const CourseBoardEditForm = () => {
         // Add more countries and cities as needed
     }
 
-    const cities = citiesByCountry[country] || []
+    const cities = citiesByCountry[postInfo.country] || []
 
     useEffect(() => {
         // 기존 게시물 데이터를 가져와 초기화
         axios.get(`/api/v1/posts/${id}/update`)
             .then((res) => {
-                console.log(res.data.postData)
-                const { title, country, city, tags, postData } = res.data
-                setTitle(title)
-                setCountry(country)
-                setCity(city)
-                setPostTags(tags)
-                setDays(postData)
-
+                console.log(res.data)
+                setPostInfo(res.data)
+                // setPostTags(res.data.tags)
             })
             .catch((error) => console.log(error))
     }, [id]);
 
     const handleSubmit = () => {
-        const post = {
-            userId,
-            writer: nickname,
-            type: "COURSE",
-            title,
-            country,
-            city,
-            tags : postTags,
-            postData: days,
-            status: "PUBLIC"
-        };
-
-        axios.put(`/api/v1/posts/${id}`, post)  // PUT 요청으로 업데이트
+        axios.put(`/api/v1/posts/${id}`, postInfo)  // PUT 요청으로 업데이트
             .then((res) => {
                 alert("수정했습니다")
                 // 업데이트 후 해당글 자세히보기로 이동
@@ -87,37 +84,65 @@ const CourseBoardEditForm = () => {
 
     const handleTagInput = (e) => {
         const value = e.target.value;
-        setTagInput(value);
         if (value.endsWith(" ") && value.trim() !== "") {
-            const newTag = value.trim();
-            if (newTag !== "#" && newTag.startsWith("#") && !postTags.includes(newTag)) {
-                setPostTags([...postTags, newTag]);
-                setTagInput("");
+            const newTag = value.trim()
+            if (newTag !== "#" && newTag.startsWith("#") && !postInfo.tags.includes(newTag)) {
+                setPostInfo((prev) => ({
+                    ...prev,
+                    tags: [...prev.tags, newTag]
+                }))
             }
         }
     };
 
-    const removeTag = (tagToRemove) => setPostTags(postTags.filter((tag) => tag !== tagToRemove));
+    const removeTag = (tagToRemove) => {
+        setPostInfo((prev) => ({
+            ...prev,
+            tags: prev.tags.filter((tag) => tag !== tagToRemove)
+        }))
+    }
 
-    const addDay = () => setDays([...days, { places: [""], dayMemo: "" }]);
+    const addDay = () => {
+        setPostInfo((prev) => ({
+            ...prev,
+            postData: [...prev.postData, { places: [{ place_name: "", placeMemo: "" }], dayMemo: "" }]
+        }));
+    };
 
     const removeDay = (dayIndex) => {
-        if (days.length > 1) {
-            setDays(days.filter((_, index) => index !== dayIndex));
+        if (postInfo.postData.length > 1) {
+            setPostInfo((prev) => ({
+                ...prev,
+                postData: prev.postData.filter((_, index) => index !== dayIndex)
+            }))
         }
-    };
+    }
 
     const addPlace = (dayIndex) => {
-        const newDays = [...days];
-        newDays[dayIndex].places.push("");
-        setDays(newDays);
-    };
+        const newDays = [...postInfo.postData]
+        newDays[dayIndex].places.push("")
+        setPostInfo((prev) => ({
+            ...prev,
+            postData: newDays
+        }))
+    }
 
     const removePlace = (dayIndex, placeIndex) => {
-        const newDays = [...days];
-        newDays[dayIndex].places.splice(placeIndex, 1);
-        setDays(newDays);
-    };
+        const newDays = [...postInfo.postData]
+
+        if(newDays[dayIndex].places.length > 1){
+            // 장소 데이터가 2개 이상일 때 UI와 장소 데이터를 모두 삭제
+            newDays[dayIndex].places.splice(placeIndex, 1)
+        } else {
+            // 장소 데이터가 1개일 때 UI는 남기고 장소 데이터만 삭제
+            newDays[dayIndex].places[placeIndex] = ""
+        }
+        
+        setPostInfo((prev) => ({
+            ...prev,
+            postData: newDays
+        }))
+    }
 
     const handlePlaceSelection = (dayIndex, placeIndex) => {
         setSelectedDayIndex(dayIndex);
@@ -127,35 +152,43 @@ const CourseBoardEditForm = () => {
 
     const handleSavePlace = (place) => {
         if (place && isSelectPlace) {
-            const newDays = [...days];
-
-            const currentPlace = newDays[place.dayIndex].places[place.placeIndex];
+            const newDays = [...postInfo.postData]
+            const currentPlace = newDays[place.dayIndex].places[place.placeIndex]
             const updatedPlace = {
                 ...place,
-                placeMemo: currentPlace.placeMemo || "", // 기존 메모를 유지
-            };
+                placeMemo: currentPlace.placeMemo || "",
+            }
 
-            newDays[place.dayIndex].places[place.placeIndex] = updatedPlace;
-            setDays(newDays);
-            setSavedPlaces([...savedPlaces, updatedPlace]);
-            setIsSelectPlace(false);
+            newDays[place.dayIndex].places[place.placeIndex] = updatedPlace
+            setPostInfo((prev) => ({
+                ...prev,
+                postData: newDays
+            }))
+            setSavedPlaces([...savedPlaces, updatedPlace])
+            setIsSelectPlace(false)
         }
-    };
+    }
 
     const handlePlaceMemoChange = (dayIndex, placeIndex, memo) => {
-        const newDays = [...days];
+        const newDays = [...postInfo.postData]
         newDays[dayIndex].places[placeIndex] = {
             ...newDays[dayIndex].places[placeIndex],
             placeMemo: memo,
-        };
-        setDays(newDays);
-    };
+        }
+        setPostInfo((prev) => ({
+            ...prev,
+            postData: newDays
+        }))
+    }
 
     const handleDayMemoChange = (dayIndex, memo) => {
-        const newDays = [...days];
-        newDays[dayIndex].dayMemo = memo;
-        setDays(newDays);
-    };
+        const newDays = [...postInfo.postData]
+        newDays[dayIndex].dayMemo = memo
+        setPostInfo((prev) => ({
+            ...prev,
+            postData: newDays
+        }))
+    }
 
     return (
         <div className="container mx-auto p-6 max-w-[900px]">
@@ -183,8 +216,10 @@ const CourseBoardEditForm = () => {
                             className="border-gray-300 rounded-md p-2 w-full"
                             type="text"
                             id="title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
+                            value={postInfo.title}
+                            onChange={(e) =>
+                                setPostInfo((prev) => ({ ...prev, title: e.target.value }))
+                            }
                         />
                     </div>
 
@@ -196,11 +231,11 @@ const CourseBoardEditForm = () => {
                             <select
                                 className="border-gray-300 rounded-md p-2 w-full"
                                 id="country"
-                                value={country}
-                                onChange={(e) => {
-                                    setCountry(e.target.value);
-                                    setCity("");
-                                }}>
+                                value={postInfo.country}
+                                onChange={(e) =>
+                                    setPostInfo((prev) => ({ ...prev, country: e.target.value }))
+                                }
+                            >
                                 <option value="">나라를 선택하세요</option>
                                 <optgroup label="아시아">
                                     <option value="Korea">대한민국</option>
@@ -243,9 +278,11 @@ const CourseBoardEditForm = () => {
                             <select
                                 className="border-gray-300 rounded-md p-2 w-full"
                                 id="city"
-                                value={city}
-                                onChange={(e) => setCity(e.target.value)}
-                                disabled={!country}>
+                                value={postInfo.city}
+                                onChange={(e) =>
+                                    setPostInfo((prev) => ({ ...prev, city: e.target.value }))
+                                }
+                            >
                                 <option value="">도시를 선택하세요</option>
                                 {cities.map((cityOption) => (
                                     <option key={cityOption} value={cityOption}>
@@ -262,13 +299,13 @@ const CourseBoardEditForm = () => {
                         </label>
                         <input
                             id="tags"
-                            value={tagInput}
+                            value={""}
                             onChange={handleTagInput}
                             placeholder="#태그 입력 후 스페이스바"
                             className="border-gray-300 rounded-md p-2 w-full"
                         />
                         <div className="flex flex-wrap gap-2 mt-2">
-                            {postTags.map((tag, index) => (
+                            {postInfo.tags.map((tag, index) => (
                                 <span key={index} className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
                                     {tag}
                                     <button
@@ -283,7 +320,7 @@ const CourseBoardEditForm = () => {
                 </div>
 
                 <div className="mt-6 space-y-6">
-                    {days.map((day, dayIndex) => (
+                    {postInfo.postData.map((day, dayIndex) => (
                         <div key={dayIndex} className="bg-gray-50 p-4 rounded-lg shadow-inner">
                             <div className="flex justify-between items-center mb-2">
                                 <h2 className="text-xl font-semibold">Day {dayIndex + 1}</h2>
@@ -318,7 +355,7 @@ const CourseBoardEditForm = () => {
                                 <div key={placeIndex} className="mb-4">
                                     <div className="flex items-center space-x-2">
                                         <span className="w-20">
-                                        {placeIndex + 1}번 장소: {place.place_name || "장소 없음"}
+                                            {placeIndex + 1}번 장소: {place.place_name || "장소 없음"}
                                         </span>
                                         <button
                                             type="button"
@@ -334,9 +371,9 @@ const CourseBoardEditForm = () => {
                                             />
                                             <div className="ml-2 w-1/4">
                                                 <button
-                                                    className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                    className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                                                     onClick={() => removePlace(dayIndex, placeIndex)}
-                                                    disabled={day.places.length === 1}>
+                                                    disabled={day.places.length === 0}>
                                                     삭제
                                                 </button>
                                             </div>
@@ -355,6 +392,8 @@ const CourseBoardEditForm = () => {
                                         />
                                     </div>
                                 </div>
+
+
                             ))}
                             <button
                                 onClick={() => addPlace(dayIndex)}
@@ -380,12 +419,13 @@ const CourseBoardEditForm = () => {
                             </button>
                         </div>
 
-                        {country === "Korea" ? (
+                        {postInfo.country === "Korea" ? (
                             <CourseKakaoMapComponent
                                 onSave={handleSavePlace}
                                 selectedDayIndex={selectedDayIndex}
                                 selectedPlaceIndex={selectedPlaceIndex}
                                 isSelectPlace={isSelectPlace}
+
                             />
                         ) : (
                             <CourseGoogleMapComponent

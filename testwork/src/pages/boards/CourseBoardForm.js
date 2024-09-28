@@ -71,9 +71,6 @@ const CourseBoardForm = () => {
 
     axios.post("/api/v1/posts/course", post)
       .then((res) => {
-        console.log(res.data);
-        console.log(res.data.postData);
-        console.log(res.data.type);
         navigate("/posts/course");
       })
       .catch((error) => console.log(error));
@@ -121,7 +118,15 @@ const CourseBoardForm = () => {
 
   const removePlace = (dayIndex, placeIndex) => {
     const newDays = [...days];
-    newDays[dayIndex].places.splice(placeIndex, 1);
+    
+    if (newDays[dayIndex].places.length > 1) {
+      // 장소 데이터가 2개 이상일 때 UI와 장소 데이터를 모두 삭제
+      newDays[dayIndex].places.splice(placeIndex, 1);
+    } else {
+      // 장소 데이터가 1개일 때 UI는 남기고 장소 데이터만 삭제
+      newDays[dayIndex].places[placeIndex] = ""; // 빈 값으로 장소 데이터 삭제
+    }
+    
     setDays(newDays);
   };
 
@@ -335,9 +340,9 @@ const CourseBoardForm = () => {
                       />
                       <div className="ml-2 w-1/4">
                         <button
-                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
-                          onClick={() => removePlace(dayIndex, placeIndex)}
-                          disabled={day.places.length === 1}>
+                           className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                           onClick={() => removePlace(dayIndex, placeIndex)}
+                           disabled={day.places.length === 0}>
                           삭제
                         </button>
                       </div>

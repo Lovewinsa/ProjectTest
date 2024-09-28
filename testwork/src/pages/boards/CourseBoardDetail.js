@@ -154,6 +154,7 @@ const CourseBoardDetail = () => {
 
   //작성자 프로필 보기
   const handleViewProfile = () => {
+    console.log(writerProfile)
     navigate(`/users/${writerProfile.id}/profile`)
   }
 
