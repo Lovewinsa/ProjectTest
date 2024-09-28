@@ -15,28 +15,29 @@ function MateBoardForm(props) {
   const nickname = useSelector((state) => state.userData.nickname, shallowEqual);
   const username = useSelector((state) => state.userData.username, shallowEqual);
 
-  const [ domesticInternational, setDomesticInternational] = useState()
+  const [domesticInternational, setDomesticInternational] = useState();
   const [SearchParams, setSearchParams] = useSearchParams();
   const [post, setPost] = useState({}); // 게시물의 정보
-  
+
   const navigate = useNavigate();
-  
+
   //태그 관리
   const [tagInput, setTagInput] = useState("");
   const [postTags, setPostTags] = useState([]);
-  
+
   //테스트 데이터
   // const koreanRegion = ["제주도", "서울", "인천", "부산", "대전", "대구", "강원", "경기", "충북", "충남", "경북", "경남", "전북", "전남" ];
   const asianCountries = ["중국", "일본", "대만", "몽골", "라오스", "말레이시아", "베트남", "태국", "필리핀"];
   const europeanCountries = ["영국", "프랑스", "독일", "스페인", "포르투갈", "스위스", "벨기에", "네덜란드"];
-  
+
   //username 으로 로그인 여부 확인하여 로그인 하지 않으면 로그인 페이지로 넘기기
   useEffect(() => {
     username ?? navigate("/login");
   }, [username, navigate]);
-  
-  useEffect((post) => {
-    setDomesticInternational(SearchParams.get("di"))
+
+  useEffect(
+    (post) => {
+      setDomesticInternational(SearchParams.get("di"));
 
       if (domesticInternational) {
         setPost({
@@ -105,7 +106,7 @@ function MateBoardForm(props) {
   };
 
   return (
-    <>
+    <div className="container mx-auto p-4 max-w-[900px]">
       <NavLink
         to={{
           pathname: "/posts/mate",
@@ -220,10 +221,8 @@ function MateBoardForm(props) {
           ></FroalaEditor>
         </div>
       </div>
-      <button onClick={handleSubmit}>
-        제출
-      </button>
-    </>
+      <button onClick={handleSubmit}>제출</button>
+    </div>
   );
 }
 

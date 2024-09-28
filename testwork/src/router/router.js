@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
-
 import Home from "../pages/Home";
 import Sample from "../pages/Sample";
 import HomeAbroad from "../pages/HomeAbroad";
@@ -8,7 +7,6 @@ import Signup from "../pages/Signup";
 import Agreement from "../pages/Agreement";
 import LoginPage from "../pages/LoginPage";
 import LogoutPage from "../pages/LogoutPage";
-import MyPage from "../pages/myPage/MyPage";
 import MyProfile from "../pages/myPage/MyProfile";
 import MyProfileForm from "../pages/myPage/MyProfileForm";
 import CompletedSignup from "../pages/CompletedSignup";
@@ -38,6 +36,8 @@ import MyRecord from "../pages/myTripTmp/MyRecord"
 import WishMate from "../pages/myTripTmp/WishMate"
 import Alarm from "../pages/Alarm";
 import ChatRoom from "../components/ChatRoom";
+import ProtectedRoute from "../components/ProtectedRoute";
+import MyPage from "../pages/myPage/MyPage";
 
 
 const routes = [

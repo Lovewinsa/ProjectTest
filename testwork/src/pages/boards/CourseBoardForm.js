@@ -76,6 +76,17 @@ const CourseBoardForm = () => {
       .catch((error) => console.log(error));
   };
 
+  const test1 = () => {
+    console.log(days);
+    const jsonObject = {
+      title,
+      country,
+      city,
+      tags,
+      days,
+    };
+  };
+
   const handleTagInput = (e) => {
     const value = e.target.value;
     setTagInput(value);
@@ -245,8 +256,7 @@ const CourseBoardForm = () => {
                 id="city"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                disabled={!country} //나라가 선택되지 않으면 비활성화
-                >
+                disabled={!country}>
                 <option value="">도시를 선택하세요</option>
                 {cities.map((cityOption) => (
                   <option key={cityOption} value={cityOption}>
@@ -272,8 +282,7 @@ const CourseBoardForm = () => {
                   {tag}
                   <button
                     className="ml-2 text-gray-600 hover:text-gray-900"
-                    onClick={() => removeTag(tag)}
-                    >
+                    onClick={() => removeTag(tag)}>
                     &times;
                   </button>
                 </span>
@@ -340,16 +349,6 @@ const CourseBoardForm = () => {
                     </div>
                   </div>
                   <div className="mb-2">
-                  {postType === "" && (
-                      <>
-                        <label htmlFor="inputImages" className="text-sm">
-                          이미지 추가
-                        </label>
-
-                        <input type="file" name="inputImages" id="inputImages" />
-                      </>
-                    )}
-                    <div>
                     <label htmlFor={`placeMemo-${dayIndex}-${placeIndex}`} className="text-sm text-gray-700">
                       장소 메모
                     </label>
@@ -360,8 +359,6 @@ const CourseBoardForm = () => {
                       value={place.placeMemo || ""}
                       onChange={(e) => handlePlaceMemoChange(dayIndex, placeIndex, e.target.value)}
                     />
-                    </div>
-                    
                   </div>
                 </div>
               ))}

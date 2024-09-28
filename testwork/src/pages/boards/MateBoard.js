@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link, NavLink, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Calendar from "react-calendar"; 
 import 'react-calendar/dist/Calendar.css';
 
@@ -22,9 +22,8 @@ function MateBoard() {
     condition: "title", // 검색 옵션: 제목 또는 작성자
   });
 
-  // searchPrams 에 di 값이 있으면 그 값으로 없다면 Domestic 으로 설정
   // *이후에 di 값이 영향을 미치지는않지만 계속 남아있음
-  const [domesticInternational, setDomesticInternational] = useState("Domestic");
+  const [domesticInternational, setDomesticInternational] = useState();
   const [pageTurn, setPageTurn] = useState("to International");
   // 페이지 전환 버튼
   const [whereAreYou, setWhereAreYou] = useState(null);

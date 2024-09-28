@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { FaTrash } from 'react-icons/fa';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { useState } from 'react';
 
 const LOCAL_STORAGE_KEY = 'travelChecklist';
 const TRAVEL_DAYS_KEY = 'travelDays';
@@ -196,9 +197,11 @@ function TravelChecklist() {
                                     />
                                 </td>
                                 <td className="py-2 px-4">
-                                    <button onClick={() => handleDeleteItem(item.id)}>
-                                        <FaTrash />
-                                    </button>
+                                    <FontAwesomeIcon 
+                                        icon={faTrash}
+                                        onClick={() => handleDeleteItem(item.id)}
+                                        className="text-black-500 hover:text-black-700 cursor-pointer"
+                                    />
                                 </td>
                             </tr>
                         </React.Fragment>

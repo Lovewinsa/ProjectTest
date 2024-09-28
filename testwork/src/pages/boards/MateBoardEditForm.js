@@ -50,7 +50,7 @@ function MateBoardEditForm(props) {
   };
 
   return (
-    <>
+    <div className="container mx-auto p-4 max-w-[900px]">
       <Link to={`/posts/mate/${id}/detail`}>상세 페이지로</Link>
 
       <h3>{id} 번 게시물 수정 폼</h3>
@@ -86,7 +86,7 @@ function MateBoardEditForm(props) {
           수정
         </button>
       </form>
-    </>
+    </div>
   );
 }
 

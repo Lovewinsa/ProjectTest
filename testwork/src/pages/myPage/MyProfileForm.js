@@ -154,7 +154,7 @@ function MyProfileForm(props) {
     }
 
     axios
-      .put(`/api/v1/users/${id}`, formData, {
+      .put(`/api/v1/users/${id}/profile-info`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -207,11 +207,13 @@ function MyProfileForm(props) {
 
   // form 에서 전송되는 데이터 : profilePicture, profileMessage ,(email),(phoneNumber)
   return (
-    <>
+    <div className="container mx-auto p-4 max-w-[900px]">
       <h3>Profile Update Form</h3>
-      <button type="button" className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
-        <Link to={`/users/${id}/profile`}>돌아가기</Link>
-      </button>
+      <div>
+        <button type="button" className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600">
+          <Link to={`/users/${id}/profile`}>돌아가기</Link>
+        </button>
+      </div>
       <div className="isolate bg-white px-6 py-24 sm:py-32 lg:px-8">
         {/* 수정 폼 */}
         <form className="space-y-4">
@@ -408,7 +410,7 @@ function MyProfileForm(props) {
       <br />
       <br />
       <br />
-    </>
+    </div>
   );
 }
 

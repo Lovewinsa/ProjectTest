@@ -158,11 +158,23 @@ function LoginPage() {
             로그인
           </button>
         </div>
-        <img className="logo" alt="IconImage" src="/img/KakaoLogin.png" onClick={handleKakaoLogin} />
-        <button onClick={handleGoogleLogin}>구글 로그인</button>
-        <p>
-          회원가입 하지 않으셨다면
-          <Link as={NavLink} to="/agreement">
+        <div className="flex flex-col items-center space-y-4">
+          <img 
+            className="w-48 h-auto cursor-pointer" 
+            src="/img/KakaoLogin.png" 
+            alt="Kakao Login" 
+            onClick={handleKakaoLogin}
+          />
+          <img 
+            className="w-48 h-auto cursor-pointer" 
+            src="/img/GoogleLogin.png" 
+            alt="Google Login" 
+            onClick={handleGoogleLogin}
+          />
+        </div>
+        <p className="mt-6 text-center">
+          회원가입 하지 않으셨다면{" "}
+          <Link as={NavLink} to="/agreement" className="text-blue-500 hover:underline font-semibold">
             클릭
           </Link>
         </p>
