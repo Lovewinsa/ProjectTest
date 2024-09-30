@@ -107,7 +107,7 @@ const CourseBoardDetail = () => {
         //전체 댓글 페이지의 개수를 상태값으로 넣어주기
         setTotalPageCount(res.data.totalCommentPages)
 
-        console.log(postData.userId)
+        // console.log(postData.userId)
         //게시물 작성자의 정보
         const resUserId = postData.userId || null
         if (!resUserId) {
