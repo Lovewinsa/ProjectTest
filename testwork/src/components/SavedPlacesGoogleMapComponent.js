@@ -43,12 +43,13 @@ const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
 
   const displaySavedPlaces = () => {
     if (map && savedPlaces.length > 0) {
-      clearMarkers();
+      clearMarkers()
 
       const newMarkers = [];
       const newInfoWindows = [];
 
       savedPlaces.forEach((place) => {
+
         if (place.Ma !== undefined && place.La !== undefined) {
           const marker = new window.google.maps.Marker({
             position: { lat: place.Ma, lng: place.La },
@@ -86,20 +87,16 @@ const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
   }, [map, savedPlaces]);
 
   useEffect(() => {
-    // console.log(savedPlaces)
-    // console.log(centerLocation)
-
-    
     //map이 초기화되지 않았을 때는 바로 반환
-    if (!map) return;
+    if (!map) return
     // centerLocation이 업데이트될 때마다 지도 중심을 해당 위치로 이동
     if (map && centerLocation) {
-      const { Ma, La } = centerLocation;
-      const newCenter = new window.google.maps.LatLng(Ma, La);
+      const { Ma, La } = centerLocation
+      const newCenter = new window.google.maps.LatLng(Ma, La)
     //   console.log('New center location:', newCenter)
-      map.panTo(newCenter);
+      map.panTo(newCenter)
     }
-  }, [map, centerLocation]);
+  }, [map, centerLocation])
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden">

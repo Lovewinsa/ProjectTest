@@ -68,7 +68,7 @@ const CourseBoardForm = () => {
       postData: days,
       status: "PUBLIC",
     }
-
+    console.log(post)
     axios.post("/api/v1/posts/course", post)
       .then((res) => {
         navigate("/posts/course");
