@@ -1,7 +1,7 @@
 import axios from "axios"
 import React, { createRef, useEffect, useRef, useState } from "react"
 import { shallowEqual, useDispatch, useSelector } from "react-redux"
-import { NavLink, useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { NavLink, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import ConfirmModal from "../../components/ConfirmModal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons"
@@ -36,9 +36,9 @@ const CourseBoardDetail = () => {
   //맵에 전달할 장소 정보 상태값으로 관리
   const [allPlaces, setAllPlaces] = useState([])
   //카카오 지도의 중심 좌표를 저장하는 상태값
-  const [kakaoMapCenterLocation, setKakaoMapCenterLocation] = useState(null)
+  const [kakaoMapCenterLocation, setKakaoMapCenterLocation] = useState({Ma: 37.5665, La: 126.978})
   //구글 지도의 중심 좌표를 저장하는 상태값
-  const [googleMapCenterLocation, setGoogleMapCenterLocation] = useState(null)
+  const [googleMapCenterLocation, setGoogleMapCenterLocation] = useState({Ma: 37.5665, La: 126.978})
   //댓글 목록을 상태값으로 관리
   const [commentList, setCommentList] = useState([])
   //댓글의 현재 페이지 번호
@@ -60,7 +60,9 @@ const CourseBoardDetail = () => {
 
   //검색 키워드, 국내외 관련 처리
   const [searchParams] = useSearchParams()
-  const domesticInternational = searchParams.get("di")
+  const location = useLocation()
+  const searchParams2 = new URLSearchParams(location.search)
+  const domesticInternational = searchParams.get('di')
   //Confirm 모달을 띄울지 여부를 상태값으로 관리
   const [confirmShow, setConfirmShow] = useState(false)
   //action 발행하기 위해
@@ -82,13 +84,14 @@ const CourseBoardDetail = () => {
         setPost(postData)
 
         //장소 정보
-        const places = postData.postData.reduce((acc, day) => acc.concat(day.places), []);
-        setAllPlaces(places);
+        const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
+        setAllPlaces(places)
+  
         // 첫 번째 장소로 지도 중심 설정
-        if (places.length > 0 && places[0].position) {
+        if (places.length > 0 && places[0].position && domesticInternational === "Domestic") {
           setKakaoMapCenterLocation({ Ma: places[0].position.Ma, La: places[0].position.La });
         }
-        if (places.length > 0 && places[0]) {
+        if (places.length > 0 && places[0] && domesticInternational === "Domestic") {
           setGoogleMapCenterLocation({ Ma: places[0].Ma, La: places[0].La });
         }
 
@@ -199,7 +202,6 @@ const CourseBoardDetail = () => {
 
   //장소명 눌렀을 때 실행되는 함수
   const handlePlaceClick = (place) => {
-    console.log(place)
     if (place.position && place.position.Ma !== undefined && place.position.La !== undefined) {
       setKakaoMapCenterLocation({ Ma: place.position.Ma, La: place.position.La })
     } else {
