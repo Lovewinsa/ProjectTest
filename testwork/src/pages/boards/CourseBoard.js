@@ -263,7 +263,10 @@ function CourseBoard() {
       <div className="container mx-auto">
         <div className="flex justify-between mb-4">
           <Link
-            to={{ pathname: "/posts/course/new", search: `?di=${domesticInternational}` }}
+            to={{
+              pathname: "/posts/course/new",
+              search: `?di=${domesticInternational}&status=PUBLIC`
+            }}
             className="text-blue-500"
           >
             여행코스 계획하기
