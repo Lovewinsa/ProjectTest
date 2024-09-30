@@ -6,7 +6,6 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
   const [markers, setMarkers] = useState([])
 
   useEffect(() => {
-    console.log("왔니?")
     const initializeMap = () => {
       if (!window.kakao || !window.kakao.maps) {
         console.error("Kakao Maps API is not loaded.")

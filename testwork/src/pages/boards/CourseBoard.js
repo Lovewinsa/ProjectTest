@@ -1,5 +1,7 @@
 import axios from "axios";
+import moment from "moment/moment";
 import { useEffect, useState } from "react";
+import Calendar from "react-calendar";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 
@@ -8,85 +10,224 @@ function CourseBoard() {
   const [pageInfo, setPageInfo] = useState([])
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [mark, setMark] = useState([])
+
+  // 파라미터 값 관리
+  const [searchParams, setSearchParams] = useSearchParams()
   //검색 조건과 키워드
-  const [searchState, setSearchState] = useState({
-    condition: "",
-    keyword: ""
+  const [searchCriteria, setSearchCriteria] = useState({
+    country: "",
+    city: "",
+    startDate: "",
+    endDate: "",
+    keyword: "",
+    condition: "title", // 검색 옵션: 제목 또는 작성자
   })
 
-  // "/posts/course?pageNum=x"에서 pageNum을 추출하기 위한 Hook
-  const [searchParams] = useSearchParams({ pageNum: 1 })
-  //국내 페이지, 해외 페이지
-  const [domesticInternational, setDomesticInternational] = useState(searchParams.get("di") || "Domestic")
-  const [pageTurn, setPageTurn] = useState("해외여행 코스") //페이지 전환 버튼
+  //국내/해외 페이지
+  const [domesticInternational, setDomesticInternational] = useState()
+  //국내/해외 페이지 전환 버튼
+  const [pageTurn, setPageTurn] = useState("해외여행 코스")
   const [desiredCountry, setDesiredCountry] = useState(null)
+
+  //정렬기준 초기값 설정
+  const [sortBy, setSortBy] = useState("latest"); // 정렬 기준 초기값 설정
+
+  // 달력에서 선택된 날짜 범위 저장
+  const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
 
   const navigate = useNavigate()
 
-  //국내, 해외 선택 이벤트
-  const handleDesiredCountry = () => {
-    setDomesticInternational(domesticInternational === "International" ? "Domestic" : "International")
-  };
+  //searchParams가 바뀔 때마다 실행
+  useEffect(() => {
+    let pageNum = searchParams.get("pageNum") || 1
+    const diValue = searchParams.get("di") || "Domestic"
+    const city = searchParams.get("city") || ""; // 도시 가져오기
+    const startDate = searchParams.get("startDate") || ""; // 시작 날짜 가져오기
+    const endDate = searchParams.get("endDate") || ""; // 종료 날짜 가져오기
+    const country = searchParams.get("country") || ""; // 국가 가져오기
+    const keyword = searchParams.get("keyword") || "";
 
-  //글 목록 새로 읽어오는 함수
-  const refreshPageInfo = (pageNum) => {
-    //검색 기능과 관련된 query 문자열 읽어오기
-    const query = new URLSearchParams(searchState).toString()
-    axios.get(`/api/v1/posts/course?pageNum=${pageNum}&${query}`)//
+    setCurrentPage(Number(pageNum))
+    setDomesticInternational(diValue)
+    setSearchCriteria({ city, startDate, endDate, country, keyword, condition: searchCriteria.condition }) // 검색 조건 설정
+  }, [searchParams])
+
+  useEffect(() => {
+    axios.get(`/api/v1/posts/course`)//
       .then(res => {
         console.log(res.data)
         //국내코스, 해외코스 필터
         const filteredPageInfo = res.data.list.filter((item) => {
-          return domesticInternational === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
+
+          const matchesDomesticInternational = domesticInternational === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
+          if (!matchesDomesticInternational) return false
+
+          const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true
+          if (!matchesCountry) return false
+
+          const matchesCity = searchCriteria.city ? item.city.includes(searchCriteria.city) : true
+          if (!matchesCity) return false
+
+          // 조건에 따라 제목 또는 작성자를 필터링
+          const matchesKeyword =
+            searchCriteria.condition === "title"
+              ? item.title.includes(searchCriteria.keyword)
+              : searchCriteria.condition === "writer"
+                ? item.writer.includes(searchCriteria.keyword)
+                : searchCriteria.condition === "content"
+                  ? item.content.includes(searchCriteria.keyword)
+                  : searchCriteria.condition === "title_content"
+                    ? item.title.includes(searchCriteria.keyword) || item.content.includes(searchCriteria.keyword)
+                    : true;
+          if (!matchesKeyword) return false;
+
+          // 선택한 startDate와 endDate 범위에 포함되는 항목만 필터링
+          const matchesDateRange = (item) => {
+            const itemStartDate = new Date(item.startDate);
+            const itemEndDate = new Date(item.endDate);
+            const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null;
+            const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null;
+
+            // 검색 범위의 날짜가 설정되지 않았으면 모든 게시물 표시
+            if (!searchStartDate && !searchEndDate) {
+              return true;
+            }
+
+            // 검색 범위에 날짜가 설정되었을 경우 날짜 범위 체크
+            return (
+              (itemStartDate < searchEndDate && itemEndDate > searchStartDate) ||
+              (itemStartDate <= searchStartDate && itemEndDate >= searchStartDate) ||
+              (itemStartDate <= searchEndDate && itemEndDate >= searchEndDate)
+            );
+          };
+          if (!matchesDateRange(item)) return false;
+
+          return true;
         })
+
+        //정렬 조건
+        const sorted = filteredPageInfo.sort((a, b) => {
+          if (sortBy === "latest") {
+            return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt); // 최신순
+          } else if (sortBy === "viewCount") {
+            return b.viewCount - a.viewCount; // 조회수순
+          } else if (sortBy === "likeCount") {
+            return b.likeCount - a.likeCount; // 좋아요순
+          }
+          return 0; // 기본값
+        });
+
         //서버로부터 응답된 데이터 state에 넣기
         setDesiredCountry(domesticInternational === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지")
         setPageTurn(domesticInternational === "Domestic" ? "해외로" : "국내로")
-        setPageInfo(filteredPageInfo)
+        setPageInfo(sorted)
         setTotalPages(res.data.totalPostPages); // 총 페이지 수 업데이트
-
       })
       .catch(error => {
         console.log(error)
       })
-  }
+  }, [domesticInternational, searchCriteria, sortBy])
 
-  useEffect(() => {
-    let pageNum = searchParams.get("pageNum") || 1
-    setCurrentPage(Number(pageNum))
-    refreshPageInfo(pageNum)
-  }, [domesticInternational, searchParams])
+
+  //국내, 해외 선택 이벤트
+  const handleDesiredCountry = () => {
+    setDomesticInternational(domesticInternational === "International" ? "Domestic" : "International")
+    setSearchParams({
+      ...searchCriteria,
+      di: domesticInternational === "International" ? "Domestic" : "International",
+    })
+  };
+
+  // 새로운 검색을 시작하는 함수
+  const handleSearch = () => {
+    setSearchParams({
+      country: searchCriteria.country,
+      city: searchCriteria.city,
+      startDate: searchCriteria.startDate,
+      endDate: searchCriteria.endDate,
+      keyword: searchCriteria.keyword,
+      di: domesticInternational,
+    });
+  };
+
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value); // 정렬 기준 변경
+  };
+
+  // 검색 기준 변경 핸들러
+  const handleConditionChange = (e) => {
+    setSearchCriteria({
+      ...searchCriteria,
+      condition: e.target.value,
+      keyword: ""
+    });
+  };
+
+  // 검색 조건 입력 변화에 대한 처리 함수
+  const handleSearchChange = (e) => {
+    const { name, value } = e.target;
+    setSearchCriteria({ ...searchCriteria, [name]: value });
+  };
+
+  // 제목 또는 작성자 검색 쿼리 처리
+  const handleQueryChange = (e) => {
+    const value = e.target.value;
+    setSearchCriteria({
+      ...searchCriteria,
+      keyword: value, // 검색어를 keyword로 저장
+    });
+  };
+
+  // 날짜 초기화
+  const handleDateReset = () => {
+    setSelectedDateRange([null, null]); // 날짜 범위를 현재 날짜로 초기화
+    setSearchCriteria({
+      ...searchCriteria,
+      startDate: "", // 시작 날짜 초기화
+      endDate: "",   // 종료 날짜 초기화
+    });
+  };
+
+  // 현재 날짜로 돌아오는 함수 추가
+  const handleTodayClick = () => {
+    const today = new Date();
+    setSelectedDateRange([today, today]); // 현재 날짜로 설정
+    setSearchCriteria({
+      ...searchCriteria,
+      startDate: today.toLocaleDateString('ko-KR'),
+      endDate: today.toLocaleDateString('ko-KR'),
+    });
+  };
+
+  // 달력에서 날짜를 선택할 때 호출되는 함수
+  const handleDateChange = (dateRange) => {
+    setSelectedDateRange(dateRange);
+    setIsCalendarOpen(false); // 날짜 선택 후 캘린더 닫기
+    setSearchCriteria({
+      ...searchCriteria,
+      startDate: dateRange[0] ? dateRange[0].toLocaleDateString('ko-KR') : "",
+      endDate: dateRange[1] ? dateRange[1].toLocaleDateString('ko-KR') : "",
+    });
+  };
 
   // 페이지 이동 핸들러
   const paginate = (pageNum) => {
     setCurrentPage(pageNum)
-    refreshPageInfo(pageNum)
-  }
-
-  //원하는 글 정보 조건검색
-  const conditionalSearch = () => {
-    const query = new URLSearchParams(searchState).toString()
-    navigate(`/course?${query}`)
-    refreshPageInfo(1)
-  }
-
-  //검색 조건을 변경하거나 검색어를 입력하면 호출되는 함수
-  const handleSearchChange = (e) => {
-    setSearchState({
-      ...searchState,
-      [e.target.name]: e.target.value  //검색조건 혹은 검색 키워드가 변경된 값을 반영
-    })
+    // refreshPageInfo(pageNum)
   }
 
   //Reset 버튼을 눌렀을 때
   const handleReset = () => {
     //검색조건과 검색어 초기화
-    setSearchState({
+    setSearchCriteria({
       condition: "",
       keyword: ""
     })
     // //1페이지 내용이 보여지게
-    refreshPageInfo(1)
+    // refreshPageInfo(1)
   }
 
   // 현재 시간과 작성일을 비교해 '몇 시간 전' 또는 '몇 일 전'을 계산하는 함수
@@ -129,43 +270,119 @@ function CourseBoard() {
           </Link>
           <button
             onClick={handleDesiredCountry}
-            className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-500"
+            className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-500 transition-all duration-300"
           >
             {pageTurn}
           </button>
         </div>
         <h1 className="text-3xl font-bold text-center mb-8">
-          {domesticInternational === "Domestic" ? "국내여행 코스" : "해외여행 코스"}
+          {desiredCountry}
         </h1>
 
-        {/* 검색 섹션 */}
-        <div className="flex justify-center mb-8">
-          <select
-            onChange={handleSearchChange}
-            value={searchState.condition}
-            name="condition"
-            id="search"
-            className="border border-gray-300 p-2 rounded-md"
+        {/* 검색 조건 입력 폼 */}
+        <div className="my-4 space-y-4">
+          {/* 국가와 도시를 한 행으로 배치 */}
+          <div className="flex items-center gap-4">
+            {domesticInternational === "International" && (
+              <input
+                type="text"
+                name="country"
+                value={searchCriteria.country}
+                onChange={handleSearchChange}
+                placeholder="국가"
+                className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              />
+            )}
+
+            <input
+              type="text"
+              name="city"
+              value={searchCriteria.city}
+              onChange={handleSearchChange}
+              placeholder="도시"
+              className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            />
+          </div>
+
+          {/* 제목/작성자 선택 필드 */}
+          <div className="flex items-center gap-4">
+            <select
+              value={searchCriteria.condition}
+              onChange={handleConditionChange}
+              className="border border-gray-300 rounded-md px-4 py-2 w-1/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            >
+              <option value="title">제목</option>
+              <option value="writer">작성자</option>
+              <option value="content">내용</option>
+              <option value="title+writer">제목 + 내용</option>
+            </select>
+
+            <input
+              type="text"
+              name={searchCriteria.condition}
+              value={searchCriteria[searchCriteria.condition]}
+              onChange={handleQueryChange}
+              placeholder={searchCriteria.condition === "title" ? "제목" : "작성자"}
+              className="border border-gray-300 rounded-md px-4 py-2 w-5/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            />
+          </div>
+
+          {/* 날짜 선택 및 검색 버튼 */}
+          <div className="flex items-center space-x-2 mt-4">
+            <button
+              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300"
+            >
+              {selectedDateRange[0] && selectedDateRange[1]
+                ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
+                : "날짜 선택"}
+            </button>
+
+            {/* 캘린더 표시 여부에 따라 렌더링 */}
+            {isCalendarOpen && (
+              <div className="absolute z-50 bg-white shadow-lg rounded-md p-4 mt-2">
+                <Calendar
+                  selectRange={true}
+                  onChange={handleDateChange}
+                  value={selectedDateRange || [new Date(), new Date()]}
+                  formatDay={(locale, date) => moment(date).format("DD")}
+                  minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                  maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                  navigationLabel={null}
+                  showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
+                  calendarType="hebrew" //일요일부터 보이도록 설정
+                />
+                <button onClick={handleDateReset} className="bg-red-500 text-white px-4 py-2 ml-2">
+                  날짜 초기화
+                </button>
+                <button onClick={handleTodayClick} className="bg-green-500 text-white px-4 py-2 ml-2">
+                  오늘로 돌아가기
+                </button>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleSearch}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300 mt-4"
           >
-            <option value="">검색 조건 선택</option>
-            <option value="title_content">제목+내용</option>
-            <option value="title">제목</option>
-            <option value="writer">작성자</option>
-          </select>
-          <input
-            onChange={handleSearchChange}
-            value={searchState.keyword}
-            type="text"
-            placeholder="검색어..."
-            name="keyword"
-            className="border border-gray-300 p-2 rounded-md mx-2"
-          />
-          <button onClick={conditionalSearch} className="px-4 py-2 bg-blue-500 text-white rounded-md">
             검색
           </button>
-          <button onClick={handleReset} className="px-4 py-2 bg-gray-500 text-white rounded-md ml-2">
-            Reset
-          </button>
+        </div>
+
+        {/* 검색 정렬 기준 다운바 */}
+        <div className="my-4">
+          <label htmlFor="sortBy" className="mr-2">정렬 기준:</label>
+          <select
+            id="sortBy"
+            value={sortBy}
+            onChange={handleSortChange}
+            className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+          >
+            <option value="latest">최신순</option>
+            <option value="viewCount">조회수순</option>
+            <option value="likeCount">좋아요순</option>
+          </select>
         </div>
 
         {/* 카드 리스트 */}
