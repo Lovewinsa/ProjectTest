@@ -36,9 +36,9 @@ const CourseBoardDetail = () => {
   //맵에 전달할 장소 정보 상태값으로 관리
   const [allPlaces, setAllPlaces] = useState([])
   //카카오 지도의 중심 좌표를 저장하는 상태값
-  const [kakaoMapCenterLocation, setKakaoMapCenterLocation] = useState({Ma: 37.5665, La: 126.978})
+  const [kakaoMapCenterLocation, setKakaoMapCenterLocation] = useState({ Ma: 37.5665, La: 126.978 })
   //구글 지도의 중심 좌표를 저장하는 상태값
-  const [googleMapCenterLocation, setGoogleMapCenterLocation] = useState({Ma: 37.5665, La: 126.978})
+  const [googleMapCenterLocation, setGoogleMapCenterLocation] = useState({ Ma: 37.5665, La: 126.978 })
   //댓글 목록을 상태값으로 관리
   const [commentList, setCommentList] = useState([])
   //댓글의 현재 페이지 번호
@@ -80,13 +80,14 @@ const CourseBoardDetail = () => {
     axios
       .get(`/api/v1/posts/${id}?${query}`)
       .then((res) => {
+        console.log(res.data.dto)
         const postData = res.data.dto
         setPost(postData)
 
         //장소 정보
         const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
         setAllPlaces(places)
-  
+
         // 첫 번째 장소로 지도 중심 설정
         if (places.length > 0 && places[0].position && domesticInternational === "Domestic") {
           setKakaoMapCenterLocation({ Ma: places[0].position.Ma, La: places[0].position.La });
@@ -112,12 +113,12 @@ const CourseBoardDetail = () => {
         if (!resUserId) {
           throw new Error("게시물 작성자의 정보가 없습니다.")
         }
-
-
+        
         return axios
-          .get(`/api/v1/users/${resUserId}`)
+          .get(`/api/v1/users/${resUserId}/author`)
           .then((res) => {
-            const writerData = res.data.userProfileInfo
+            
+            const writerData = res.data
             setWriterProfile(writerData)
           })
           .catch((error) => {
@@ -158,7 +159,6 @@ const CourseBoardDetail = () => {
 
   //작성자 프로필 보기
   const handleViewProfile = () => {
-    console.log(writerProfile)
     navigate(`/users/${writerProfile.id}/profile`)
   }
 
@@ -289,7 +289,6 @@ const CourseBoardDetail = () => {
   const handleReplySubmit = (e) => {
     e.preventDefault()
 
-    console.log(writerProfile)
     const data = {
       postId: id,
       userId: loggedInUserId,
@@ -442,6 +441,14 @@ const CourseBoardDetail = () => {
           </button>
         </div>
 
+        {/* 여행 일정 추가 */}
+        <div className="my-2 text-sm text-gray-500">
+          <span>
+             여행 일정 : {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+             {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}
+          </span>
+        </div>
+
         <div className="flex justify-between items-center m-3">
           <div>
             <strong>{post.title}</strong>
@@ -467,7 +474,7 @@ const CourseBoardDetail = () => {
               </span>
               <span className="mr-3">
                 <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-2" />
-                {post.likeCount}
+                {post.commentCount}
               </span>
             </span>
           </div>
@@ -525,9 +532,9 @@ const CourseBoardDetail = () => {
             </div>
             <div>
               <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={handleViewProfile}>
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleViewProfile}>
                 프로필 보기
               </button>
             </div>
