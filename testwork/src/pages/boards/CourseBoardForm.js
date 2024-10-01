@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent"
 import { shallowEqual, useSelector } from "react-redux"
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent"
+import Calendar from "react-calendar"
 
 const CourseBoardForm = () => {
   const userId = useSelector((state) => state.userData.id, shallowEqual)
@@ -11,6 +12,9 @@ const CourseBoardForm = () => {
   const username = useSelector((state) => state.userData.username, shallowEqual)
 
   const [title, setTitle] = useState("")
+  // 달력에서 선택된 날짜 범위 저장
+  const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
   // 나라별 도시 목록
@@ -37,8 +41,6 @@ const CourseBoardForm = () => {
   const [tags, setTags] = useState([])
   const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
 
-  const [postType, setPostType] = useState("")
-
   const [selectedDayIndex, setSelectedDayIndex] = useState(null)
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [savedPlaces, setSavedPlaces] = useState([])
@@ -51,27 +53,22 @@ const CourseBoardForm = () => {
   const status = searchParams.get("status") //"PUBLIC"이거나 "PRIVATE"인 경우 처리
   const navigate = useNavigate()
 
-  useEffect(() => {}, [])
+  useEffect(() => { }, [])
 
-  const handleSubmit = () => {
-    const post = {
-      userId,
-      writer: nickname,
-      type: "COURSE",
-      title,
-      country,
-      city,
-      tags,
-      postData: days,
-      status: status,
-    }
-    console.log(post)
-    axios
-      .post("/api/v1/posts/course", post)
-      .then((res) => {
-        navigate("/posts/course")
-      })
-      .catch((error) => console.log(error))
+  // 날짜 초기화
+  const handleDateReset = () => {
+    setSelectedDateRange([null, null]) // 날짜 범위를 현재 날짜로 초기화
+  }
+
+  // 달력에서 날짜를 선택할 때 호출되는 함수
+  const handleDateChange = (dateRange) => {
+    setSelectedDateRange(dateRange)
+    setIsCalendarOpen(false) // 날짜 선택 후 캘린더 닫기
+    // setSearchCriteria({
+    //   ...searchCriteria,
+    //   startDate: dateRange[0] ? dateRange[0].toLocaleDateString('ko-KR') : "", 
+    //   endDate: dateRange[1] ? dateRange[1].toLocaleDateString('ko-KR') : "",   
+    // })
   }
 
   const handleTagInput = (e) => {
@@ -155,6 +152,28 @@ const CourseBoardForm = () => {
     setDays(newDays)
   }
 
+  const handleSubmit = () => {
+    const post = {
+      userId,
+      writer: nickname,
+      type: "COURSE",
+      title,
+      country,
+      city,
+      startDate: selectedDateRange[0],
+      endDate: selectedDateRange[1],
+      tags,
+      postData: days,
+      status: status,
+    }
+    axios
+      .post("/api/v1/posts/course", post)
+      .then((res) => {
+        navigate("/posts/course")
+      })
+      .catch((error) => console.log(error))
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-[900px]">
       <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
@@ -175,18 +194,53 @@ const CourseBoardForm = () => {
         </div>
 
         <div className="space-y-4">
-          <div>
-            <label htmlFor="title" className="block text-lg font-medium text-gray-700">
-              제목
-            </label>
-            <input
-              className="border-gray-300 rounded-md p-2 w-full"
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+          <div className="flex mb-4">
+            {/* 제목 요소 */}
+            <div className="flex-grow-[4]">
+              <label htmlFor="title" className="block text-lg font-medium text-gray-700">
+                제목
+              </label>
+              <input
+                className="border-gray-300 rounded-md p-2 w-full"
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            {/* 날짜 선택 및 날짜 초기화 버튼 */}
+            <div className="flex flex-grow-[1] items-end justify-end ml-4">
+              <button
+                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2"
+              >
+                날짜 선택
+              </button>
+              <button onClick={handleDateReset} className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 ml-2">
+                날짜 초기화
+              </button>
+            </div>
           </div>
+          {/* 선택한 날짜 */}
+          <div className="sm:col-span-6">
+            <p style={{ marginTop: '-10px', marginBottom: '-20px' }} className="text-sm text-gray-600 text-right">
+              {selectedDateRange[0] && selectedDateRange[1]
+                ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
+                : "0000. 00. 00. ~ 0000. 00. 00."}
+            </p>
+          </div>
+
+          {/* 캘린더 표시 여부에 따라 렌더링 */}
+          {isCalendarOpen && (
+            <div className="absolute z-50 bg-white shadow-lg p-2">
+              <Calendar
+                selectRange={true}
+                onChange={handleDateChange}
+                value={selectedDateRange || [new Date(), new Date()]}  // 초기값 또는 선택된 날짜 범위
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -328,9 +382,8 @@ const CourseBoardForm = () => {
                       />
                       <div className="ml-2 w-1/4">
                         <button
-                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${
-                            day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
+                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                           onClick={() => removePlace(dayIndex, placeIndex)}
                           disabled={day.places.length === 0}>
                           삭제
@@ -339,15 +392,6 @@ const CourseBoardForm = () => {
                     </div>
                   </div>
                   <div className="mb-2">
-                    {postType === "" && (
-                      <>
-                        <label htmlFor="inputImages" className="text-sm">
-                          이미지 추가
-                        </label>
-
-                        <input type="file" name="inputImages" id="inputImages" />
-                      </>
-                    )}
                     <div>
                       <label htmlFor={`placeMemo-${dayIndex}-${placeIndex}`} className="text-sm text-gray-700">
                         장소 메모

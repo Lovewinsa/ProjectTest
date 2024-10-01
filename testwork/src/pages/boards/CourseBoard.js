@@ -401,6 +401,8 @@ function CourseBoard() {
                 <h2 className="text-lg font-bold">{post.title}</h2>
                 <p className="text-sm text-gray-600">작성자: {post.writer}</p>
                 <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
+                <p className="text-sm text-gray-600">{post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}</p>
                 <p className="text-sm text-right text-green-800 font-semibold">
                   {post.country} - {post.city}
                 </p>
