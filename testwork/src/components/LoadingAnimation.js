@@ -2,13 +2,17 @@ import React from 'react';
 
 const LoadingAnimation = ({ imageWidth }) => {
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50">
-      <div className="relative w-72 h-72 border-4 border-gray-300 overflow-hidden">
+    <div className="fixed inset-0 flex justify-center items-center z-50 pointer-events-none">
+      {/* 로고가 처음부터 화면에 표시되지만, 클리핑되어 점차 채워짐 */}
+      <div className="relative w-64 h-32">
         <img
-          src="/img/loading-image.jpg"
+          src="/img/TripDuologo.png"
           alt="Loading"
-          className="absolute top-0 left-0 h-full object-cover transition-all duration-[3000ms] ease-linear"
-          style={{ width: imageWidth }}
+          className="w-full h-full object-contain"
+          style={{
+            clipPath: `inset(0 ${imageWidth} 0 0)`, // 오른쪽부터 점점 보이도록 조정
+            transition: 'clip-path 3s cubic-bezier(0.65, 0, 0.35, 1)', // 속도 조정: 매우 느리게 시작해 중간부터 빠르게
+          }}
         />
       </div>
     </div>

@@ -37,11 +37,12 @@ function App() {
   useJwtExpirationHandler(token)
 
   const [loading, setLoading] = useState(true) // 초기 상태를 true로 변경
-  const [imageWidth, setImageWidth] = useState('0%'); // 초기 너비 0%
+  const [imageWidth, setImageWidth] = useState('100%'); // 초기 너비 0%
   const location = useLocation();
   const navigate = useNavigate()
 
   useEffect(() => {
+    
     // 로딩 상태가 3초 뒤에 false로 바뀌고 이미지를 채움
     const timer = setTimeout(() => {
       setLoading(false);
@@ -49,7 +50,7 @@ function App() {
 
     // 이미지 채워지는 애니메이션
     const widthTimer = setTimeout(() => {
-      setImageWidth('100%'); // 3초에 걸쳐 너비가 100%로 확장
+      setImageWidth('0%'); // 3초에 걸쳐 너비가 100%로 확장
     }, 100);
 
     return () => {
@@ -61,13 +62,11 @@ function App() {
   return (
     <div className="app-container">
       {loading && <LoadingAnimation imageWidth={imageWidth} />} {/* imageWidth를 prop으로 전달 */}
-      {!loading && (
         <>
           <NavBar />
           <div className="main-content">{currentOutlet}</div>
           <Footer />
         </>
-      )}
     </div>
   )
 }
