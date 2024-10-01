@@ -91,6 +91,7 @@ const CourseBoardEditForm = () => {
                     ...prev,
                     tags: [...prev.tags, newTag]
                 }))
+                e.target.value = ""
             }
         }
     };
@@ -299,7 +300,6 @@ const CourseBoardEditForm = () => {
                         </label>
                         <input
                             id="tags"
-                            value={""}
                             onChange={handleTagInput}
                             placeholder="#태그 입력 후 스페이스바"
                             className="border-gray-300 rounded-md p-2 w-full"
