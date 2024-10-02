@@ -80,9 +80,12 @@ const CourseBoardDetail = () => {
     axios
       .get(`/api/v1/posts/${id}?${query}`)
       .then((res) => {
-        console.log(res.data.dto)
+        //게시글 정보
         const postData = res.data.dto
         setPost(postData)
+        //글 작성자 정보
+        const writerData = res.data.userProfileInfo
+        setWriterProfile(writerData)
 
         //장소 정보
         const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
@@ -108,24 +111,6 @@ const CourseBoardDetail = () => {
         //전체 댓글 페이지의 개수를 상태값으로 넣어주기
         setTotalPageCount(res.data.totalCommentPages)
 
-        //게시물 작성자의 정보
-        const resUserId = postData.userId || null
-        if (!resUserId) {
-          throw new Error("게시물 작성자의 정보가 없습니다.")
-        }
-        
-        return axios
-          .get(`/api/v1/users/${resUserId}/author`)
-          .then((res) => {
-            
-            const writerData = res.data
-            setWriterProfile(writerData)
-          })
-          .catch((error) => {
-            console.log("작성자 정보를 불러오지 못했습니다.", error)
-            alert("작성자 정보를 불러오는 중 문제가 발생했습니다.")
-          })
-
 
       })
       .catch((error) => {
@@ -147,10 +132,10 @@ const CourseBoardDetail = () => {
   //글 삭제를 눌렀을 때 호출되는 함수
   const deleteHandleYes = () => {
     axios
-      .delete(`${id}`)
+      .delete(`/api/v1/posts/${id}`)
       .then((res) => {
-        console.log(res.data)
-        navigate("/posts/course")
+        alert("해당 글이 삭제되었습니다.")
+        navigate(`/posts/course?di=${domesticInternational}`)
       })
       .catch((error) => {
         console.log(error)
@@ -433,9 +418,9 @@ const CourseBoardDetail = () => {
               ))}
           </div>
 
-          {/* 버튼 */}
+          {/* 목록으로 버튼 */}
           <button
-            onClick={() => navigate("/posts/course")}
+            onClick={() => navigate(`/posts/course?di=${domesticInternational}`)}
             className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
             목록으로 돌아가기
           </button>

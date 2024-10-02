@@ -11,8 +11,6 @@ function CourseBoard() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [mark, setMark] = useState([])
-
   // 파라미터 값 관리
   const [searchParams, setSearchParams] = useSearchParams()
   //검색 조건과 키워드
@@ -26,43 +24,63 @@ function CourseBoard() {
   })
 
   //국내/해외 페이지
-  const [domesticInternational, setDomesticInternational] = useState()
+  const [domesticInternational, setDomesticInternational] = useState("")
   //국내/해외 페이지 전환 버튼
-  const [pageTurn, setPageTurn] = useState("해외여행 코스")
+  const [pageTurn, setPageTurn] = useState("")
   const [desiredCountry, setDesiredCountry] = useState(null)
 
   //정렬기준 초기값 설정
-  const [sortBy, setSortBy] = useState("latest"); // 정렬 기준 초기값 설정
+  const [sortBy, setSortBy] = useState("latest")
 
   // 달력에서 선택된 날짜 범위 저장
-  const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
+  const [selectedDateRange, setSelectedDateRange] = useState([null, null])
+  // 캘린더 표시 여부 상태
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 
   const navigate = useNavigate()
 
-  //searchParams가 바뀔 때마다 실행
   useEffect(() => {
     let pageNum = searchParams.get("pageNum") || 1
     const diValue = searchParams.get("di") || "Domestic"
-    const city = searchParams.get("city") || ""; // 도시 가져오기
-    const startDate = searchParams.get("startDate") || ""; // 시작 날짜 가져오기
-    const endDate = searchParams.get("endDate") || ""; // 종료 날짜 가져오기
-    const country = searchParams.get("country") || ""; // 국가 가져오기
-    const keyword = searchParams.get("keyword") || "";
+    const city = searchParams.get("city") || ""
+    const startDate = searchParams.get("startDate") || ""
+    const endDate = searchParams.get("endDate") || ""
+    const country = searchParams.get("country") || ""
+    const keyword = searchParams.get("keyword") || ""
+    const condition = searchCriteria.condition || "title"; // 기존 조건 유지
 
     setCurrentPage(Number(pageNum))
     setDomesticInternational(diValue)
-    setSearchCriteria({ city, startDate, endDate, country, keyword, condition: searchCriteria.condition }) // 검색 조건 설정
-  }, [searchParams])
+    console.log("첫 번째 체크:", diValue)
+    setSearchCriteria((prev) => ({
+      ...prev,
+      city,
+      startDate,
+      endDate,
+      country,
+      keyword,
+      condition: condition
+    }))
 
-  useEffect(() => {
-    axios.get(`/api/v1/posts/course`)//
+    axios
+      .get(`/api/v1/posts/course`, {
+        params: {
+          pageNum: Number(pageNum),
+          country: country || undefined,
+          city: city || undefined,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          keyword: keyword || undefined,
+          condition: condition, // 조건이 없으면 제목으로 설정
+          sortBy: sortBy || "latest", // 정렬 조건이 없으면 최신순으로 설정
+          di: diValue || "Domestic", // 국내/해외 페이지가 설정되지 않았으면 기본값으로 설정
+        },
+      })
       .then(res => {
-        console.log(res.data)
         //국내코스, 해외코스 필터
         const filteredPageInfo = res.data.list.filter((item) => {
 
-          const matchesDomesticInternational = domesticInternational === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
+          const matchesDomesticInternational = diValue === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
           if (!matchesDomesticInternational) return false
 
           const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true
@@ -72,8 +90,7 @@ function CourseBoard() {
           if (!matchesCity) return false
 
           // 조건에 따라 제목 또는 작성자를 필터링
-          const matchesKeyword =
-            searchCriteria.condition === "title"
+          const matchesKeyword = searchCriteria.condition === "title"
               ? item.title.includes(searchCriteria.keyword)
               : searchCriteria.condition === "writer"
                 ? item.writer.includes(searchCriteria.keyword)
@@ -81,19 +98,19 @@ function CourseBoard() {
                   ? item.content.includes(searchCriteria.keyword)
                   : searchCriteria.condition === "title_content"
                     ? item.title.includes(searchCriteria.keyword) || item.content.includes(searchCriteria.keyword)
-                    : true;
-          if (!matchesKeyword) return false;
+                    : true
+          if (!matchesKeyword) return false
 
           // 선택한 startDate와 endDate 범위에 포함되는 항목만 필터링
           const matchesDateRange = (item) => {
-            const itemStartDate = new Date(item.startDate);
-            const itemEndDate = new Date(item.endDate);
-            const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null;
-            const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null;
+            const itemStartDate = new Date(item.startDate)
+            const itemEndDate = new Date(item.endDate)
+            const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null
+            const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null
 
             // 검색 범위의 날짜가 설정되지 않았으면 모든 게시물 표시
             if (!searchStartDate && !searchEndDate) {
-              return true;
+              return true
             }
 
             // 검색 범위에 날짜가 설정되었을 경우 날짜 범위 체크
@@ -101,11 +118,11 @@ function CourseBoard() {
               (itemStartDate < searchEndDate && itemEndDate > searchStartDate) ||
               (itemStartDate <= searchStartDate && itemEndDate >= searchStartDate) ||
               (itemStartDate <= searchEndDate && itemEndDate >= searchEndDate)
-            );
-          };
-          if (!matchesDateRange(item)) return false;
+            )
+          }
+          if (!matchesDateRange(item)) return false
 
-          return true;
+          return true
         })
 
         //정렬 조건
@@ -113,23 +130,28 @@ function CourseBoard() {
           if (sortBy === "latest") {
             return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt); // 최신순
           } else if (sortBy === "viewCount") {
-            return b.viewCount - a.viewCount; // 조회수순
+            return b.viewCount - a.viewCount // 조회수순
           } else if (sortBy === "likeCount") {
-            return b.likeCount - a.likeCount; // 좋아요순
+            return b.likeCount - a.likeCount // 좋아요순
           }
-          return 0; // 기본값
-        });
+          return 0 // 기본값
+        })
+        console.log("두 번째 체크:", diValue)
 
         //서버로부터 응답된 데이터 state에 넣기
-        setDesiredCountry(domesticInternational === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지")
-        setPageTurn(domesticInternational === "Domestic" ? "해외로" : "국내로")
+        setDesiredCountry(diValue === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지")
+        setPageTurn(diValue === "Domestic" ? "해외로" : "국내로")
         setPageInfo(sorted)
-        setTotalPages(res.data.totalPostPages); // 총 페이지 수 업데이트
+        // 총 페이지 수 업데이트
+        console.log(res.data.list)
+        // console.log(sorted)
+        setTotalPages(res.data.totalPostPages)
+
       })
       .catch(error => {
         console.log(error)
       })
-  }, [domesticInternational, searchCriteria, sortBy])
+  }, [searchParams, sortBy])
 
 
   //국내, 해외 선택 이벤트
@@ -199,24 +221,24 @@ function CourseBoard() {
       ...searchCriteria,
       startDate: today.toLocaleDateString('ko-KR'),
       endDate: today.toLocaleDateString('ko-KR'),
-    });
-  };
+    })
+  }
 
   // 달력에서 날짜를 선택할 때 호출되는 함수
   const handleDateChange = (dateRange) => {
-    setSelectedDateRange(dateRange);
-    setIsCalendarOpen(false); // 날짜 선택 후 캘린더 닫기
+    setSelectedDateRange(dateRange)
+    setIsCalendarOpen(false) // 날짜 선택 후 캘린더 닫기
     setSearchCriteria({
       ...searchCriteria,
       startDate: dateRange[0] ? dateRange[0].toLocaleDateString('ko-KR') : "",
       endDate: dateRange[1] ? dateRange[1].toLocaleDateString('ko-KR') : "",
-    });
-  };
+    })
+  }
 
   // 페이지 이동 핸들러
   const paginate = (pageNum) => {
     setCurrentPage(pageNum)
-    // refreshPageInfo(pageNum)
+    setSearchParams({ ...searchParams, pageNum })
   }
 
   //Reset 버튼을 눌렀을 때
@@ -402,7 +424,7 @@ function CourseBoard() {
                 <p className="text-sm text-gray-600">작성자: {post.writer}</p>
                 <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
                 <p className="text-sm text-gray-600">{post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}</p>
+                  {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}</p>
                 <p className="text-sm text-right text-green-800 font-semibold">
                   {post.country} - {post.city}
                 </p>
@@ -435,6 +457,7 @@ function CourseBoard() {
           >
             &lt;
           </button>
+          {/* totalPages만큼 배열 생성 */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
             <button
               key={number}
@@ -448,8 +471,7 @@ function CourseBoard() {
           <button
             onClick={() => paginate(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-              }`}
+            className={`px-4 py-2 rounded ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"}`}
           >
             &gt;
           </button>

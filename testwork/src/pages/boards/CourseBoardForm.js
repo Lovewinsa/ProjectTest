@@ -182,7 +182,7 @@ const CourseBoardForm = () => {
             {status === "PRIVATE" && "나만의 "}{domesticInternational === "Domestic" ? "국내 " : "해외 "}여행 코스 작성
           </h1>
           <button
-            onClick={() => navigate("/posts/course")}
+            onClick={() => navigate(`/posts/course?di=${domesticInternational}`)}
             className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
             목록으로 돌아가기
           </button>
