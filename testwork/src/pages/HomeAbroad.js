@@ -1,133 +1,181 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import 'keen-slider/keen-slider.min.css';
+import { useKeenSlider } from 'keen-slider/react';
+import '../css/Home.css';
 
 function HomeAbroad() {
     const navigate = useNavigate();
-    const location = useLocation();
-    const [selectedOption, setSelectedOption] = useState("해외");
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-
-    useEffect(() => {
-        if (location.pathname === "/home") {
-            setSelectedOption("국내");
-        } else {
-            setSelectedOption("해외");
-        }
-    }, [location.pathname]);
-
-    const [searchParams, setSearchParams] = useState({
-        location: "",
-        city: "",
-        startDate: "",
-        endDate: "",
+    const [currentSlide, setCurrentSlide] = useState(0); // 현재 슬라이드 상태 추가
+    const [sliderRef, slider] = useKeenSlider({
+        loop: true,
+        slides: {
+            perView: 3,
+            spacing: 10, // 간격을 0으로 설정
+        },
+        breakpoints: {
+            '(max-width: 1024px)': {
+                slides: { perView: 2 },
+            },
+            '(max-width: 768px)': {
+                slides: { perView: 1 },
+            },
+        },
+        dragSpeed: 0.5,
+        slideChanged(s) {
+            setCurrentSlide(s.track.details.rel); // 슬라이드가 변경될 때 현재 슬라이드 업데이트
+        },
     });
-
-    const handleSelect = (eventKey) => {
-        setSelectedOption(eventKey === "Home" ? "국내" : "해외");
-        if (eventKey === "Home") {
-            navigate("/");
-        } else if (eventKey === "international") {
-            navigate("/home-abroad");
-        }
-        setDropdownOpen(false); // Close dropdown after selection
+   // 버튼을 클릭했을 때 실행할 함수 정의
+    const handlePrev = () => {
+        if (slider.current) slider.current.prev();
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setSearchParams((prev) => ({ ...prev, [name]: value }));
+    const handleNext = () => {
+        if (slider.current) slider.current.next();
     };
 
-    const handleSearch = () => {
-        const { location, city, startDate, endDate } = searchParams;
-        console.log("Searching with params:", { location, city, startDate, endDate });
-        navigate(`/posts/mate?location=${location}&city=${city}&startdate=${startDate}&enddate=${endDate}&di=International`);
+    // 점 클릭 시 해당 슬라이드로 이동
+    const handleDotClick = (index) => {
+        if (slider.current) slider.current.moveToIdx(index);
     };
+
+    const navigateToMate = (destination) => {
+        navigate(`/posts/mate?di=${destination}`);
+    };
+
+    const navigateToPage = (path) => {
+        navigate(path);
+    };
+
+    const navigateToLogin = () => {
+        navigate("/login"); // 로그인 페이지로 이동
+    };
+
+    // 토큰 확인 (예시로 'token' 키를 사용)
+    const token = localStorage.getItem('token');
 
     return (
-        <div className="container mx-auto px-4">
-            <div className="flex justify-end pt-2 relative">
-                <button
-                    className="inline-flex justify-center w-24 rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                >
-                    {selectedOption}
-                </button>
-                {dropdownOpen && (
-                    <div className="absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                        <div className="py-1" role="menu" aria-orientation="vertical">
-                            <button onClick={() => handleSelect("Home")} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">국내</button>
-                            <button onClick={() => handleSelect("international")} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">해외</button>
-                        </div>
+        <div className="container mx-auto px-8 bg-white min-h-screen">
+            <div className="my-12 relative">
+                <header className="py-8 text-center">
+                    <h1 className="text-3xl font-bold text-green-600">해외 여행</h1>
+                    <p className="mt-2 text-gray-600">다양한 해외 여행 정보를 만나보세요!</p>
+                </header>
+                <div className="relative">
+                    {/* 슬라이더 */}
+                    <div ref={sliderRef} className="keen-slider w-full my-6">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
+                            <div key={item} className="keen-slider__slide flex justify-center">
+                                <div className="w-[90vw] max-w-[350px] h-[450px] bg-white shadow-lg rounded-lg overflow-hidden">
+                                    <img
+                                        src={`https://picsum.photos/350/450?random=${item}`}
+                                        alt={`여행지 ${item}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            </div>
+                        ))}
                     </div>
+
+                    {/* 왼쪽(이전) 버튼 */}
+                    <button
+                        onClick={handlePrev}
+                        className="absolute left-[-40px] top-1/2 transform -translate-y-1/2 bg-transparent text-green-600 rounded-none p-0 text-3xl z-10 transition-transform duration-200 hover:scale-150"
+                        style={{ width: '50px', height: '50px' }} // 버튼 크기 설정
+                    >
+                        &#8592; {/* 왼쪽 화살표 */}
+                    </button>
+
+                    {/* 오른쪽(다음) 버튼 */}
+                    <button
+                        onClick={handleNext}
+                        className="absolute right-[-40px] top-1/2 transform -translate-y-1/2 bg-transparent text-green-600 rounded-none p-0 text-3xl z-10 transition-transform duration-200 hover:scale-150"
+                        style={{ width: '50px', height: '50px' }} // 버튼 크기 설정
+                    >
+                        &#8594; {/* 오른쪽 화살표 */}
+                    </button>
+                    {/* 슬라이드 점들 */}
+                    <div className="flex justify-center mt-4">
+                        {[...Array(10)].map((_, index) => (
+                            <div
+                                key={index}
+                                onClick={() => handleDotClick(index)} // 점 클릭 시 해당 슬라이드로 이동
+                                className={`w-3 h-3 mx-1 rounded-full cursor-pointer transition-all duration-200 ${
+                                    currentSlide === index ? "bg-green-600 scale-125" : "bg-gray-300"
+                                }`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            <div className="my-12 h-16" />
+
+            <div className="flex items-center justify-between mb-8 p-4 bg-green-300 rounded-lg shadow-lg">
+                <h3 className="text-xl font-semibold text-white">여행메이트 찾기</h3>
+                <div className="flex space-x-4">
+                    <div
+                        className="relative min-w-[80px] cursor-pointer"
+                        onClick={() => navigateToMate("Domestic")}
+                    >
+                        <img src="https://picsum.photos/80/80?random=1" alt="국내" className="rounded-full border-2 border-white shadow-md" />
+                        <span className="absolute inset-0 flex items-center justify-center text-white text-lg font-bold">국내</span>
+                    </div>
+                    <div
+                        className="relative min-w-[80px] cursor-pointer"
+                        onClick={() => navigateToMate("International")}
+                    >
+                        <img src="https://picsum.photos/80/80?random=2" alt="해외" className="rounded-full border-2 border-white shadow-md" />
+                        <span className="absolute inset-0 flex items-center justify-center text-white text-lg font-bold">해외</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="my-12 h-16" />
+
+            <div className="my-12">
+                <h3 className="text-xl font-semibold mb-4 text-green-600">해외 여행 인기 게시물</h3>
+                {!token && (
+                    <p className="text-gray-600 text-sm text-left mb-4">
+                        <span className='cursor-pointer' onClick={navigateToLogin}>로그인</span> 하시면 고객님에게 알맞는 게시물을 추천해드립니다.
+                    </p>
                 )}
-            </div>
-
-            <div className="my-4">
-                <h2 className="text-2xl font-bold text-center">해외 여행 메이트 찾기</h2>
-                <form className="mt-4 max-w-lg mx-auto">
-                    <div className="mb-4">
-                        <label className="block text-gray-700">여행지</label>
-                        <input
-                            type="text"
-                            placeholder="여행지를 입력하세요..."
-                            name="location"
-                            value={searchParams.location}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:ring-blue-500"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">도시</label>
-                        <input
-                            type="text"
-                            placeholder="도시를 입력하세요..."
-                            name="city"
-                            value={searchParams.city}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:ring-blue-500"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">출발일</label>
-                        <input
-                            type="date"
-                            name="startDate"
-                            value={searchParams.startDate}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:ring-blue-500"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">귀국일</label>
-                        <input
-                            type="date"
-                            name="endDate"
-                            value={searchParams.endDate}
-                            onChange={handleInputChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:ring-blue-500"
-                        />
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleSearch}
-                        className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700"
-                    >
-                        검색
-                    </button>
-                </form>
-            </div>
-
-            <div className="my-4">
-                <h3 className="text-xl font-semibold">추천 해외 여행 메이트</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {[1, 2, 3].map((mate) => (
-                        <div key={mate} className="bg-white shadow-md rounded-lg overflow-hidden">
-                            <img src={`https://picsum.photos/200/150?random=${mate + 10}`} alt={`여행 메이트 ${mate}`} className="w-full h-32 object-cover" />
+                        <div key={mate} className="relative bg-white shadow-lg rounded-lg overflow-hidden flex flex-col transition-transform">
+                            <div className="h-32 w-full bg-gray-300" />
+                            <div className="flex justify-center -mt-16">
+                                <img src={`https://picsum.photos/80/80?random=${mate + 3}`} alt={`메이트 ${mate}`} className="rounded-full border-4 border-white shadow-md" />
+                            </div>
+                            <div className="p-4 text-center flex-grow">
+                                <h4 className="font-bold text-lg">{`메이트 ${mate}`}</h4>
+                                <p className="text-gray-600">여행을 좋아하는 메이트입니다.</p>
+                                <p className="text-gray-500">좋아요: {Math.floor(Math.random() * 100)}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="my-12 h-16" />
+
+            <div className="my-12">
+                <h3 className="text-xl font-semibold mb-4 text-green-600">해외 추천 여행지(임시)</h3>
+                {!token && (
+                    <p className="text-gray-600 text-sm text-left mb-4">
+                        <span className='cursor-pointer' onClick={navigateToLogin}>로그인</span> 하시면, 고객님을 위한 여행지를 추천해드립니다.
+                    </p>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {[1, 2, 3, 4].map((product) => (
+                        <div key={product} className="bg-white shadow-lg rounded-lg overflow-hidden">
+                            <img src={`https://picsum.photos/200/150?random=${product + 5}`} alt={`여행지 ${product}`} className="w-full h-32 object-cover" />
                             <div className="p-4">
-                                <h4 className="font-bold">여행 메이트 {mate}</h4>
-                                <p>이 메이트는 {mate}번 해외 여행 스타일을 선호합니다.</p>
-                                <button className="mt-2 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
-                                    프로필 보기
+                                <h4 className="font-bold">{`여행지 ${product}`}</h4>
+                                <p className="text-gray-600">여행지 이름</p>
+                                <button className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                                    더 보기
                                 </button>
                             </div>
                         </div>
@@ -135,51 +183,49 @@ function HomeAbroad() {
                 </div>
             </div>
 
-            <div className="my-4">
-                <h3 className="text-xl font-semibold">인기 해외 여행지</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[1, 2, 3].map((dest) => (
-                        <div key={dest} className="bg-white shadow-md rounded-lg overflow-hidden">
-                            <img src={`https://picsum.photos/200/150?random=${dest + 20}`} alt={`여행지 ${dest}`} className="w-full h-32 object-cover" />
-                            <div className="p-4">
-                                <h4 className="font-bold">해외 여행지 {dest}</h4>
-                                <p>이 여행지는 {dest}번 해외 여행 스타일과 잘 어울립니다.</p>
-                                <button className="mt-2 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
-                                    더 알아보기
-                                </button>
-                            </div>
+            <div className="my-12 h-16" />
+
+            {/* 추가된 카드들 */}
+            <div className="my-12">
+                <h3 className="text-xl font-semibold mb-4 text-green-600">여행을 쉽고 간편하게</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <img src="https://picsum.photos/200/150?random=11" alt="여행 체크리스트" className="w-full h-32 object-cover" />
+                        <div className="p-4">
+                            <h4 className="font-bold text-lg">여행 체크리스트</h4>
+                            <button onClick={() => navigateToPage("/checklist")} className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                                작성하기
+                            </button>
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="my-4">
-                <h3 className="text-xl font-semibold">사용자 리뷰 및 성공 사례</h3>
-                <ul className="list-disc list-inside mt-4">
-                    <li>리뷰 1: 이 사이트를 통해 최고의 해외 여행 메이트를 만났어요!</li>
-                    <li>리뷰 2: 함께한 해외 여행이 잊을 수 없는 추억이 되었어요.</li>
-                    <li>리뷰 3: 다음 해외 여행도 여기서 메이트를 구할 거예요!</li>
-                </ul>
-            </div>
-
-            <div className="my-4">
-                <h3 className="text-xl font-semibold">뉴스레터 가입</h3>
-                <form className="mt-4 max-w-lg mx-auto">
-                    <div className="mb-4">
-                        <label className="block text-gray-700">이메일 주소</label>
-                        <input
-                            type="email"
-                            placeholder="이메일을 입력하세요..."
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring focus:ring-blue-500"
-                        />
                     </div>
-                    <button
-                        type="button"
-                        className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700"
-                    >
-                        가입하기
-                    </button>
-                </form>
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <img src="https://picsum.photos/200/150?random=12" alt="환율 정보" className="w-full h-32 object-cover" />
+                        <div className="p-4">
+                            <h4 className="font-bold text-lg">환율 정보</h4>
+                            <button onClick={() => navigateToPage("/exchange")} className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                                살펴보기
+                            </button>
+                        </div>
+                    </div>
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <img src="https://picsum.photos/200/150?random=13" alt="여행 경비 계산기" className="w-full h-32 object-cover" />
+                        <div className="p-4">
+                            <h4 className="font-bold text-lg">여행 경비 계산기</h4>
+                            <button onClick={() => navigateToPage("/calculator")} className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                                계산하기
+                            </button>
+                        </div>
+                    </div>
+                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <img src="https://picsum.photos/200/150?random=14" alt="여행 플레너" className="w-full h-32 object-cover" />
+                        <div className="p-4">
+                            <h4 className="font-bold text-lg">여행 플레너</h4>
+                            <button onClick={() => navigateToPage("/planner")} className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                                계획짜기
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

@@ -1,6 +1,5 @@
-
+import { Outlet, Navigate } from "react-router-dom"
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router";
 
 function ProtectedRoute({children}) {
   const isLogin = useSelector((state) => state.userData.username ? true : false ) 
@@ -12,7 +11,7 @@ function ProtectedRoute({children}) {
   }
 
 
-  return children ;
+  return children || <Outlet />
 }
 
 export default ProtectedRoute;

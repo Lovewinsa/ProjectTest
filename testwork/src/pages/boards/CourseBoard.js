@@ -51,7 +51,7 @@ function CourseBoard() {
 
     setCurrentPage(Number(pageNum))
     setDomesticInternational(diValue)
-    
+    console.log("첫 번째 체크:", diValue)
     setSearchCriteria((prev) => ({
       ...prev,
       city,
@@ -136,6 +136,7 @@ function CourseBoard() {
           }
           return 0 // 기본값
         })
+        console.log("두 번째 체크:", diValue)
 
         //서버로부터 응답된 데이터 state에 넣기
         setDesiredCountry(diValue === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지")

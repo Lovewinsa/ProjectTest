@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
-import { Stomp } from '@stomp/stompjs';
+import { Client, Stomp } from '@stomp/stompjs';
 
 // WebSocket 서버와 연결 설정
 const useWebSocket = () => {
@@ -11,15 +11,26 @@ const useWebSocket = () => {
   // WebSocket 연결
   useEffect(() => {
     const socket = new SockJS('httP://localhost:8888/api/ws');
-    const client = Stomp.over(socket);
-
-    client.connect({}, () => {
-      setStompClient(client);
+    // Stomp 클라이언트 생성
+    const client = new Client({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000, // 자동 재연결 지연 시간 (5초)
+      debug: () => {},      // 디버그 로그 비활성화
     });
+
+    client.onConnect = () => {
+      setStompClient(client);
+    };  
+
+    client.onStompError = (error) => {
+      console.error('STOMP Error: ', error);
+    };
+
+    client.activate(); // 클라이언트 활성화 및 연결 시도
 
     return () => {
       if (client) {
-        client.disconnect();
+        client.deactivate(); // 컴포넌트 unmount 시 WebSocket 연결 해제
       }
     };
   }, []);

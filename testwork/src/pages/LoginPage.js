@@ -160,7 +160,7 @@ function LoginPage() {
         </div>
         <div className="flex flex-col items-center space-y-4">
           <img 
-            className="w-48 h-auto cursor-pointer" 
+            className="w-48 h-auto cursor-pointer mt-5" 
             src="/img/KakaoLogin.png" 
             alt="Kakao Login" 
             onClick={handleKakaoLogin}

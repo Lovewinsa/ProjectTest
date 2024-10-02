@@ -14,7 +14,7 @@ function Footer(props) {
               <img src="/img/TripDuologo.png" className="w-40 h-auto me-3" alt="logo" />
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3">
             {/* RESOURCES */}
             <div>

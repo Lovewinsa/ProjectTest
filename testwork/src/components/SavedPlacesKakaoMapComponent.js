@@ -35,7 +35,6 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
   }, [])
 
   useEffect(() => {
-
     if (map && savedPlaces.length > 0) {
       // 첫 번째 마커의 위치로 지도 중심을 설정
       const firstPlace = savedPlaces[0];
@@ -78,7 +77,6 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
   useEffect(() => {
     // centerLocation이 업데이트될 때마다 지도 중심 이동
     if (map && centerLocation) {
-      
       const { Ma, La } = centerLocation;
       const newCenter = new window.kakao.maps.LatLng(Ma, La);
       map.setCenter(newCenter);
