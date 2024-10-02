@@ -25,6 +25,7 @@
     "holderjs": "^2.9.9",
     "holdjs": "^1.0.0",
     "jsontokens": "^4.0.1",
+    "keen-slider": "^6.8.6",
     "moment": "^2.30.1",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
@@ -42,8 +43,10 @@
     "react-router-dom": "^6.26.0",
     "react-script": "^2.0.5",
     "react-scripts": "^5.0.1",
+    "react-slick": "^0.30.2",
     "react-transition-group": "^4.4.5",
     "redux": "^5.0.1",
+    "slick-carousel": "^1.8.1",
     "sockjs-client": "^1.6.1",
     "styled-components": "^6.1.13",
     "web-vitals": "^2.1.4"

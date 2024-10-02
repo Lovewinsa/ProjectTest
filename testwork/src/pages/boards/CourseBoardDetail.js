@@ -4,7 +4,7 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux"
 import { NavLink, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import ConfirmModal from "../../components/ConfirmModal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons"
+import { faCrown, faDove, faEye, faFeather, faHeart, faMessage, faPlane, faUser } from "@fortawesome/free-solid-svg-icons"
 import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
 import SavedPlacesGoogleMapComponent from "../../components/SavedPlacesGoogleMapComponent"
 
@@ -68,6 +68,28 @@ const CourseBoardDetail = () => {
   //action 발행하기 위해
   const navigate = useNavigate()
 
+  //--------------------------------------------------------------------------------------------------------------rating 관리 부
+  // rating 비교 조건 데이터
+  const ratingConfig = [
+    { min: 0, max: 1499, icon: faFeather, color: "gray" }, // 이코노미
+    { min: 1500, max: 2999, icon: faFeather, color: "blue" }, // 프리미엄 이코노미
+    { min: 3000, max: 4499, icon: faDove, color: "gray" }, // 비지니스
+    { min: 4500, max: 5999, icon: faDove, color: "blue" }, // 프리미엄 비지니스
+    { min: 6000, max: 7499, icon: faPlane, color: "gray" }, // 퍼스트
+    { min: 7500, max: 8999, icon: faPlane, color: "blue" }, // 프리미엄 퍼스트
+    { min: 9000, max: 10000, icon: faCrown, color: "yellow" }, // 로얄
+    { min: -Infinity, max: Infinity, icon: faUser, color: "black" }, // 기본값
+  ]
+
+  // rating 값에 따른 아이콘과 색상 계산 //
+  const getRatingDetails = (ratings) => {
+    return (
+      ratingConfig.find((config) => ratings >= config.min && ratings <= config.max) || { icon: faUser, color: "black" }
+    ) // 기본값
+  }
+
+  const { icon: ratingIcon, color: ratingColor } = getRatingDetails(writerProfile.ratings || 0);
+  //--------------------------------------------------------------------------------------------------------------
   useEffect(() => {
     //id가 변경될 때 기존 게시물 데이터가 화면에 남아있는 것 방지
     setPost({ tags: [], postData: [{ dayMemo: "", places: [""] }] }) // 초기값으로 설정
@@ -429,8 +451,8 @@ const CourseBoardDetail = () => {
         {/* 여행 일정 추가 */}
         <div className="my-2 text-sm text-gray-500">
           <span>
-             여행 일정 : {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-             {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}
+            여행 일정 : {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+            {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}
           </span>
         </div>
 
@@ -509,6 +531,7 @@ const CourseBoardDetail = () => {
             )}
             <div>
               <h3 className="text-base font-semibold leading-7 tracking-tight text-gray-900">
+              <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
                 {writerProfile.nickname}
               </h3>
               <p className="text-sm font-semibold leading-6 text-indigo-600">
