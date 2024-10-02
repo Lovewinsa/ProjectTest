@@ -41,6 +41,7 @@ import MyPage from "../pages/myPage/MyPage"
 import ProtectedRoute from "../components/ProtectedRoute"
 import TripLogBoardForm from "../pages/boards/TripLogBoardForm"
 import TripLogBoard from "../pages/boards/TripLogBoard"
+import TripLogBoardFormNew from "../pages/boards/TripLogBoardFormNew"
 
 // /users/:id
 // /users/:id/setting
@@ -100,7 +101,7 @@ const protectedRoutes = [
   { path: "/posts/course/:id/edit", element: <CourseBoardEditForm /> },
 
   //      ### triplog ###
-  { path: "posts/trip_log/new", element: <TripLogBoardForm />},
+  { path: "posts/trip_log/new", element: <TripLogBoardFormNew />},
   // { path: "posts/trip_log/:id/edit", element: <TripLogBoardEditForm />},
 
   // ### profile setting(보여지는 정보) ###

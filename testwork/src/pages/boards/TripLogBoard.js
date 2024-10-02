@@ -284,7 +284,7 @@ function TripLogBoard() {
                 <div className="flex justify-between mb-4">
                     <Link
                         to={{
-                            pathname: "/posts/course/new",
+                            pathname: "/posts/trip_log/new",
                             search: `?di=${domesticInternational}&status=PUBLIC`
                         }}
                         className="text-blue-500"

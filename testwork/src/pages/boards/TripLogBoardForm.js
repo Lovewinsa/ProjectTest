@@ -1,12 +1,12 @@
 import axios from "axios"
 import React, { useEffect, useState } from "react"
 import { shallowEqual, useSelector } from "react-redux"
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
 import SavedPlacesGoogleMapComponent from "../../components/SavedPlacesGoogleMapComponent"
 
 const TripLogBoardForm = () => {
-    //"/posts/course/:id/detail" 에서 id에 해당되는 경로 파라미터 값 얻어오기
+    
     const { id } = useParams()
     //로그인된 user정보
     const loggedInUserId = useSelector((state) => state.userData.id, shallowEqual) // 로그인된 user의 id
@@ -28,7 +28,6 @@ const TripLogBoardForm = () => {
 
     const searchParams = useSearchParams()
     const domesticInternational = searchParams.get("di")
-    const location = useLocation()
 
     //action 발행하기 위해
     const navigate = useNavigate()
