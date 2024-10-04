@@ -102,6 +102,7 @@ const protectedRoutes = [
 
   //      ### triplog ###
   { path: "posts/trip_log/new", element: <TripLogBoardFormNew />},
+  { path: "posts/trip_log/:id/new", element: <TripLogBoardForm />},
   // { path: "posts/trip_log/:id/edit", element: <TripLogBoardEditForm />},
 
   // ### profile setting(보여지는 정보) ###

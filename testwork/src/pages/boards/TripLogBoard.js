@@ -61,7 +61,7 @@ function TripLogBoard() {
         }))
     
         axios
-          .get(`/api/v1/posts/course`, {
+          .get(`/api/v1/posts/trip_log`, {
             params: {
               pageNum: Number(pageNum),
               country: country || undefined,
@@ -275,7 +275,7 @@ function TripLogBoard() {
 
     // 게시물 클릭 시 해당 게시물 상세 페이지로 이동
     const handlePostClick = (id) => {
-        navigate(`/posts/triplog/${id}/detail?di=${domesticInternational}`)
+        navigate(`/posts/trip_log/${id}/detail?di=${domesticInternational}`)
     }
 
     return (

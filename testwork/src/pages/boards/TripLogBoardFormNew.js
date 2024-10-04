@@ -12,9 +12,9 @@ const TripBoardFormNew = () => {
   const loggedInUsername = useSelector((state) => state.userData.username, shallowEqual)
 
   // 달력에서 선택된 날짜 범위 저장
-  const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
-  
+  const [selectedDateRange, setSelectedDateRange] = useState([null, null])
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false) // 캘린더 표시 여부 상태
+
   const [title, setTitle] = useState("")
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
@@ -61,7 +61,7 @@ const TripBoardFormNew = () => {
   // 달력에서 날짜를 선택할 때 호출되는 함수
   const handleDateChange = (dateRange) => {
     setSelectedDateRange(dateRange)
-     // 날짜 선택 후 캘린더 닫기
+    // 날짜 선택 후 캘린더 닫기
     setIsCalendarOpen(false)
   }
 
@@ -148,7 +148,7 @@ const TripBoardFormNew = () => {
   //게시글 작성 완료
   const handleSubmit = () => {
     const post = {
-      userId : loggedInUserId,
+      userId: loggedInUserId,
       writer: loggedInNickname,
       type: "TRIP_LOG",
       title,
@@ -173,7 +173,8 @@ const TripBoardFormNew = () => {
       <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-semibold text-gray-800">
-            {status === "PRIVATE" && "나만의 "}{domesticInternational === "Domestic" ? "국내 " : "해외 "}여행기록 작성
+            {status === "PRIVATE" && "나만의 "}
+            {domesticInternational === "Domestic" ? "국내 " : "해외 "}여행기록 작성
           </h1>
           <button
             onClick={() => navigate(`/posts/trip_log?di=${domesticInternational}`)}
@@ -207,18 +208,19 @@ const TripBoardFormNew = () => {
             <div className="flex flex-grow-[1] items-end justify-end ml-4">
               <button
                 onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2"
-              >
+                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
                 날짜 선택
               </button>
-              <button onClick={handleDateReset} className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 ml-2">
+              <button
+                onClick={handleDateReset}
+                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 ml-2">
                 날짜 초기화
               </button>
             </div>
           </div>
           {/* 선택한 날짜 */}
           <div className="sm:col-span-6">
-            <p style={{ marginTop: '-10px', marginBottom: '-20px' }} className="text-sm text-gray-600 text-right">
+            <p style={{ marginTop: "-10px", marginBottom: "-20px" }} className="text-sm text-gray-600 text-right">
               {selectedDateRange[0] && selectedDateRange[1]
                 ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
                 : "0000. 00. 00. ~ 0000. 00. 00."}
@@ -231,7 +233,7 @@ const TripBoardFormNew = () => {
               <Calendar
                 selectRange={true}
                 onChange={handleDateChange}
-                value={selectedDateRange || [new Date(), new Date()]}  // 초기값 또는 선택된 날짜 범위
+                value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
               />
             </div>
           )}
@@ -376,8 +378,9 @@ const TripBoardFormNew = () => {
                       />
                       <div className="ml-2 w-1/4">
                         <button
-                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
+                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${
+                            day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                           onClick={() => removePlace(dayIndex, placeIndex)}
                           disabled={day.places.length === 0}>
                           삭제
@@ -387,11 +390,14 @@ const TripBoardFormNew = () => {
                   </div>
                 </div>
               ))}
-              <button
-                onClick={() => addPlace(dayIndex)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
-                장소 추가
-              </button>
+              {/* 장소 추가 버튼을 하단 중앙에 배치 */}
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={() => addPlace(dayIndex)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full">
+                  장소 추가
+                </button>
+              </div>
             </div>
           ))}
         </div>
