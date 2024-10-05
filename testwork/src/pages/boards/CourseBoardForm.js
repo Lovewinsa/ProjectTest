@@ -53,7 +53,6 @@ const CourseBoardForm = () => {
   const status = searchParams.get("status") //"PUBLIC"이거나 "PRIVATE"인 경우 처리
   const navigate = useNavigate()
 
-
   // 날짜 초기화
   const handleDateReset = () => {
     setSelectedDateRange([null, null]) // 날짜 범위를 현재 날짜로 초기화

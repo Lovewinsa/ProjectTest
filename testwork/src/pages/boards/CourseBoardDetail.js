@@ -448,7 +448,7 @@ const CourseBoardDetail = () => {
           </button>
         </div>
 
-        {/* 여행 일정 추가 */}
+        {/* 여행 일정 */}
         <div className="my-2 text-sm text-gray-500">
           <span>
             여행 일정 : {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
@@ -495,7 +495,7 @@ const CourseBoardDetail = () => {
                 여행기록 작성
               </button>
               <button
-                onClick={() => navigate(`/posts/course/${id}/edit`)}
+                onClick={() => navigate(`/posts/course/${id}/edit?di=${domesticInternational}`)}
                 className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
                 수정
               </button>

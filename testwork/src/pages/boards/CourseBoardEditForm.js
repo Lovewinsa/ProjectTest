@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
 import { shallowEqual, useSelector } from "react-redux";
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent";
@@ -25,17 +25,13 @@ const CourseBoardEditForm = () => {
         status: "PUBLIC"
     })
 
-    // const [title, setTitle] = useState("")
-    // const [country, setCountry] = useState("")
-    // const [city, setCity] = useState("")
-    // const [tagInput, setTagInput] = useState("")
-    // const [postTags, setPostTags] = useState([])
-    // const [postData, setPostData] = useState([{ places: [""], dayMemo: "" }])
-
     const [selectedDayIndex, setSelectedDayIndex] = useState(null)
     const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
     const [savedPlaces, setSavedPlaces] = useState([])
     const [isSelectPlace, setIsSelectPlace] = useState(false)
+
+    const [searchParams] = useSearchParams()
+    const domesticInternational = searchParams.get("di") || "Domestic"
 
     const navigate = useNavigate()
     const { id } = useParams()  // URL에서 게시물 ID를 가져옴
@@ -65,25 +61,24 @@ const CourseBoardEditForm = () => {
         // 기존 게시물 데이터를 가져와 초기화
         axios.get(`/api/v1/posts/${id}/update`)
             .then((res) => {
-                console.log(res.data)
                 setPostInfo(res.data)
-                // setPostTags(res.data.tags)
             })
             .catch((error) => console.log(error))
-    }, [id]);
+    }, [id])
 
     const handleSubmit = () => {
         axios.put(`/api/v1/posts/${id}`, postInfo)  // PUT 요청으로 업데이트
             .then((res) => {
                 alert("수정했습니다")
                 // 업데이트 후 해당글 자세히보기로 이동
-                navigate(`/posts/course/${id}/detail`);
+                navigate(`/posts/course/${id}/detail?di=${domesticInternational}`)
             })
-            .catch((error) => console.log(error));
-    };
+            .catch((error) => console.log(error))
+    }
 
+    //태그 입력
     const handleTagInput = (e) => {
-        const value = e.target.value;
+        const value = e.target.value
         if (value.endsWith(" ") && value.trim() !== "") {
             const newTag = value.trim()
             if (newTag !== "#" && newTag.startsWith("#") && !postInfo.tags.includes(newTag)) {
@@ -94,8 +89,9 @@ const CourseBoardEditForm = () => {
                 e.target.value = ""
             }
         }
-    };
+    }
 
+    //태그 지우기 버튼
     const removeTag = (tagToRemove) => {
         setPostInfo((prev) => ({
             ...prev,
@@ -103,6 +99,18 @@ const CourseBoardEditForm = () => {
         }))
     }
 
+    // 날짜 계산 함수
+    const calculateDate = (startDate, dayIndex) => {
+        const date = new Date(startDate)
+        date.setDate(date.getDate() + dayIndex) // 시작 날짜에 dayIndex 만큼 더함
+        return date.toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+        })
+    }
+
+    //Day 추가 버튼
     const addDay = () => {
         setPostInfo((prev) => ({
             ...prev,
@@ -110,6 +118,7 @@ const CourseBoardEditForm = () => {
         }));
     };
 
+    //Day 삭제 버튼
     const removeDay = (dayIndex) => {
         if (postInfo.postData.length > 1) {
             setPostInfo((prev) => ({
@@ -119,6 +128,7 @@ const CourseBoardEditForm = () => {
         }
     }
 
+    //장소 추가 버튼
     const addPlace = (dayIndex) => {
         const newDays = [...postInfo.postData]
         newDays[dayIndex].places.push("")
@@ -128,29 +138,32 @@ const CourseBoardEditForm = () => {
         }))
     }
 
+    //장소 삭제 버튼
     const removePlace = (dayIndex, placeIndex) => {
         const newDays = [...postInfo.postData]
 
-        if(newDays[dayIndex].places.length > 1){
+        if (newDays[dayIndex].places.length > 1) {
             // 장소 데이터가 2개 이상일 때 UI와 장소 데이터를 모두 삭제
             newDays[dayIndex].places.splice(placeIndex, 1)
         } else {
             // 장소 데이터가 1개일 때 UI는 남기고 장소 데이터만 삭제
             newDays[dayIndex].places[placeIndex] = ""
         }
-        
+
         setPostInfo((prev) => ({
             ...prev,
             postData: newDays
         }))
     }
 
+    //장소 선택 버튼
     const handlePlaceSelection = (dayIndex, placeIndex) => {
-        setSelectedDayIndex(dayIndex);
-        setSelectedPlaceIndex(placeIndex);
-        setIsSelectPlace(true);
-    };
+        setSelectedDayIndex(dayIndex)
+        setSelectedPlaceIndex(placeIndex)
+        setIsSelectPlace(true)
+    }
 
+    //장소 저장 버튼
     const handleSavePlace = (place) => {
         if (place && isSelectPlace) {
             const newDays = [...postInfo.postData]
@@ -170,6 +183,7 @@ const CourseBoardEditForm = () => {
         }
     }
 
+    //장소 메모 
     const handlePlaceMemoChange = (dayIndex, placeIndex, memo) => {
         const newDays = [...postInfo.postData]
         newDays[dayIndex].places[placeIndex] = {
@@ -182,6 +196,7 @@ const CourseBoardEditForm = () => {
         }))
     }
 
+    //Day 메모
     const handleDayMemoChange = (dayIndex, memo) => {
         const newDays = [...postInfo.postData]
         newDays[dayIndex].dayMemo = memo
@@ -196,16 +211,18 @@ const CourseBoardEditForm = () => {
             <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-semibold text-gray-800">여행 코스 수정</h1>
-                    <button
-                        onClick={() => navigate("/posts/course")}
-                        className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
-                        목록으로 돌아가기
-                    </button>
-                    <button
-                        className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
-                        onClick={handleSubmit}>
-                        수정 완료
-                    </button>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => navigate(`/posts/course/${id}/detail?di=${domesticInternational}`)}
+                            className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
+                            게시글로 돌아가기
+                        </button>
+                        <button
+                            className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
+                            onClick={handleSubmit}>
+                            수정 완료
+                        </button>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -323,7 +340,7 @@ const CourseBoardEditForm = () => {
                     {postInfo.postData.map((day, dayIndex) => (
                         <div key={dayIndex} className="bg-gray-50 p-4 rounded-lg shadow-inner">
                             <div className="flex justify-between items-center mb-2">
-                                <h2 className="text-xl font-semibold">Day {dayIndex + 1}</h2>
+                                <h2 className="text-xl font-semibold">Day {dayIndex + 1} - {postInfo.startDate && calculateDate(postInfo.startDate, dayIndex)}</h2>
                                 <div className="flex space-x-2">
                                     <button
                                         onClick={addDay}
@@ -439,7 +456,7 @@ const CourseBoardEditForm = () => {
                 </div>
             )}
         </div>
-    );
-};
+    )
+}
 
-export default CourseBoardEditForm;
+export default CourseBoardEditForm
