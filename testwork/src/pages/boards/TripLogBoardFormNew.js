@@ -65,6 +65,17 @@ const TripBoardFormNew = () => {
     setIsCalendarOpen(false)
   }
 
+  // 날짜 계산 함수
+  const calculateDate = (startDate, dayIndex) => {
+    const date = new Date(startDate)
+    date.setDate(date.getDate() + dayIndex) // 시작 날짜에 dayIndex 만큼 더함
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+  }
+
   const handleTagInput = (e) => {
     const value = e.target.value
     setTagInput(value)
@@ -335,7 +346,7 @@ const TripBoardFormNew = () => {
           {days.map((day, dayIndex) => (
             <div key={dayIndex} className="bg-gray-50 p-4 rounded-lg shadow-inner">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-semibold">Day {dayIndex + 1}</h2>
+                <h2 className="text-xl font-semibold">Day {dayIndex + 1} - {selectedDateRange && calculateDate(selectedDateRange[0], dayIndex)}</h2>
                 <div className="flex space-x-2">
                   <button onClick={addDay} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                     Day 추가
@@ -378,9 +389,8 @@ const TripBoardFormNew = () => {
                       />
                       <div className="ml-2 w-1/4">
                         <button
-                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${
-                            day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
+                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                           onClick={() => removePlace(dayIndex, placeIndex)}
                           disabled={day.places.length === 0}>
                           삭제

@@ -42,6 +42,8 @@ import ProtectedRoute from "../components/ProtectedRoute"
 import TripLogBoardForm from "../pages/boards/TripLogBoardForm"
 import TripLogBoard from "../pages/boards/TripLogBoard"
 import TripLogBoardFormNew from "../pages/boards/TripLogBoardFormNew"
+import TripLogBoardDetail from "../pages/boards/TripLogBoardDetail"
+import TripLogBoardEditForm from "../pages/boards/TripLogBoardEditForm"
 
 // /users/:id
 // /users/:id/setting
@@ -72,9 +74,9 @@ const routes = [
   { path: "/posts/course", element: <CourseBoard /> },
   { path: "/posts/course/:id/detail", element: <CourseBoardDetail /> },
 
-  //      ### triplog ###
+  //      ### trip_log ###
   { path: "/posts/trip_log", element: <TripLogBoard />},
-  // { path: "/posts/trip_log/:id/detail", element: <TripLogDetail />},
+  { path: "/posts/trip_log/:id/detail", element: <TripLogBoardDetail />},
 
   // ### 부가 기능 ###
   { path: "/checklist", element: <TravelChecklist /> },
@@ -103,7 +105,7 @@ const protectedRoutes = [
   //      ### triplog ###
   { path: "posts/trip_log/new", element: <TripLogBoardFormNew />},
   { path: "posts/trip_log/:id/new", element: <TripLogBoardForm />},
-  // { path: "posts/trip_log/:id/edit", element: <TripLogBoardEditForm />},
+  { path: "posts/trip_log/:id/edit", element: <TripLogBoardEditForm />},
 
   // ### profile setting(보여지는 정보) ###
   { path: "/users/:id", element: <MyPage /> },

@@ -435,7 +435,7 @@ function TripLogBoard() {
                                         {post.tags &&
                                             post.tags.map((tag, index) => (
                                                 <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
-                                                    #{tag}
+                                                    {tag}
                                                 </span>
                                             ))}
                                     </div>

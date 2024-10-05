@@ -36,6 +36,9 @@ const TripLogBoardForm = () => {
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
   const domesticInternational = queryParams.get("di")
+  const [searchParams] = useSearchParams()
+  const status = searchParams.get("status") || "PUBLIC" //"PUBLIC"이거나 "PRIVATE"인 경우 처리
+
 
   //action 발행하기 위해
   const navigate = useNavigate()
@@ -51,7 +54,7 @@ const TripLogBoardForm = () => {
         const postData = res.data.dto
         setPost(postData)
         setTitle(`[ ${res.data.dto.title} ] 게시물의 여행기록`)
-
+        console.log(res.data.dto)
         //장소 정보
         const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
         setAllPlaces(places)
@@ -93,6 +96,12 @@ const TripLogBoardForm = () => {
   //Day 메모
   const handleDayMemoChange = (dayIndex, memo) => {
     const newDays = [...days]
+
+    // dayIndex에 해당하는 객체가 없으면 기본 값을 추가
+    if (!newDays[dayIndex]) {
+      newDays[dayIndex] = { dayMemo: "", places: [""] }
+    }
+
     newDays[dayIndex].dayMemo = memo
     setDays(newDays)
   }
@@ -122,31 +131,55 @@ const TripLogBoardForm = () => {
   //tag 삭제
   const removeTag = (tagToRemove) => setTags(tags.filter((tag) => tag !== tagToRemove))
 
-
-
-  const handleSubmit = () => {}
+  //글 작성 완료
+  const handleSubmit = () => {
+    const postInfo = {
+      userId: loggedInUserId,
+      writer: loggedInNickname,
+      type: "TRIP_LOG",
+      title,
+      country: post.country,
+      city: post.city,
+      startDate: post.startDate,
+      endDate: post.endDate,
+      tags,
+      postData: days,
+      status: status,
+    }
+    axios
+      .post("/api/v1/posts/trip_log", postInfo)
+      .then((res) => {
+        console.log(postInfo)
+        navigate(`/posts/trip_log?di=${domesticInternational}`)
+      })
+      .catch((error) => console.log(error))
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-[1024px]">
       <div className="flex flex-col h-full bg-gray-100 p-6">
-        <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
+        <div className="flex justify-between items-center gap-2 mt-2">
+          {/* 왼쪽 정렬: 태그s */}
           <div className="flex gap-2">
-            {/* 태그s */}
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">#{post.country}</span>
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">#{post.city}</span>
           </div>
-          {/* 버튼 */}
-          <button
-            onClick={() => navigate(`/posts/trip_log?di=${domesticInternational}`)}
-            className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
-            목록으로 돌아가기
-          </button>
-          <button
-            className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
-            onClick={handleSubmit}>
-            작성 완료
-          </button>
+
+          {/* 오른쪽 정렬: 버튼 */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate(`/posts/course/${id}/detail?di=${domesticInternational}`)}
+              className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+              게시글로 돌아가기
+            </button>
+            <button
+              className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
+              onClick={handleSubmit}>
+              작성 완료
+            </button>
+          </div>
         </div>
+
         {/* 여행 일정 */}
         <div className="my-2 text-sm text-gray-500">
           <span>
@@ -154,17 +187,17 @@ const TripLogBoardForm = () => {
             {post.startDate === null
               ? "설정하지 않았습니다."
               : new Date(post.startDate).toLocaleDateString("ko-KR", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })}
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })}
             {post.endDate === null
               ? ""
               : ` ~ ${new Date(post.endDate).toLocaleDateString("ko-KR", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })}`}
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })}`}
           </span>
         </div>
         <div className="flex justify-between items-center m-3">
@@ -210,7 +243,7 @@ const TripLogBoardForm = () => {
           {(post.postData || [{ dayMemo: "", places: [] }]).map((day, dayIndex) => (
             <div key={dayIndex} className="bg-white rounded-lg shadow-md p-4">
               <h2 className="text-xl font-semibold mb-4">
-              Day {dayIndex + 1} - {post.startDate && calculateDate(post.startDate, dayIndex)} {/* 날짜 표시 */}
+                Day {dayIndex + 1} - {post.startDate && calculateDate(post.startDate, dayIndex)} {/* 날짜 표시 */}
                 <span className="my-2 text-sm text-gray-500"></span>
               </h2>
               <div className="mb-4">
