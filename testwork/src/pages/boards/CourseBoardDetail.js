@@ -254,9 +254,14 @@ const CourseBoardDetail = () => {
 
   // 신고 처리 함수
   const handleReportComment = (commentId) => {
-    // 신고 기능 구현
-    alert(`댓글 ID ${commentId}가 신고되었습니다.`)
-    // 추가로 서버에 신고 요청을 보내는 로직을 여기에 추가
+    if (!loggedInUserId) {
+      alert("로그인 후 이용가능합니다.")
+    } else {
+      // 신고 기능 구현
+      alert(`댓글 ID ${commentId}가 신고되었습니다.`)
+      // 추가로 서버에 신고 요청을 보내는 로직을 여기에 추가
+    }
+
   }
 
   //댓글 등록
@@ -423,6 +428,26 @@ const CourseBoardDetail = () => {
     }
   }
 
+  //댓글 등록일 날짜 형식 변환
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+
+    const formattedDate = date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+
+    const formattedTime = date.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+
+    return `${formattedDate} ${formattedTime}`
+  }
+
+
   return (
 
     <div className="container mx-auto p-4 max-w-[1024px]">
@@ -536,7 +561,7 @@ const CourseBoardDetail = () => {
             )}
             <div>
               <h3 className="text-base font-semibold leading-7 tracking-tight text-gray-900">
-              <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
+                <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
                 {writerProfile.nickname}
               </h3>
               <p className="text-sm font-semibold leading-6 text-indigo-600">
@@ -596,37 +621,44 @@ const CourseBoardDetail = () => {
 
 
         {/* 원글의 댓글 작성 form */}
-        <div className={`border-3 rounded-lg p-3 mt-4 mb-6 bg-white ${!loggedInUsername ? 'hidden' : ''}`}>
-          <div className="font-bold text-lg">{loggedInNickname}</div>
-          <form onSubmit={handleCommentSubmit}>
-            <div className="relative">
-              {/* 원글의 id */}
-              <input type="hidden" name="id" defaultValue={post.id} />
-              {/* 원글의 작성자 */}
-              <input type="hidden" name="toUsername" defaultValue={post.writer} />
-              <input type="hidden" name="status" />
-              <textarea
-                name="content"
-                className="border border-white rounded w-full h-24 p-2"
-                placeholder="댓글을 남겨보세요"
-                value={commentInnerText}
-                maxLength={maxLength}
-                onChange={(e) => setCommentInnerText(e.target.value)}
-              />
-              <div className="absolute top-2 right-2 text-gray-500 text-sm">
-                {commentInnerText.length}/{maxLength}
+        {loggedInUserId ?
+          <div className="border-3 rounded-lg p-3 mt-4 mb-6 bg-white">
+            <div className="font-bold text-lg">{loggedInNickname}</div>
+            <form onSubmit={handleCommentSubmit}>
+              <div className="relative">
+                {/* 원글의 id */}
+                <input type="hidden" name="id" defaultValue={post.id} />
+                {/* 원글의 작성자 */}
+                <input type="hidden" name="toUsername" defaultValue={post.writer} />
+                <input type="hidden" name="status" />
+                <textarea
+                  name="content"
+                  className="border border-white rounded w-full h-24 p-2"
+                  placeholder="댓글을 남겨보세요"
+                  value={commentInnerText}
+                  maxLength={maxLength}
+                  onChange={(e) => setCommentInnerText(e.target.value)}
+                />
+                <div className="absolute top-2 right-2 text-gray-500 text-sm">
+                  {commentInnerText.length}/{maxLength}
+                </div>
+                <div className="flex items-center justify-between">
+                  <button
+                    type="submit"
+                    className="text-blue-500 hover:text-blue-700 font-semibold"
+                    onClick={() => (commentIndex = 0)}>
+                    등록
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <button
-                  type="submit"
-                  className="text-blue-500 hover:text-blue-700 font-semibold"
-                  onClick={() => (commentIndex = 0)}>
-                  등록
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+          :
+          <p className="text-center border-3 rounded-lg p-3 mt-4 mb-6 bg-white">
+            댓글 기능은 로그인 후 이용 가능합니다.
+          </p>
+        }
+
 
         {/* 댓글 목록 */}
         <div className="mt-6 space-y-6">
@@ -729,9 +761,9 @@ const CourseBoardDetail = () => {
                         {/* 댓글 내용 */}
                         <p className="whitespace-pre-wrap text-gray-700 mt-1">{item.content}</p>
 
-                        {/* 답글 및 기타 버튼 */}
+                        {/* 등록일 / 답글 및 기타 버튼 */}
                         <div className="mt-2 text-sm text-gray-500">
-                          <small className="ml-4 text-gray-400">{item.createdAt}</small>
+                          <small className="ml-4 text-gray-400">{formatDate(item.createdAt)}</small>
                           <button
                             className="ml-4 text-blue-500 hover:text-blue-700 text-sm"
                             onClick={(e) => {
