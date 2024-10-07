@@ -36,7 +36,7 @@ const CourseBoardForm = () => {
     // Add more countries and cities as needed
   }
   // 선택한 나라에 맞는 도시 목록을 얻음
-  const cities = citiesByCountry[country] || [] //citiesByCountry[country]가 undefined 또는 null일 경우 빈 배열 반환
+  const cities = citiesByCountry[country] || []
   const [tagInput, setTagInput] = useState("")
   const [tags, setTags] = useState([])
   const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
@@ -53,6 +53,14 @@ const CourseBoardForm = () => {
   const status = searchParams.get("status") //"PUBLIC"이거나 "PRIVATE"인 경우 처리
   const navigate = useNavigate()
 
+  //국내 글 작성시 대한민국 자동 선택처리
+  useEffect(()=>{
+    if (domesticInternational === "Domestic") {
+      setCountry("Korea")
+    } else {
+      setCountry("")
+    }
+  }, [domesticInternational])
   // 날짜 초기화
   const handleDateReset = () => {
     setSelectedDateRange([null, null]) // 날짜 범위를 현재 날짜로 초기화
