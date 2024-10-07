@@ -44,6 +44,7 @@ import TripLogBoard from "../pages/boards/TripLogBoard"
 import TripLogBoardFormNew from "../pages/boards/TripLogBoardFormNew"
 import TripLogBoardDetail from "../pages/boards/TripLogBoardDetail"
 import TripLogBoardEditForm from "../pages/boards/TripLogBoardEditForm"
+import SaveLocationPage from "../pages/myTripTmp/SaveLocationPage"
 
 // /users/:id
 // /users/:id/setting
@@ -117,6 +118,7 @@ const protectedRoutes = [
   { path: "/myPlan/:id", element: <MyPlan /> },
   { path: "/myRecord/:id", element: <MyRecord /> },
   { path: "/wishMate/:id", element: <WishMate /> },
+  { path: "/save_location", element: <SaveLocationPage />},
 
   // ### 개인정보 설정(보안, 인증정보) ###
   { path: "/auth/:id/changePassword", element: <ChangePassword /> },

@@ -91,7 +91,7 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
         style={{ width: "100%", height: "60vh" }}>
       </div>
     </div>
-  );
-};
+  )
+}
 
 export default SavedPlacesMapComponent

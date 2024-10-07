@@ -111,6 +111,7 @@ const CourseBoardDetail = () => {
 
         //장소 정보
         const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
+        console.log(places)
         setAllPlaces(places)
 
         // 첫 번째 장소로 지도 중심 설정
