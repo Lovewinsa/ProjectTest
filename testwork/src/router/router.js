@@ -41,10 +41,15 @@ import MyPage from "../pages/myPage/MyPage"
 import ProtectedRoute from "../components/ProtectedRoute"
 import TripLogBoardForm from "../pages/boards/TripLogBoardForm"
 import TripLogBoard from "../pages/boards/TripLogBoard"
-import TripLogBoardFormNew from "../pages/boards/TripLogBoardFormNew"
+import CommunityBoard from "../pages/boards/CommunityBoard"
+import CommunityBoardForm from "../pages/boards/CommunityBoardForm"
 import TripLogBoardDetail from "../pages/boards/TripLogBoardDetail"
 import TripLogBoardEditForm from "../pages/boards/TripLogBoardEditForm"
-import SaveLocationPage from "../pages/myTripTmp/SaveLocationPage"
+import TripLogBoardFormNew from "../pages/boards/TripLogBoardFormNew"
+import CommunityBoardDetail from "../pages/boards/CommunityBoardDetail"
+import CommunityBoardEditForm from "../pages/boards/CommunityBoardEditForm"
+import ResetPassword from "../pages/ResetPassword"
+import ApiDocs from "../pages/admin/ApiDocs"
 
 // /users/:id
 // /users/:id/setting
@@ -65,6 +70,9 @@ const routes = [
   { path: "/kakaoLogin/redirect", element: <KakaoRedirect /> },
   { path: "/googleLogin/redirect", element: <GoogleRedirect /> },
 
+  // ### Reset Password ###
+  { path: "/auth/resetPassword", element: <ResetPassword /> },
+
   // ### board ###
 
   //      ### mate ###
@@ -76,8 +84,14 @@ const routes = [
   { path: "/posts/course/:id/detail", element: <CourseBoardDetail /> },
 
   //      ### trip_log ###
-  { path: "/posts/trip_log", element: <TripLogBoard />},
-  { path: "/posts/trip_log/:id/detail", element: <TripLogBoardDetail />},
+  { path: "/posts/trip_log", element: <TripLogBoard /> },
+  { path: "/posts/trip_log/:id/detail", element: <TripLogBoardDetail /> },
+
+  // { path: "/posts/trip_log/:id/detail", element: <TripLogDetail />},
+
+  //      ### Community ###
+  { path: "/posts/community", element: <CommunityBoard /> },
+  { path: "/posts/community/:id/detail", element: <CommunityBoardDetail /> },
 
   // ### 부가 기능 ###
   { path: "/checklist", element: <TravelChecklist /> },
@@ -90,6 +104,9 @@ const routes = [
   { path: "/languageTip", element: <LanguageCultureTips /> },
   { path: "/extra", element: <ExtraPage /> },
   { path: "/alarm", element: <Alarm /> },
+
+  // ### etc ###
+  { path: "/api-docs", element: <ApiDocs /> },
 ]
 
 const protectedRoutes = [
@@ -103,10 +120,14 @@ const protectedRoutes = [
   { path: "/posts/course/new", element: <CourseBoardForm /> },
   { path: "/posts/course/:id/edit", element: <CourseBoardEditForm /> },
 
-  //      ### triplog ###
-  { path: "posts/trip_log/new", element: <TripLogBoardFormNew />},
-  { path: "posts/trip_log/:id/new", element: <TripLogBoardForm />},
-  { path: "posts/trip_log/:id/edit", element: <TripLogBoardEditForm />},
+  //      ### trip_log ###
+  { path: "posts/trip_log/new", element: <TripLogBoardFormNew /> },
+  { path: "posts/trip_log/:id/new", element: <TripLogBoardForm /> },
+  { path: "posts/trip_log/:id/edit", element: <TripLogBoardEditForm /> },
+
+  //      ### Community ###
+  { path: "/posts/community/new", element: <CommunityBoardForm /> },
+  { path: "/posts/community/:id/edit", element: <CommunityBoardEditForm /> },
 
   // ### profile setting(보여지는 정보) ###
   { path: "/users/:id", element: <MyPage /> },
@@ -118,7 +139,6 @@ const protectedRoutes = [
   { path: "/myPlan/:id", element: <MyPlan /> },
   { path: "/myRecord/:id", element: <MyRecord /> },
   { path: "/wishMate/:id", element: <WishMate /> },
-  { path: "/save_location", element: <SaveLocationPage />},
 
   // ### 개인정보 설정(보안, 인증정보) ###
   { path: "/auth/:id/changePassword", element: <ChangePassword /> },

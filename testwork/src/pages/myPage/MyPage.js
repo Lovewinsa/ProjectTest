@@ -28,16 +28,16 @@ function MyPage() {
     { min: 9000, max: 10000, icon: faCrown, color: "yellow" }, // 로얄
     { min: -Infinity, max: Infinity, icon: faUser, color: "black" }, // 기본값
   ];
-  
-  // rating 값에 따른 아이콘과 색상 계산 // 
-  const getRatingDetails = (ratings) => {   
+
+  // rating 값에 따른 아이콘과 색상 계산 //
+  const getRatingDetails = (ratings) => {
     return (
       ratingConfig.find((config) => ratings >= config.min && ratings <= config.max) || { icon: faUser, color: "black" }
     ); // 기본값
   };
-  
-  const {icon : ratingIcon, color : ratingColor} = getRatingDetails(profile.ratings || 0);
-  //---------------------------------------------------------------------------------------------------------------rating 관리부 
+
+  const { icon: ratingIcon, color: ratingColor } = getRatingDetails(profile.ratings || 0);
+  //---------------------------------------------------------------------------------------------------------------rating 관리부
 
   // 접속된 사용자가 없거나 본인이 아니라면 home 으로 리다일렉트
   useEffect(() => {
@@ -71,6 +71,21 @@ function MyPage() {
   // 차단 목록 모달 close
   const handleCloseBlockModal = () => {
     setBlockModalOpen(false);
+  };
+
+  const handleDeleteUser = () => {
+    if (
+      window.prompt(
+        `[주의] \n회원 탈퇴를 진행하시면 사용자의 정보가 영구히 삭제됩니다. \n이해하셨으면 [탈퇴] 를 입력해 주세요.`
+      ) === "탈퇴"
+    ) {
+      axios
+        .delete(`/api/v1/users/${id}`)
+        .then((res) => {
+          console.log(res.data);
+        })
+        .catch((error) => console.log(error));
+    }
   };
 
   return (
@@ -159,15 +174,18 @@ function MyPage() {
 
       {isBlockModalOpen && <BlockModal id={id} onClose={handleCloseBlockModal} />}
 
-      <div className="mt-20">
-        <p className=" cursor-pointer" onClick={handleOpenBlockModal}>
-          <strong>차단 목록</strong>
+      <div className="mt-20 space-y-3">
+        <p>
+          <strong className="py-2 hover:bg-gray-100 cursor-pointer" onClick={handleOpenBlockModal}>
+            차단 목록
+          </strong>
         </p>
         <p>
-          <strong>보안</strong>
+          <strong className="py-2 hover:bg-gray-100 cursor-pointer" onClick={handleDeleteUser}>
+            회원 탈퇴
+          </strong>
         </p>
-        <p>내 활동 기록</p>
-        <p>회원 탈퇴</p>
+        <p className="py-2">내 활동 기록</p>
       </div>
     </div>
   );

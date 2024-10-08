@@ -37,7 +37,7 @@ function CompletedSignup(props) {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
-    }, 500)
+    }, 700)
         if(username){
         axios.get(`/api/v1/users/username/${username}`)
         .then(res=>{

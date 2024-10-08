@@ -65,7 +65,7 @@ const CourseBoardEditForm = () => {
         setLoading(true)
         setTimeout(() => {
             setLoading(false)
-        }, 500)
+        }, 700)
         // 기존 게시물 데이터를 가져와 초기화
         axios.get(`/api/v1/posts/${id}/update`)
             .then((res) => {

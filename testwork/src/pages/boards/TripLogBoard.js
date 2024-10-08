@@ -45,7 +45,7 @@ function TripLogBoard() {
         setLoading(true)
         setTimeout(() => {
             setLoading(false)
-        }, 500)
+        }, 700)
         let pageNum = searchParams.get("pageNum") || 1
         const diValue = searchParams.get("di") || "Domestic"
         const city = searchParams.get("city") || ""

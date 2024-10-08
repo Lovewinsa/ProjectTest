@@ -6,11 +6,14 @@ import "react-calendar/dist/Calendar.css";
 import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons";
+import LoadingAnimation from "../../components/LoadingAnimation"
 
 function MateBoard() {
+  //로딩 상태 추가
+  const [loading, setLoading] = useState(false);
+
   //배열 안에서 객체로 관리
   const [pageData, setPageData] = useState([]);
-  const [mark, setMark] = useState([]);
 
   //파라미터 값 관리
   // URL에서 검색 매개변수를 가져오기 위한 상태
@@ -91,10 +94,28 @@ function MateBoard() {
       endDate: dateRange[1] ? dateRange[1].toLocaleDateString("ko-KR") : "",
     });
   };
+  // 캘린더의 날짜 스타일을 설정하는 함수 추가
+  const tileClassName = ({ date }) => {
+    const day = date.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+    // 기본적으로 검은색으로 설정
+    let className = "text-black";
 
+    // 토요일과 일요일에만 빨간색으로 변경
+    if (day === 0 || day === 6) {
+      className = "text-red-500"; // 토요일과 일요일에 숫자를 빨간색으로 표시
+    }
+
+    return className; // 최종 클래스 이름 반환
+  };
   // searchParams 가 바뀔때마다 실행된다.
   // searchParams 가 없다면 초기값 "Domestic" 있다면 di 란 key 값의 데이터를 domesticInternational에 전달한다
   useEffect(() => {
+    // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 700);
+
     const diValue = searchParams.get("di") || "Domestic"; // 국내/국제 값 가져오기
     const city = searchParams.get("city") || ""; // 도시 가져오기
     const startDate = searchParams.get("startDate") || ""; // 시작 날짜 가져오기
@@ -110,12 +131,18 @@ function MateBoard() {
   // domesticInternational 가 바뀔때마다 실행된다.
   // to D~ I~ Button 을 누를때 or 새로운 요청이 들어왔을때
   useEffect(() => {
+    // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+
     axios
       .get("/api/v1/posts/mate")
       .then((res) => {
         const filtered = res.data.list.filter((item) => {
           const matchesDomesticInternational =
-            domesticInternational === "Domestic" ? item.country === "한국" : item.country !== "한국";
+            domesticInternational === "International" ? item.country !== "한국" : item.country === "한국";
           if (!matchesDomesticInternational) return false;
 
           const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true;
@@ -174,8 +201,10 @@ function MateBoard() {
           return 0; // 기본값
         });
         setPageData(sorted);
-        setWhereAreYou(domesticInternational === "Domestic" ? "국내 여행 메이트 페이지" : "해외 여행 메이트 페이지");
-        setPageTurn(domesticInternational === "Domestic" ? "to International" : "to Domestic");
+        setWhereAreYou(
+          domesticInternational === "International" ? "해외 여행 메이트 페이지" : "국내 여행 메이트 페이지"
+        );
+        setPageTurn(domesticInternational === "International" ? "to Domestic" : "to International");
       })
       .catch((error) => console.log(error));
   }, [domesticInternational, searchCriteria, sortBy]);
@@ -209,9 +238,17 @@ function MateBoard() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <Link to={{ pathname: "/posts/mate/new", search: `?di=${domesticInternational}` }}>새글 작성</Link>
-      <button className="border border-1 bg-light-green-200" onClick={handleButtonClick}>
+    <div className="container mx-auto m-4">
+      {/* 로딩 애니메이션 */}
+      {loading && <LoadingAnimation />}
+      <Link
+        className="px-4 py-2 text-sm font-medium rounded-md bg-green-600 text-gray-100 mr-3"
+        to={{ pathname: "/posts/mate/new", search: `?di=${domesticInternational}` }}>
+        새글 작성
+      </Link>
+      <button
+        className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
+        onClick={handleButtonClick}>
         {pageTurn}
       </button>
       <h4 className="font-bold mb-4">{whereAreYou}</h4>
@@ -273,12 +310,21 @@ function MateBoard() {
                 selectRange={true}
                 onChange={handleDateChange}
                 value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
-                formatDay={(locale, date) => moment(date).format("DD")}
+                // formatDay={(locale, date) => moment(date).format("DD")}
                 minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
                 maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
                 navigationLabel={null}
                 showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
                 calendarType="hebrew" //일요일부터 보이도록 설정
+                tileClassName={tileClassName} // 날짜 스타일 설정
+                tileContent={({ date }) => {
+                  return (
+                    <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
+                      {date.getDate()} {/* 날짜 숫자만 표시 */}
+                    </span>
+                  );
+                }} // 날짜 내용 설정
+                formatDay={() => null}
               />
               <button onClick={handleDateReset} className="bg-red-500 text-white px-4 py-2 ml-2">
                 날짜 초기화
@@ -324,11 +370,13 @@ function MateBoard() {
               <td>{item.id}</td>
               <td className="text-left">
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">{`#${item.country}`}</span>
-                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">{`#${item.city}`}</span>
+                  <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">{`#${item.country}`}</span>
+                  <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">{`#${item.city}`}</span>
                   {item.tags &&
                     item.tags.map((tag, index) => (
-                      <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center">
+                      <span
+                        key={index}
+                        className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center">
                         {tag}
                       </span>
                     ))}
@@ -340,9 +388,13 @@ function MateBoard() {
                 {item.startDate} ~ {item.endDate}
               </td>
               <td className="text-xs ">
-                {
-                  item.updatedAt ? <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">update</span> : <span className="px-8"></span>
-                }
+                {item.updatedAt ? (
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
+                    update
+                  </span>
+                ) : (
+                  <span className="px-8"></span>
+                )}
                 {new Date(item.updatedAt ? item.updatedAt : item.createdAt).toLocaleDateString("ko-KR", {
                   year: "numeric",
                   month: "long",

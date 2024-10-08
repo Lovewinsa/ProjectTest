@@ -18,9 +18,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../../css/MyProfile.css";
 import FollowerFolloweeModal from "../../components/FollowerFolloweeModal";
+import LoadingAnimation from "../../components/LoadingAnimation";
 
 function MyProfile(props) {
   // to do : cur_location, last_login
+  //로딩 상태 추가
+  const [loading, setLoading] = useState(false);
 
   const { id } = useParams(); // 프로필 사용자의 id
   const userId = useSelector((state) => state.userData.id, shallowEqual); // 접속된 사용자의 id
@@ -55,6 +58,8 @@ function MyProfile(props) {
   const [selectedTags, setSelectedTags] = useState([]);
   //리뷰 이미 작성한 사용자인지 체크
   const [isReviewed, setReviewed] = useState(false);
+  //리뷰를 작성할 조건이 되는 사용자 (나를 팔로우한 사용자인지)
+  const [isFollowing, setFollowing] = useState(false);
 
   // 팔로잉/팔로워 모달 상태관리
   const [isModalOpen, setModalOpen] = useState(false);
@@ -81,7 +86,7 @@ function MyProfile(props) {
   ];
 
   const reviewNegativeTagList = [
-    { key: 1, keyword: "COMMUNICATION", text: "메시지 답변이 느려 소통에 어려움을 느꼈어요." },
+    { key: 1, keyword: "COMMUNICATION", text: "메시지 답변이 느��� 소통에 어려움을 느꼈어요." },
     { key: 2, keyword: "TRUST", text: "계획된 일정을 자주 변경하여 불안했어요." },
     { key: 3, keyword: "ONTIME", text: "약속 시간에 자주 늦어 불편했어요." },
     { key: 4, keyword: "MANNER", text: "무례한 언행으로 불쾌한 경험을 했어요." },
@@ -99,7 +104,7 @@ function MyProfile(props) {
   // rating 비교 조건 데이터
   const ratingConfig = [
     { min: 0, max: 1499, icon: faFeather, color: "gray" }, // 이코노미
-    { min: 1500, max: 2999, icon: faFeather, color: "blue" }, // 프리미엄 이코노미
+    { min: 1500, max: 2999, icon: faFeather, color: "blue" }, // 프��미엄 이코노미
     { min: 3000, max: 4499, icon: faDove, color: "gray" }, // 비지니스
     { min: 4500, max: 5999, icon: faDove, color: "blue" }, // 프리미엄 비지니스
     { min: 6000, max: 7499, icon: faPlane, color: "gray" }, // 퍼스트
@@ -118,6 +123,12 @@ function MyProfile(props) {
   const { icon: ratingIcon, color: ratingColor } = getRatingDetails(profile.ratings || 0);
   //---------------------------------------------------------------------------------------------------------------rating 관리부
   useEffect(() => {
+    // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 700);
+
     axios
       .get(`/api/v1/users/${id}`)
       .then((res) => {
@@ -127,6 +138,8 @@ function MyProfile(props) {
         if (res.data.theirFollowType === "BLOCK") {
           alert("해당 사용자가 당신을 차단하여 더 이상 프로필을 볼 수 없습니다.");
           navigate("/");
+        } else if (res.data.theirFollowType === "FOLLOW") {
+          setFollowing(true);
         }
 
         // BLOCK or FOLLOW
@@ -136,8 +149,15 @@ function MyProfile(props) {
           setFollowingStatus(true);
         }
 
-        //불러온 사용자의 정보 저장
-        setProfile(res.data.userProfileInfo);
+        // 불러온 사용자의 정보 저장
+        const userProfileInfo = res.data.userProfileInfo;
+        const socialLinksArray = userProfileInfo.socialLinks || ["tictok+", "instagram+"];
+
+        setProfile({
+          ...userProfileInfo,
+          socialLinks: socialLinksArray,
+        });
+
         //리뷰 목록이 존재하는지 확인하고, 존재한다면 ref 라는 방 추가
         const list = Array.isArray(res.data.userReviewList)
           ? res.data.userReviewList.map((item) => {
@@ -227,6 +247,10 @@ function MyProfile(props) {
         .then((res) => {
           console.log(res.data);
           setFollowingStatus(true);
+          setProfile({
+            ...profile,
+            followerCount: profile.followerCount + 1,
+          });
         })
         .catch((error) => console.log(error));
     } else {
@@ -237,6 +261,10 @@ function MyProfile(props) {
           .then((res) => {
             console.log(res.data);
             setFollowingStatus(false);
+            setProfile({
+              ...profile,
+              followerCount: profile.followerCount - 1,
+            });
           })
           .catch((error) => console.log(error));
       }
@@ -294,13 +322,19 @@ function MyProfile(props) {
   // 프로필 사용자 신고
   const handleReportUser = () => {
     const data = { content: "신고 테스트" };
-
-    axios
-      .post(`/api/v1/users/${id}/report/user/${userId}`, data)
-      .then((res) => {
-        console.log(res.data);
-      })
-      .catch((error) => console.log(error));
+    if (window.confirm("사용자를 신고하시겠습니까")) {
+      axios
+        .post(`/api/v1/reports/${id}/user/${userId}`, data)
+        .then((res) => {
+          console.log(res.data);
+          if (res.data.isSuccess) {
+            alert("해당 사용자에 대한 신고가 접수되었습니다.");
+          } else {
+            alert(res.data.message);
+          }
+        })
+        .catch((error) => console.log(error));
+    }
   };
 
   // 리뷰 작성
@@ -328,6 +362,8 @@ function MyProfile(props) {
         setUserReview("");
         setSelectedTags([]);
         setExperience("");
+        // 리뷰 작성 조건 조정 => 리뷰 작성 창 제거
+        setReviewed(true);
       })
       .catch((error) => console.log(error));
   };
@@ -337,12 +373,19 @@ function MyProfile(props) {
     const data = {
       content: "신고 테스트",
     };
-    axios
-      .post(`/api/v1/users/${reviewId}/report/user_review/${userId}`, data)
-      .then((res) => {
-        console.log(res.data);
-      })
-      .catch((error) => console.log(error));
+    if (window.confirm("해당 리뷰를 신고하시겠습니까")) {
+      axios
+        .post(`/api/v1/reports/${reviewId}/user_review/${userId}`, data)
+        .then((res) => {
+          console.log(res.data);
+          if (res.data.isSuccess) {
+            alert("해당 사용자에 대한 신고가 접수되었습니다.");
+          } else {
+            alert(res.data.message);
+          }
+        })
+        .catch((error) => console.log(error));
+    }
   };
 
   // 리뷰 수정 함수
@@ -379,6 +422,9 @@ function MyProfile(props) {
           console.log(res.data);
           // 사용자당 한개의 리뷰를 작성하기때문에 삭제가 가능한 reviewerId = userId 이다
           setReviewList(reviewList.filter((item) => item.reviewerId !== userId));
+
+          //리뷰 작성 조건 수정
+          setReviewed(false);
         })
         .catch((error) => console.log(error));
     }
@@ -394,6 +440,8 @@ function MyProfile(props) {
 
   return (
     <div className="container mx-auto p-4 max-w-[900px]">
+      {/* 로딩 애니메이션 */}
+      {loading && <LoadingAnimation />}
       {isProfileOwner && (
         <div>
           <button
@@ -414,14 +462,13 @@ function MyProfile(props) {
             &nbsp;차단된 사용자 입니다.
           </p>
         )}
-
         {/* 프로필 부분 전체 */}
         <div className="relative flex-col ">
           {/* 세로로 가운데, 아이템들 수평 간격 6px 마진 3  */}
           <div className="flex items-center gap-x-6 m-3 justify-center">
             {/* 프로필 이미지 핸들링 */}
             {profile.profilePicture ? (
-              <img src={profile.profilePicture} width={100} height={100} className="rounded-full" alt="" />
+              <img src={profile.profilePicture} className="w-20 h-20 rounded-full" alt="" />
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -443,7 +490,7 @@ function MyProfile(props) {
                 <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
                 {profile.nickname}
               </h3>
-              <p className="text-sm font-semibold leading-6 text-indigo-600">
+              <p className="text-sm font-semibold leading-6 text-green-600">
                 {profile.gender} / {profile.age}
               </p>
             </div>
@@ -521,65 +568,49 @@ function MyProfile(props) {
               onClick={() => {
                 handleOpenModal("followee");
               }}>
-              <strong>{profile.followeeCount}</strong>Following
+              <strong>{profile.followeeCount}</strong> Following
             </button>
             <button
               onClick={() => {
                 handleOpenModal("follower");
               }}>
-              <strong>{profile.followerCount}</strong>Followers
+              <strong>{profile.followerCount}</strong> Followers
             </button>
           </div>
         </div>
-
         {/* MODAL */}
         {isModalOpen && <FollowerFolloweeModal id={id} ff={modalTab} onClose={handleCloseModal} />}
-
-        {/* sns 아이콘 */}
+        {/*  소셜 링크 렌더링 */}
         <div className="mt-3 flex justify-center">
-          <a className="h-8 w-8 rounded-full outline-none focus:outline-none" type="button" href={profile.socialLinks}>
-            <svg
-              className="fill-current transition duration-700 ease-in-out text-gray-700 hover:text-pink-600"
-              role="img"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg">
-              <title>Instagram</title>
-              <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z" />
-            </svg>
-          </a>
-          <span> {profile.socialLinks} </span>
-
-          <a
-            className="ml-5 h-8 w-8 rounded-full outline-none focus:outline-none"
-            type="button"
-            href={profile.socialLinks}>
-            <svg
-              className="fill-current transition duration-700 ease-in-out text-gray-700 hover:text-green-600"
-              role="img"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg">
-              <title>Github</title>
-              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-            </svg>
-          </a>
-          <span> {profile.socialLinks} </span>
+          {Array.isArray(profile.socialLinks) &&
+            profile.socialLinks.map((link, index) => {
+              const [platform, url] = link.split("+");
+              return (
+                <div key={index} className="flex items-center ml-5">
+                  <a className="h-8 w-8 rounded-full outline-none focus:outline-none" type="button" href={url}>
+                    {platform === "tictok" && (
+                      <img src="/img/socialLinks/tictok.svg" className="w-6 mb-3" alt="tictok.svg" />
+                    )}
+                    {platform === "instagram" && (
+                      <img src="/img/socialLinks/instagram.svg" className="mb-3" alt="instagram.svg" />
+                    )}
+                  </a>
+                  <span className="ml-2">{url}</span>
+                </div>
+              );
+            })}
         </div>
-
         {/* profile message */}
         <div className="my-3">
           <div id="profileMessage" className="border-2 border-gray-400 rounded-md p-2 min-h-[100px] overflow-y-auto">
-            {profile.profileMessage}
+            {profile.profileMessage ?? ""}
           </div>
         </div>
-
         {/* -------------------------------------------------------------------------------------- */}
         {/* 리뷰 작성 */}
         {/* 두 조건 모두 거짓(리뷰 하지않음, 프로필 사용자가 아님)이어야 true 를 반환 => 리뷰 작성 랜더링 */}
-        {!isReviewed && !isProfileOwner && (
+        {/* + 프로필 사용자가 팔로우 하고 있어야한다. */}
+        {!isReviewed && !isProfileOwner && isFollowing && (
           <form className="border-3 rounded-lg p-3 mb-6 bg-gray-100" onSubmit={handleReviewSubmit}>
             <div className="mt-10 text-center space-x-20">
               <FontAwesomeIcon
@@ -621,7 +652,7 @@ function MyProfile(props) {
                         <input
                           id={item.keyword}
                           type="checkbox"
-                          value={item.keyword}
+                          value={item.keyword || ""}
                           checked={selectedTags.includes(item.keyword)} // selectedTags 에 포함된 요소만 체크
                           onChange={handleCheckboxChange}
                           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
@@ -637,7 +668,7 @@ function MyProfile(props) {
                         <input
                           id={item.keyword}
                           type="checkbox"
-                          value={item.keyword}
+                          value={item.keyword || ""}
                           checked={selectedTags.includes(item.keyword)} // selectedTags 에 포함된 요소만 체크
                           onChange={handleCheckboxChange}
                           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
@@ -674,7 +705,6 @@ function MyProfile(props) {
             </div>
           </form>
         )}
-
         {/* REVIEW */}
         <div>
           <ul className="space-y-4">
@@ -728,7 +758,9 @@ function MyProfile(props) {
                       </p>
                     ) : (
                       // 리뷰 신고
-                      <p onClick={()=>handleReportReview(item.id)} className="text-xs text-gray-500 ml-auto mr-4 cursor-pointer">
+                      <p
+                        onClick={() => handleReportReview(item.id)}
+                        className="text-xs text-gray-500 ml-auto mr-4 cursor-pointer">
                         신고
                       </p>
                     )}

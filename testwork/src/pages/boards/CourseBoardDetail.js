@@ -98,7 +98,7 @@ const CourseBoardDetail = () => {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
-    }, 500)
+    }, 700)
     //id가 변경될 때 기존 게시물 데이터가 화면에 남아있는 것 방지
     setPost({ tags: [], postData: [{ dayMemo: "", places: [""] }] }) // 초기값으로 설정
     setCommentList([])

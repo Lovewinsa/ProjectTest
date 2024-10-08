@@ -71,7 +71,7 @@ function Signup() {
   //비밀번호 보이기/숨기기
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword)
-  }
+  };
 
   const validateNickname = (value) => {
     // 닉네임 : 한글, 영어 대소문자, 숫자로 이루어진 2~16자리
@@ -281,7 +281,6 @@ function Signup() {
     }
   }
 
-  //회원가입 완료 버튼
   const handleSignUp = (e) => {
     e.preventDefault()
     if (!isAllChecked) {
@@ -301,7 +300,6 @@ function Signup() {
     })
       .then((response) => {
         processToken(response.data)
-        console.log("들어왔니?")
       })
       .catch((error) => {
         console.error('회원가입에 실패하였습니다');

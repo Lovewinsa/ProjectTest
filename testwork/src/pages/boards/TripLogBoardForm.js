@@ -54,7 +54,7 @@ const TripLogBoardForm = () => {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
-    }, 500)
+    }, 700)
 
     //글 정보 가져오기
     axios

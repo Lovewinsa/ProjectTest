@@ -1,4 +1,5 @@
 import {
+  faCircleExclamation,
   faCrown,
   faDove,
   faEye,
@@ -6,6 +7,7 @@ import {
   faHeart,
   faMessage,
   faPlane,
+  faShareNodes,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,6 +19,8 @@ import Calendar from "react-calendar";
 import { shallowEqual, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import { NavLink } from "react-router-dom";
+import useWebSocket from "../../components/useWebSocket";
+import LoadingAnimation from "../../components/LoadingAnimation"
 
 //새로 등록한 댓글을 추가할 인덱스
 let commentIndex = 0;
@@ -24,6 +28,9 @@ let commentIndex = 0;
 const maxLength = 3000;
 
 function MateBoardDetail(props) {
+  //로딩 상태 추가
+  const [loading, setLoading] = useState(false);
+
   const { id } = useParams(); // 게시물 번호
   // 로그인된 유저 정보
   const userId = useSelector((state) => state.userData.id, shallowEqual); // 로그인된 user의 id
@@ -50,7 +57,7 @@ function MateBoardDetail(props) {
   //댓글 전체의 페이지 개수
   const [totalCommentPages, setTotalCommentPages] = useState(0);
   //현재 로딩중인지 여부
-  const [isLoading, setLoading] = useState(false);
+  const [isCommentLoading, setCommentLoading] = useState(false);
   //원글의 댓글 내용 상태값
   const [commentInnerText, setCommentInnerText] = useState("");
   //dropdown 상태 정의
@@ -98,6 +105,12 @@ function MateBoardDetail(props) {
   //---------------------------------------------------------------------------------------------------------------rating 관리부
 
   useEffect(() => {
+    // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 700);
+
     axios
       .get(`/api/v1/posts/${id}`)
       .then((res) => {
@@ -137,7 +150,10 @@ function MateBoardDetail(props) {
       if (!isLiked) {
         // isLiked = false 좋아요 누르지 않음
         axios
-          .post(`/api/v1/posts/${id}/likes`, { postId: post.id, userId: userId })
+          .post(`/api/v1/posts/${id}/likes`, {
+            postId: post.id,
+            userId: userId,
+          })
           .then((res) => {
             setLiked(true);
             //view 페이지에서만 숫자 변경
@@ -169,6 +185,26 @@ function MateBoardDetail(props) {
       }
     } else {
       alert("로그인을 해주세요");
+    }
+  };
+
+  // 게시물 신고
+  const handleReportPost = () => {
+    const data = {
+      content: "신고 테스트",
+    };
+    if (window.confirm("해당 게시물을 신고하시겠습니까")) {
+      axios
+        .post(`/api/v1/reports/${post.id}/post/${userId}`, data)
+        .then((res) => {
+          console.log(res.data);
+          if (res.data.isSuccess) {
+            alert("해당 게시물에 대한 신고가 접수되었습니다.");
+          } else {
+            alert(res.data.message);
+          }
+        })
+        .catch((error) => console.log(error));
     }
   };
 
@@ -212,11 +248,24 @@ function MateBoardDetail(props) {
     }
   };
 
-  // 신고 처리 함수
+  // 댓글 신고 처리 함수
   const handleReportComment = (commentId) => {
-    // 신고 기능 구현
-    alert(`댓글 ID ${commentId}가 신고되었습니다.`);
-    // 추가로 서버에 신고 요청을 보내는 로직을 여기에 추가
+    const data = {
+      content: "신고 테스트",
+    };
+    if (window.confirm("해당 리뷰를 신고하시겠습니까")) {
+      axios
+        .post(`/api/v1/reports/${commentId}/post_comment/${userId}`, data)
+        .then((res) => {
+          console.log(res.data);
+          if (res.data.isSuccess) {
+            alert("해당 사용자에 대한 신고가 접수되었습니다.");
+          } else {
+            alert(res.data.message);
+          }
+        })
+        .catch((error) => console.log(error));
+    }
   };
 
   //댓글 등록
@@ -352,7 +401,7 @@ function MateBoardDetail(props) {
     } else {
       //마지막 페이지가 아니라면
       //로딩 상태로 바꿔준다
-      setLoading(true);
+      setCommentLoading(true);
       //요청할 댓글의 게시물id
       const postId = id;
       //요청할 댓글의 페이지
@@ -375,26 +424,128 @@ function MateBoardDetail(props) {
           //증가된 페이지 번호도 반영
           setPageNum(page);
 
-          setLoading(false);
+          setCommentLoading(false);
         })
         .catch((error) => {
           console.log(error);
-          setLoading(false);
+          setCommentLoading(false);
         });
     }
+  };
+  // ---------------------------------------------------- 채팅 관련
+  const { stompClient, isConnected, messages, setMessages } = useWebSocket();
+  const [subscribedRoomIds, setSubscribedRoomIds] = useState([]); // 내가 구독한 목록
+
+  const handleClickChat = () => {
+    console.log("채팅 버튼 클릭");
+    console.log("1번" + userId);
+
+    console.log("2번" + writerProfile.id);
+    axios
+      .post("/api/chat/rooms", {
+        ownerId: userId, // 방 생성자를 명시
+        participantsList: [userId, writerProfile.id], // 대화 참가자 목록
+        type: "ONE_ON_ONE",
+        title: `${username}님과${writerProfile.nickname}님의 채팅`,
+      })
+      .then((res) => {
+        const chatRoomId = res.data;
+        navigate(`/chatroom/${chatRoomId.id}`);
+        alert("채팅방 생성.");
+
+        selectRoom(chatRoomId.id); // 방 선택
+      })
+      .catch((error) => {
+        console.log(error);
+        alert("채팅방 생성에 실패했습니다.");
+      });
+  };
+
+  // 채팅방 선택시 메시지 불러오기
+  const selectRoom = (roomId) => {
+    if (!stompClient || !stompClient.connected) {
+      console.error("WebSocket not connected yet");
+      return;
+    }
+
+    navigate(`/chatroom/${roomId}`);
+
+    axios
+      .get(`/api/chat/rooms/${roomId}`)
+      .then((res) => {
+        const chatMessageroom = res.data;
+        console.log("Response:", res.data);
+
+        const chatMessagetopic =
+          chatMessageroom.type === "ONE_ON_ONE"
+            ? `/user/private/${chatMessageroom.id}`
+            : `/topic/group/${chatMessageroom.id}`;
+
+        stompClient.subscribe(chatMessagetopic, (message) => {
+          const parsedMessage = JSON.parse(message.body);
+          setMessages((prevMessages) => [...prevMessages, parsedMessage]);
+        });
+
+        const newRoomTopic =
+          chatMessageroom.type === "ONE_ON_ONE"
+            ? `/user/newroom/private/${chatMessageroom.id}`
+            : `/topic/newroom/group/${chatMessageroom.id}`;
+        stompClient.subscribe(newRoomTopic, (message) => {
+          const parsedMessage = JSON.parse(message.body);
+          setMessages((prevMessages) => [...prevMessages, parsedMessage]);
+        });
+      })
+
+      .catch((error) => {
+        console.error("Error fetching room info:", error.response ? error.response.data : error.message);
+      });
+
+    axios
+      .get(`/api/chat/rooms/${roomId}/getMessages`)
+      .then((response) => {
+        setMessages(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching messages:", error);
+      });
+  };
+
+  //프로필 링크 복사
+  const handleCopy = () => {
+    const tmpText = `localhost:3000/posts/mate/${post.id}/detail`;
+    navigator.clipboard
+      .writeText(tmpText)
+      .then(() => {
+        alert("클립보드에 복사되었습니다.");
+      })
+      .catch((error) => console.log(error));
   };
 
   return (
     <div className="container mx-auto p-4 max-w-[900px]">
+      {/* 로딩 애니메이션 */}
+      {loading && <LoadingAnimation />}
       <div className="flex flex-col h-full bg-gray-100 p-6">
         <div className="container">
-          <NavLink
-            to={{
-              pathname: "/posts/mate",
-              search: post.country === "한국" ? "?di=Domestic" : "?di=International",
-            }}>
-            Mate
-          </NavLink>
+          <div className="flex">
+            <NavLink
+              className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
+              to={{
+                pathname: "/posts/mate",
+                search: post.country === "대한민국" ? "?di=Domestic" : "?di=International",
+              }}>
+              Mate
+            </NavLink>
+            <div className="ml-auto text-sm text-gray-600">
+              <span className="cursor-pointer" onClick={handleCopy}>
+                <FontAwesomeIcon icon={faShareNodes} /> 공유
+              </span>{" "}
+              &nbsp;
+              <span className="cursor-pointer" onClick={handleReportPost}>
+                <FontAwesomeIcon icon={faCircleExclamation} /> 신고
+              </span>
+            </div>
+          </div>
 
           {/* 태그s */}
           <div className="flex flex-wrap gap-2 mt-10">
@@ -472,9 +623,16 @@ function MateBoardDetail(props) {
               </div>
               <div>
                 <button
+                  onClick={handleClickChat}
                   type="button"
-                  className="text-white bg-gray-500 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
+                  className="text-white bg-gray-500 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 mb-2 ">
+                  채팅 test
+                </button>
+                <button
+                  type="button"
+                  className="text-white bg-gray-500 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-2.5 me-2 mb-2 "
                   onClick={handleClickProfile}>
+                  {" "}
                   프로필 보기
                 </button>
               </div>
@@ -523,7 +681,7 @@ function MateBoardDetail(props) {
                     .then((res) => {
                       alert("글 삭제 성공");
                       // 국/해외 페이지 별 리다일렉트
-                      post.country === "한국"
+                      post.country === "대한민국"
                         ? navigate(`/posts/mate?di=Domestic`)
                         : navigate(`/posts/mate?di=International`);
                     })
@@ -634,14 +792,16 @@ function MateBoardDetail(props) {
                                   role="menu"
                                   aria-orientation="vertical"
                                   aria-labelledby="options-menu">
-                                  <button
-                                    className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-                                    onClick={() => {
-                                      setDropdownIndex(null);
-                                      handleReportComment(item.id);
-                                    }}>
-                                    신고
-                                  </button>
+                                  {item.writer !== nickname && (
+                                    <button
+                                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                      onClick={() => {
+                                        setDropdownIndex(null);
+                                        handleReportComment(item.id);
+                                      }}>
+                                      신고
+                                    </button>
+                                  )}
                                   {item.writer === nickname && (
                                     <>
                                       <button
@@ -781,11 +941,11 @@ function MateBoardDetail(props) {
         <div className="grid grid-cols-1 md:grid-cols-2 mx-auto mb-5">
           <button
             className={`bg-green-500 text-white py-2 px-4 rounded ${
-              isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+              isCommentLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
             }`}
-            disabled={isLoading}
+            disabled={isCommentLoading}
             onClick={handleMoreComment}>
-            {isLoading ? (
+            {isCommentLoading ? (
               <span className="animate-spin inline-block w-5 h-5 border-2 border-t-2 border-white rounded-full"></span>
             ) : (
               <span>댓글 더보기</span>

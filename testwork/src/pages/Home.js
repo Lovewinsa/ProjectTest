@@ -13,7 +13,7 @@ function Home() {
         setLoading(true)
         setTimeout(() => {
             setLoading(false)
-        }, 500)
+        }, 700)
     }, [])
     const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0); // 현재 슬라이드 상태 추가

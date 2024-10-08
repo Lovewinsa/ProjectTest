@@ -227,8 +227,7 @@ function NavBar() {
             />
           </div>
           {isDropdownOpen && (
-            <div
-              className="absolute right-20 top-10 mt-2 w-42 bg-white shadow divide-y divide-gray-100 rounded-lg py-2 z-10">
+            <div className="absolute right-20 top-10 mt-2 w-42 bg-white shadow divide-y divide-gray-100 rounded-lg py-2 z-10">
               <p className="block px-4 py-2 hover:bg-gray-100 ">
                 <button className="font-bold text-gray-800" onClick={handleLoginLogoutClick}>
                   {isLoggedIn ? "로그아웃" : "로그인/회원가입"}
@@ -304,7 +303,7 @@ function NavBar() {
       </div>
 
       {/* Off-canvas */}
-      <div ref={offcanvasRef} className="fixed top-0 left-0 w-64 bg-white shadow-lg h-full hidden">
+      <div ref={offcanvasRef} className="z-20 fixed top-0 left-0 w-64 bg-white shadow-lg h-full hidden">
         <div className="p-4 border-b flex justify-between">
           <h5>
             <button className="text-lg font-semibold" onClick={handleLoginLogoutClick}>
@@ -336,7 +335,11 @@ function NavBar() {
                   </div>
                   <div>여행 메이트</div>
                   <div>여행 정보</div>
-                  <div>커뮤니티</div>
+                  <div>
+                    <NavLink to={"/posts/community"} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                      커뮤니티
+                    </NavLink>
+                  </div>
                 </div>
               )}
             </li>
