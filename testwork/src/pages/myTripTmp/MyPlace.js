@@ -28,11 +28,11 @@ function MyPlace() {
 
     // 저장된 장소 목록 불러오기
     useEffect(() => {
-        // 로딩 애니메이션을 0.5초 동안만 표시
+        // 로딩 애니메이션을 0.7초 동안만 표시
         setLoading(true)
         setTimeout(() => {
             setLoading(false)
-        }, 500)
+        }, 700)
         axios.get(`/api/v1/users/${loggedInUserId}/trips/saved-places`)
             .then(res => {
                 const savedPlacesList = res.data
