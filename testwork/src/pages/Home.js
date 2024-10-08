@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'keen-slider/keen-slider.min.css';
 import { useKeenSlider } from 'keen-slider/react';
 import '../css/Home.css';
+import LoadingAnimation from '../components/LoadingAnimation';
 
 function Home() {
+    //로딩 상태 추가
+    const [loading, setLoading] = useState(false)
+    useEffect(() => {
+        // 로딩 애니메이션을 0.5초 동안만 표시
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 500)
+    }, [])
     const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0); // 현재 슬라이드 상태 추가
     const [sliderRef, slider] = useKeenSlider({
@@ -26,7 +36,7 @@ function Home() {
             setCurrentSlide(s.track.details.rel); // 슬라이드가 변경될 때 현재 슬라이드 업데이트
         },
     });
-   // 버튼을 클릭했을 때 실행할 함수 정의
+    // 버튼을 클릭했을 때 실행할 함수 정의
     const handlePrev = () => {
         if (slider.current) slider.current.prev();
     };
@@ -61,13 +71,15 @@ function Home() {
 
     return (
         <div className="container mx-auto px-8 bg-white min-h-screen">
+            {/* 로딩 애니메이션 */}
+            {loading && <LoadingAnimation />}
             <div className="my-12 relative">
                 <header className="py-8 text-center">
                     <h1 className="text-3xl font-bold text-green-600">국내 여행</h1>
                     <p className="mt-2 text-gray-600">다양한 국내 여행 정보를 만나보세요!</p>
                 </header>
                 <div className="relative">
-                 {/* 슬라이더 */}
+                    {/* 슬라이더 */}
                     <div ref={sliderRef} className="keen-slider w-full my-6">
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
                             <div key={item} className="keen-slider__slide flex justify-center">
@@ -105,9 +117,8 @@ function Home() {
                             <div
                                 key={index}
                                 onClick={() => handleDotClick(index)} // 점 클릭 시 해당 슬라이드로 이동
-                                className={`w-3 h-3 mx-1 rounded-full cursor-pointer transition-all duration-200 ${
-                                    currentSlide === index ? "bg-green-600 scale-125" : "bg-gray-300"
-                                }`}
+                                className={`w-3 h-3 mx-1 rounded-full cursor-pointer transition-all duration-200 ${currentSlide === index ? "bg-green-600 scale-125" : "bg-gray-300"
+                                    }`}
                             />
                         ))}
                     </div>

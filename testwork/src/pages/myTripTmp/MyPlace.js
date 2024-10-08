@@ -4,8 +4,11 @@ import SaveLocationPage from "./SaveLocationPage";
 import { useNavigate } from "react-router";
 import SavedPlacesMapComponent from "../../components/SavedPlacesKakaoMapComponent";
 import { shallowEqual, useSelector } from "react-redux";
+import LoadingAnimation from "../../components/LoadingAnimation";
 
 function MyPlace() {
+    //로딩 상태 추가
+    const [loading, setLoading] = useState(false)
     // 로그인된 user 정보
     const loggedInUserId = useSelector((state) => state.userData.id, shallowEqual)
     // 저장된 장소 목록의 상태값
@@ -25,6 +28,11 @@ function MyPlace() {
 
     // 저장된 장소 목록 불러오기
     useEffect(() => {
+        // 로딩 애니메이션을 0.5초 동안만 표시
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 500)
         axios.get(`/api/v1/users/${loggedInUserId}/trips/saved-places`)
             .then(res => {
                 const savedPlacesList = res.data
@@ -130,6 +138,8 @@ function MyPlace() {
 
     return (
         <div className="container mx-auto p-4 max-w-[1024px]">
+            {/* 로딩 애니메이션 */}
+            {loading && <LoadingAnimation />}
             <div className="flex flex-col items-center min-h-screen bg-gray-100">
                 <div className="w-full max-w-screen-xl mx-auto p-4">
                     {/* 상단 헤더 */}
@@ -169,9 +179,9 @@ function MyPlace() {
                             {/* 지도 영역 */}
                             <div className="flex-grow bg-white rounded-lg shadow-md">
                                 <SavedPlacesMapComponent
-                                savedPlaces={transformedData}
-                                centerLocation={kakaoMapCenterLocation}
-                                onMapReady={setMap}
+                                    savedPlaces={transformedData}
+                                    centerLocation={kakaoMapCenterLocation}
+                                    onMapReady={setMap}
                                 />
                             </div>
 

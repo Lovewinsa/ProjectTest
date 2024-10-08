@@ -4,8 +4,11 @@ import { shallowEqual, useSelector } from "react-redux"
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
 import SavedPlacesGoogleMapComponent from "../../components/SavedPlacesGoogleMapComponent"
+import LoadingAnimation from "../../components/LoadingAnimation"
 
 const TripLogBoardForm = () => {
+  //로딩 상태 추가
+  const [loading, setLoading] = useState(false)
   const { id } = useParams()
   //로그인된 user정보
   const loggedInUserId = useSelector((state) => state.userData.id, shallowEqual) // 로그인된 user의 id
@@ -46,6 +49,12 @@ const TripLogBoardForm = () => {
   useEffect(() => {
     //id가 변경될 때 기존 게시물 데이터가 화면에 남아있는 것 방지
     setPost({ tags: [], postData: [{ dayMemo: "", places: [""] }] }) // 초기값으로 설정
+
+    // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+    }, 500)
 
     //글 정보 가져오기
     axios
@@ -157,6 +166,8 @@ const TripLogBoardForm = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-[1024px]">
+      {/* 로딩 애니메이션 */}
+      {loading && <LoadingAnimation />}
       <div className="flex flex-col h-full bg-gray-100 p-6">
         <div className="flex justify-between items-center gap-2 mt-2">
           {/* 왼쪽 정렬: 태그s */}

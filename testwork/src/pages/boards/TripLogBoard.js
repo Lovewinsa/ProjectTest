@@ -3,8 +3,11 @@ import moment from "moment/moment";
 import { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import LoadingAnimation from "../../components/LoadingAnimation";
 
 function TripLogBoard() {
+    //로딩 상태 추가
+    const [loading, setLoading] = useState(false)
     // 글 목록 정보
     const [pageInfo, setPageInfo] = useState([])
     const [totalPages, setTotalPages] = useState(1);
@@ -38,6 +41,11 @@ function TripLogBoard() {
     const navigate = useNavigate()
 
     useEffect(() => {
+        // 로딩 애니메이션을 0.5초 동안만 표시
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 500)
         let pageNum = searchParams.get("pageNum") || 1
         const diValue = searchParams.get("di") || "Domestic"
         const city = searchParams.get("city") || ""
@@ -46,109 +54,109 @@ function TripLogBoard() {
         const country = searchParams.get("country") || ""
         const keyword = searchParams.get("keyword") || ""
         const condition = searchCriteria.condition || "title"; // 기존 조건 유지
-    
+
         setCurrentPage(Number(pageNum))
         setDomesticInternational(diValue)
-        
+
         setSearchCriteria((prev) => ({
-          ...prev,
-          city,
-          startDate,
-          endDate,
-          country,
-          keyword,
-          condition: condition
+            ...prev,
+            city,
+            startDate,
+            endDate,
+            country,
+            keyword,
+            condition: condition
         }))
-    
+
         axios
-          .get(`/api/v1/posts/trip_log`, {
-            params: {
-              pageNum: Number(pageNum),
-              country: country || undefined,
-              city: city || undefined,
-              startDate: startDate || undefined,
-              endDate: endDate || undefined,
-              keyword: keyword || undefined,
-              condition: condition, // 조건이 없으면 제목으로 설정
-              sortBy: sortBy || "latest", // 정렬 조건이 없으면 최신순으로 설정
-              di: diValue || "Domestic", // 국내/해외 페이지가 설정되지 않았으면 기본값으로 설정
-            },
-          })
-          .then(res => {
-            //국내코스, 해외코스 필터
-            const filteredPageInfo = res.data.list.filter((item) => {
-    
-              const matchesDomesticInternational = diValue === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
-              if (!matchesDomesticInternational) return false
-    
-              const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true
-              if (!matchesCountry) return false
-    
-              const matchesCity = searchCriteria.city ? item.city.includes(searchCriteria.city) : true
-              if (!matchesCity) return false
-    
-              // 조건에 따라 제목 또는 작성자를 필터링
-              const matchesKeyword = searchCriteria.condition === "title"
-                  ? item.title.includes(searchCriteria.keyword)
-                  : searchCriteria.condition === "writer"
-                    ? item.writer.includes(searchCriteria.keyword)
-                    : searchCriteria.condition === "content"
-                      ? item.content.includes(searchCriteria.keyword)
-                      : searchCriteria.condition === "title_content"
-                        ? item.title.includes(searchCriteria.keyword) || item.content.includes(searchCriteria.keyword)
-                        : true
-              if (!matchesKeyword) return false
-    
-              // 선택한 startDate와 endDate 범위에 포함되는 항목만 필터링
-              const matchesDateRange = (item) => {
-                const itemStartDate = new Date(item.startDate)
-                const itemEndDate = new Date(item.endDate)
-                const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null
-                const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null
-    
-                // 검색 범위의 날짜가 설정되지 않았으면 모든 게시물 표시
-                if (!searchStartDate && !searchEndDate) {
-                  return true
-                }
-    
-                // 검색 범위에 날짜가 설정되었을 경우 날짜 범위 체크
-                return (
-                  (itemStartDate < searchEndDate && itemEndDate > searchStartDate) ||
-                  (itemStartDate <= searchStartDate && itemEndDate >= searchStartDate) ||
-                  (itemStartDate <= searchEndDate && itemEndDate >= searchEndDate)
-                )
-              }
-              if (!matchesDateRange(item)) return false
-    
-              return true
+            .get(`/api/v1/posts/trip_log`, {
+                params: {
+                    pageNum: Number(pageNum),
+                    country: country || undefined,
+                    city: city || undefined,
+                    startDate: startDate || undefined,
+                    endDate: endDate || undefined,
+                    keyword: keyword || undefined,
+                    condition: condition, // 조건이 없으면 제목으로 설정
+                    sortBy: sortBy || "latest", // 정렬 조건이 없으면 최신순으로 설정
+                    di: diValue || "Domestic", // 국내/해외 페이지가 설정되지 않았으면 기본값으로 설정
+                },
             })
-    
-            //정렬 조건
-            const sorted = filteredPageInfo.sort((a, b) => {
-              if (sortBy === "latest") {
-                return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt); // 최신순
-              } else if (sortBy === "viewCount") {
-                return b.viewCount - a.viewCount // 조회수순
-              } else if (sortBy === "likeCount") {
-                return b.likeCount - a.likeCount // 좋아요순
-              }
-              return 0 // 기본값
+            .then(res => {
+                //국내코스, 해외코스 필터
+                const filteredPageInfo = res.data.list.filter((item) => {
+
+                    const matchesDomesticInternational = diValue === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
+                    if (!matchesDomesticInternational) return false
+
+                    const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true
+                    if (!matchesCountry) return false
+
+                    const matchesCity = searchCriteria.city ? item.city.includes(searchCriteria.city) : true
+                    if (!matchesCity) return false
+
+                    // 조건에 따라 제목 또는 작성자를 필터링
+                    const matchesKeyword = searchCriteria.condition === "title"
+                        ? item.title.includes(searchCriteria.keyword)
+                        : searchCriteria.condition === "writer"
+                            ? item.writer.includes(searchCriteria.keyword)
+                            : searchCriteria.condition === "content"
+                                ? item.content.includes(searchCriteria.keyword)
+                                : searchCriteria.condition === "title_content"
+                                    ? item.title.includes(searchCriteria.keyword) || item.content.includes(searchCriteria.keyword)
+                                    : true
+                    if (!matchesKeyword) return false
+
+                    // 선택한 startDate와 endDate 범위에 포함되는 항목만 필터링
+                    const matchesDateRange = (item) => {
+                        const itemStartDate = new Date(item.startDate)
+                        const itemEndDate = new Date(item.endDate)
+                        const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null
+                        const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null
+
+                        // 검색 범위의 날짜가 설정되지 않았으면 모든 게시물 표시
+                        if (!searchStartDate && !searchEndDate) {
+                            return true
+                        }
+
+                        // 검색 범위에 날짜가 설정되었을 경우 날짜 범위 체크
+                        return (
+                            (itemStartDate < searchEndDate && itemEndDate > searchStartDate) ||
+                            (itemStartDate <= searchStartDate && itemEndDate >= searchStartDate) ||
+                            (itemStartDate <= searchEndDate && itemEndDate >= searchEndDate)
+                        )
+                    }
+                    if (!matchesDateRange(item)) return false
+
+                    return true
+                })
+
+                //정렬 조건
+                const sorted = filteredPageInfo.sort((a, b) => {
+                    if (sortBy === "latest") {
+                        return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt); // 최신순
+                    } else if (sortBy === "viewCount") {
+                        return b.viewCount - a.viewCount // 조회수순
+                    } else if (sortBy === "likeCount") {
+                        return b.likeCount - a.likeCount // 좋아요순
+                    }
+                    return 0 // 기본값
+                })
+
+                //서버로부터 응답된 데이터 state에 넣기
+                setDesiredCountry(diValue === "Domestic" ? "국내 여행기록 페이지" : "해외 여행기록 페이지")
+                setPageTurn(diValue === "Domestic" ? "해외로" : "국내로")
+                setPageInfo(sorted)
+                // 총 페이지 수 업데이트
+                console.log(res.data.list)
+                // console.log(sorted)
+                setTotalPages(res.data.totalPostPages)
+
             })
-    
-            //서버로부터 응답된 데이터 state에 넣기
-            setDesiredCountry(diValue === "Domestic" ? "국내 여행기록 페이지" : "해외 여행기록 페이지")
-            setPageTurn(diValue === "Domestic" ? "해외로" : "국내로")
-            setPageInfo(sorted)
-            // 총 페이지 수 업데이트
-            console.log(res.data.list)
-            // console.log(sorted)
-            setTotalPages(res.data.totalPostPages)
-    
-          })
-          .catch(error => {
-            console.log(error)
-          })
-      }, [searchParams, sortBy])
+            .catch(error => {
+                console.log(error)
+            })
+    }, [searchParams, sortBy])
 
 
     //국내, 해외 선택 이벤트
@@ -280,6 +288,8 @@ function TripLogBoard() {
 
     return (
         <div className="container mx-auto p-4 max-w-[1024px]">
+            {/* 로딩 애니메이션 */}
+            {loading && <LoadingAnimation />}
             <div className="container mx-auto">
                 <div className="flex justify-between mb-4">
                     <Link

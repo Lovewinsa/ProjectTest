@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faCrown, faDove, faEye, faFeather, faHeart, faMessage, faPlane, faUser } from "@fortawesome/free-solid-svg-icons"
 import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
 import SavedPlacesGoogleMapComponent from "../../components/SavedPlacesGoogleMapComponent"
+import LoadingAnimation from "../../components/LoadingAnimation"
 
 
 //새로 등록한 댓글을 추가할 인덱스
@@ -15,6 +16,8 @@ let commentIndex = 0
 const maxLength = 3000
 
 const TripLogBoardDetail = () => {
+  //로딩 상태 추가
+  const [loading, setLoading] = useState(false)
   //"/posts/trip_log/:id/detail" 에서 id에 해당되는 경로 파라미터 값 얻어오기
   const { id } = useParams()
   //로그인된 user정보
@@ -46,7 +49,7 @@ const TripLogBoardDetail = () => {
   //댓글 전체 페이지의 개수(마지막 페이지 번호)
   const [totalPageCount, setTotalPageCount] = useState(0)
   //현재 로딩중인지 여부
-  const [isLoading, setLoading] = useState(false)
+  const [isCommentListLoading, setIsCommentListLoading] = useState(false)
   //원글의 댓글 내용 상태값
   const [commentInnerText, setCommentInnerText] = useState("")
   //dropdown 상태 정의
@@ -91,6 +94,12 @@ const TripLogBoardDetail = () => {
   const { icon: ratingIcon, color: ratingColor } = getRatingDetails(writerProfile.ratings || 0);
   //--------------------------------------------------------------------------------------------------------------
   useEffect(() => {
+    // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+    }, 500)
+
     //id가 변경될 때 기존 게시물 데이터가 화면에 남아있는 것 방지
     setPostInfo({ tags: [], postData: [{ dayMemo: "", places: [""] }] }) // 초기값으로 설정
     setCommentList([])
@@ -400,7 +409,7 @@ const TripLogBoardDetail = () => {
     } else {
       //마지막 페이지가 아니라면
       //로딩 상태로 바꿔준다
-      setLoading(true)
+      setIsCommentListLoading(true)
       //요청할 댓글의 게시물id
       const postId = id
       //요청할 댓글의 페이지
@@ -422,11 +431,11 @@ const TripLogBoardDetail = () => {
           //증가된 페이지 번호도 반영
           setPageNum(page)
 
-          setLoading(false)
+          setIsCommentListLoading(false)
         })
         .catch((error) => {
           console.log(error)
-          setLoading(false)
+          setIsCommentListLoading(false)
         })
     }
   }
@@ -434,6 +443,8 @@ const TripLogBoardDetail = () => {
   return (
 
     <div className="container mx-auto p-4 max-w-[1024px]">
+      {/* 로딩 애니메이션 */}
+      {loading && <LoadingAnimation />}
       <div className="flex flex-col h-full bg-gray-100 p-6">
         <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
           <div className="flex gap-2">
@@ -539,7 +550,7 @@ const TripLogBoardDetail = () => {
             )}
             <div>
               <h3 className="text-base font-semibold leading-7 tracking-tight text-gray-900">
-              <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
+                <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
                 {writerProfile.nickname}
               </h3>
               <p className="text-sm font-semibold leading-6 text-indigo-600">
@@ -842,11 +853,11 @@ const TripLogBoardDetail = () => {
         {/* 댓글 더보기 버튼 */}
         <div className="grid grid-cols-1 md:grid-cols-2 mx-auto mb-5">
           <button
-            className={`bg-green-500 text-white py-2 px-4 rounded ${isLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
+            className={`bg-green-500 text-white py-2 px-4 rounded ${isCommentListLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-green-600"
               }`}
-            disabled={isLoading}
+            disabled={isCommentListLoading}
             onClick={handleMoreComment}>
-            {isLoading ? (
+            {isCommentListLoading ? (
               <span className="animate-spin inline-block w-5 h-5 border-2 border-t-2 border-white rounded-full"></span>
             ) : (
               <span>댓글 더보기</span>

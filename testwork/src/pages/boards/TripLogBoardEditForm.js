@@ -3,9 +3,12 @@ import React, { useEffect, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent";
+import LoadingAnimation from "../../components/LoadingAnimation";
 
 
 const TripLogBoardEditForm = () => {
+    //로딩 상태 추가
+  const [loading, setLoading] = useState(false)
     const [selectedDayIndex, setSelectedDayIndex] = useState(null)
     const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
     const [savedPlaces, setSavedPlaces] = useState([])
@@ -53,6 +56,11 @@ const TripLogBoardEditForm = () => {
     const cities = citiesByCountry[postInfo.country] || []
 
     useEffect(() => {
+        // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+    }, 500)
         // 기존 게시물 데이터를 가져와 초기화
         axios.get(`/api/v1/posts/${id}/update`)
             .then((res) => {
@@ -192,6 +200,8 @@ const TripLogBoardEditForm = () => {
 
     return (
         <div className="container mx-auto p-6 max-w-[900px]">
+            {/* 로딩 애니메이션 */}
+{loading && <LoadingAnimation />}
             <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-semibold text-gray-800">여행기록 수정</h1>

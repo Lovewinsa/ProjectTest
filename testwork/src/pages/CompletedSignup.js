@@ -2,9 +2,12 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import LoadingAnimation from "../components/LoadingAnimation";
 
 
 function CompletedSignup(props) {
+     //로딩 상태 추가
+  const [loading, setLoading] = useState(false)
     const location = useLocation()
     const { isAllChecked } = location.state || {}
     const navigate = useNavigate()
@@ -13,6 +16,7 @@ function CompletedSignup(props) {
     const username = useSelector(state => state.userData.username, shallowEqual)
     
     useEffect(() => {
+        
         if (!isAllChecked) {
             alert("잘못된 경로입니다")
             navigate("/")
@@ -29,6 +33,11 @@ function CompletedSignup(props) {
     }, [isAllChecked, navigate])
 
     useEffect(()=>{      
+        // 로딩 애니메이션을 0.5초 동안만 표시
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+    }, 500)
         if(username){
         axios.get(`/api/v1/users/username/${username}`)
         .then(res=>{
@@ -41,6 +50,8 @@ function CompletedSignup(props) {
 
     return (
         <div className="bg-white">
+            {/* 로딩 애니메이션 */}
+{loading && <LoadingAnimation />}
             <div className="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
                 <div className="relative isolate overflow-hidden bg-gray-900 px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
                     <svg

@@ -4,9 +4,12 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
 import { shallowEqual, useSelector } from "react-redux";
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent";
+import LoadingAnimation from "../../components/LoadingAnimation";
 
 
 const CourseBoardEditForm = () => {
+    //로딩 상태 추가
+    const [loading, setLoading] = useState(false)
     const userId = useSelector((state) => state.userData.id, shallowEqual)
     const nickname = useSelector((state) => state.userData.nickname, shallowEqual)
     const username = useSelector((state) => state.userData.username, shallowEqual)
@@ -58,6 +61,11 @@ const CourseBoardEditForm = () => {
     const cities = citiesByCountry[postInfo.country] || []
 
     useEffect(() => {
+        // 로딩 애니메이션을 0.5초 동안만 표시
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 500)
         // 기존 게시물 데이터를 가져와 초기화
         axios.get(`/api/v1/posts/${id}/update`)
             .then((res) => {
@@ -208,6 +216,8 @@ const CourseBoardEditForm = () => {
 
     return (
         <div className="container mx-auto p-6 max-w-[900px]">
+            {/* 로딩 애니메이션 */}
+            {loading && <LoadingAnimation />}
             <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-3xl font-semibold text-gray-800">여행 코스 수정</h1>
