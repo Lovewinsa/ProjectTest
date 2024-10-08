@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 
+  
+
 const SaveLocationPage = ({ onSave }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
@@ -53,23 +55,42 @@ const SaveLocationPage = ({ onSave }) => {
     setInfoWindows([]);
   };
 
+  //장소메모 데이터를 추가하기 위한 함수
+  window.updatePlaceMemo = (placeId, memo) => {
+    const updatedPlaces = places.map((place) => {
+      if (place.id === placeId) {
+        return {
+          ...place,
+          placeMemo: memo,
+        };
+      }
+      return place;
+    });
+    setPlaces(updatedPlaces);
+  };
+
+  //검색한 결과 선택 시 렌더링 되는 박스
   const createInfoWindowContent = (place) => {
     const buttonLabel = "저장";
     const buttonOnClick = `window.savePlace('${place.place_name}')`;
-
+    const textareaOnInput = `window.updatePlaceMemo('${place.id}', this.value)`;
+  
     return `
-    <div style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;width:150px;">
-      <div style="margin-bottom: 8px; display: flex; justify-content: space-between; width: 100%;">
-        <strong>${place.place_name}</strong>
+      <div style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;width:100%;max-width:600px;">
+        <div style="margin-bottom: 8px; display: flex; justify-content: space-between; width: 100%;">
+          <strong>${place.place_name}</strong>
+        </div>
+        <div style="margin-bottom: 8px;">${place.address_name}</div>
+        <div style="margin-bottom: 8px;">전화번호: ${place.phone || '정보 없음'}</div>
+        <div style="margin-bottom: 8px;"><a href="${place.place_url}" target="_blank">장소 링크</a></div>
+        <textarea placeholder="장소 메모..." style="width: 100%; margin-bottom: 8px;" oninput="${textareaOnInput}">${place.placeMemo || ''}</textarea>
+        <button
+        onclick="${buttonOnClick}"
+        style="width:100%;background-color:green;color:white;padding:5px;border:none;border-radius:5px;">
+          ${buttonLabel}
+        </button>
       </div>
-      <div style="margin-bottom: 8px;">${place.address_name}</div>
-      <button
-      onclick="${buttonOnClick}"
-      style="width:100%;background-color:green;color:white;padding:5px;border:none;border-radius:5px;">
-        ${buttonLabel}
-      </button>
-    </div>
-  `;
+    `;
   };
 
   window.closeInfoWindow = () => {
@@ -130,7 +151,7 @@ const SaveLocationPage = ({ onSave }) => {
 
   const handleSave = (place) => {
     if (place) {
-    
+
       onSave(place); // 선택된 장소를 외부 컴포넌트로 전달
       setSelectedPlace(null);
     }
@@ -188,9 +209,8 @@ const SaveLocationPage = ({ onSave }) => {
         <ul className="border border-gray-200 p-2 rounded max-h-60 overflow-y-auto custom-scrollbar">
           {places.map((place, index) => (
             <li
-              className={`border-b last:border-none p-2 cursor-pointer hover:bg-gray-100 ${
-                selectedPlace && selectedPlace.id === place.id ? "bg-blue-100" : ""
-              }`}
+              className={`border-b last:border-none p-2 cursor-pointer hover:bg-gray-100 ${selectedPlace && selectedPlace.id === place.id ? "bg-blue-100" : ""
+                }`}
               key={index}
               onClick={() => {
                 const selectedPosition = new window.kakao.maps.LatLng(place.y, place.x);

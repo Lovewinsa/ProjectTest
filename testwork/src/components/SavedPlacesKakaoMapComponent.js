@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 
-const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
+const SavedPlacesMapComponent = ({ savedPlaces, centerLocation, onMapReady  }) => {
   const mapRef = useRef(null)
   const [map, setMap] = useState(null)
   const [markers, setMarkers] = useState([])
@@ -18,6 +18,11 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
         level: 6,
       })
       setMap(map)
+
+      // 맵 객체가 초기화되면 부모 컴포넌트에 전달
+      if (onMapReady) {
+        onMapReady(map);
+      }
     }
 
     const kakaoMapApi = process.env.REACT_APP_KAKAO_MAP_API_KEY
@@ -32,7 +37,7 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
     return () => {
       document.head.removeChild(script)
     }
-  }, [])
+  }, [onMapReady])
 
   useEffect(() => {
     if (map && savedPlaces.length > 0) {
@@ -51,6 +56,7 @@ const SavedPlacesMapComponent = ({ savedPlaces, centerLocation  }) => {
 
       // savedPlaces 배열 검증 및 처리
       savedPlaces.forEach((item) => {
+        // console.log(item)
         if (item.position && item.position.Ma !== undefined && item.position.La !== undefined) {
           const markerPosition = new window.kakao.maps.LatLng(item.position.Ma, item.position.La);
           const marker = new window.kakao.maps.Marker({
