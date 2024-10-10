@@ -41,20 +41,20 @@ const CourseBoardEditForm = () => {
 
     // 나라별 도시 목록
     const citiesByCountry = {
-        Korea: ["서울", "부산", "제주", "인천"],
-        Japan: ["도쿄", "오사카", "교토", "삿포로"],
-        China: ["베이징", "상하이", "광저우", "시안"],
-        India: ["델리", "뭄바이", "콜카타", "벵갈루루"],
-        UK: ["런던", "맨체스터", "버밍엄", "리버풀"],
-        Germany: ["베를린", "뮌헨", "프랑크푸르트", "함부르크"],
-        France: ["파리", "마르세유", "리옹", "니스"],
-        Italy: ["로마", "밀라노", "베네치아", "피렌체"],
-        USA: ["뉴욕", "로스앤젤레스", "시카고", "마이애미"],
-        Canada: ["토론토", "밴쿠버", "몬트리올", "오타와"],
-        Brazil: ["상파울루", "리우데자네이루", "브라질리아", "살바도르"],
-        Australia: ["시드니", "멜버른", "브리즈번", "퍼스"],
-        Russia: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
-        SouthAfrica: ["케이프타운", "요하네스버그", "더반", "프리토리아"],
+        대한민국: ["서울", "부산", "제주", "인천"],
+        일본: ["도쿄", "오사카", "교토", "삿포로"],
+        중국: ["베이징", "상하이", "광저우", "시안"],
+        인도: ["델리", "뭄바이", "콜카타", "벵갈루루"],
+        영국: ["런던", "맨체스터", "버밍엄", "리버풀"],
+        독일: ["베를린", "뮌헨", "프랑크푸르트", "함부르크"],
+        프랑스: ["파리", "마르세유", "리옹", "니스"],
+        이탈리아: ["로마", "밀라노", "베네치아", "피렌체"],
+        미국: ["뉴욕", "로스앤젤레스", "시카고", "마이애미"],
+        캐나다: ["토론토", "밴쿠버", "몬트리올", "오타와"],
+        브라질: ["상파울루", "리우데자네이루", "브라질리아", "살바도르"],
+        호주: ["시드니", "멜버른", "브리즈번", "퍼스"],
+        러시아: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
+        남아프리카공화국: ["케이프타운", "요하네스버그", "더반", "프리토리아"],
         // Add more countries and cities as needed
     }
 
@@ -264,38 +264,45 @@ const CourseBoardEditForm = () => {
                                     setPostInfo((prev) => ({ ...prev, country: e.target.value }))
                                 }
                             >
-                                <option value="">나라를 선택하세요</option>
-                                <optgroup label="아시아">
-                                    <option value="Korea">대한민국</option>
-                                    <option value="Japan">일본</option>
-                                    <option value="China">중국</option>
-                                    <option value="India">인도</option>
-                                </optgroup>
+                                {domesticInternational === "Domestic" ? (
+                                    // Domestic일 경우 대한민국만 표시
+                                    <option value="대한민국">대한민국</option>
+                                ) : (
+                                    // International일 경우 기존 나라 선택 옵션 제공
+                                    <>
+                                        <option value="">나라를 선택하세요</option>
+                                        <optgroup label="아시아">
+                                            <option value="일본">일본</option>
+                                            <option value="중국">중국</option>
+                                            <option value="인도">인도</option>
+                                        </optgroup>
 
-                                <optgroup label="유럽">
-                                    <option value="UK">영국</option>
-                                    <option value="Germany">독일</option>
-                                    <option value="France">프랑스</option>
-                                    <option value="Italy">이탈리아</option>
-                                </optgroup>
+                                        <optgroup label="유럽">
+                                            <option value="영국">영국</option>
+                                            <option value="독일">독일</option>
+                                            <option value="프랑스">프랑스</option>
+                                            <option value="이탈리아">이탈리아</option>
+                                        </optgroup>
 
-                                <optgroup label="북아메리카">
-                                    <option value="USA">미국</option>
-                                    <option value="Canada">캐나다</option>
-                                </optgroup>
+                                        <optgroup label="북아메리카">
+                                            <option value="미국">미국</option>
+                                            <option value="캐나다">캐나다</option>
+                                        </optgroup>
 
-                                <optgroup label="남아메리카">
-                                    <option value="Brazil">브라질</option>
-                                </optgroup>
+                                        <optgroup label="남아메리카">
+                                            <option value="브라질">브라질</option>
+                                        </optgroup>
 
-                                <optgroup label="오세아니아">
-                                    <option value="Australia">호주</option>
-                                </optgroup>
+                                        <optgroup label="오세아니아">
+                                            <option value="호주">호주</option>
+                                        </optgroup>
 
-                                <optgroup label="기타">
-                                    <option value="Russia">러시아</option>
-                                    <option value="SouthAfrica">남아프리카 공화국</option>
-                                </optgroup>
+                                        <optgroup label="기타">
+                                            <option value="러시아">러시아</option>
+                                            <option value="남아프리카 공화국">남아프리카 공화국</option>
+                                        </optgroup>
+                                    </>
+                                )}
                             </select>
                         </div>
 
@@ -446,7 +453,7 @@ const CourseBoardEditForm = () => {
                             </button>
                         </div>
 
-                        {postInfo.country === "Korea" ? (
+                        {postInfo.country === "대한민국" ? (
                             <CourseKakaoMapComponent
                                 onSave={handleSavePlace}
                                 selectedDayIndex={selectedDayIndex}

@@ -69,10 +69,10 @@ const TripLogBoardForm = () => {
         setAllPlaces(places)
 
         // 첫 번째 장소로 지도 중심 설정
-        if (places.length > 0 && places[0].position && postData.country === "Korea") {
+        if (places.length > 0 && places[0].position && postData.country === "대한민국") {
           setKakaoMapCenterLocation({ Ma: places[0].position.Ma, La: places[0].position.La })
         }
-        if (places.length > 0 && places[0] && postData.country !== "Korea") {
+        if (places.length > 0 && places[0] && postData.country !== "대한민국") {
           setGoogleMapCenterLocation({ Ma: places[0].Ma, La: places[0].La })
         }
 
@@ -284,7 +284,7 @@ const TripLogBoardForm = () => {
           ))}
         </div>
         <div>
-          {post.country === "Korea" ? (
+          {post.country === "대한민국" ? (
             <SavedPlacesKakaoMapComponent savedPlaces={allPlaces} centerLocation={kakaoMapCenterLocation} />
           ) : (
             <SavedPlacesGoogleMapComponent savedPlaces={allPlaces} centerLocation={googleMapCenterLocation} />

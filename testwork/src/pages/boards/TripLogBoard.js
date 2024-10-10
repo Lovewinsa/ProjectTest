@@ -86,7 +86,7 @@ function TripLogBoard() {
                 //국내코스, 해외코스 필터
                 const filteredPageInfo = res.data.list.filter((item) => {
 
-                    const matchesDomesticInternational = diValue === "Domestic" ? item.country === "Korea" : item.country !== "Korea"
+                    const matchesDomesticInternational = diValue === "Domestic" ? item.country === "대한민국" : item.country !== "대한민국"
                     if (!matchesDomesticInternational) return false
 
                     const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true
@@ -286,6 +286,108 @@ function TripLogBoard() {
         navigate(`/posts/trip_log/${id}/detail?di=${domesticInternational}`)
     }
 
+    // city 또는 country 값에 따른 이미지 파일명 변환 함수
+    const getImageFileName = (city, country) => {
+        const cityMapping = {
+            // 대한민국
+            "서울": "KOR_Seoul_01",
+            "부산": "KOR_Busan_01",
+            "제주": "KOR_Jeju_01",
+            "인천": "KOR_Incheon_01",
+            // 일본
+            "도쿄": "JPN_Tokyo_01",
+            "오사카": "JPN_Osaka_01",
+            "교토": "JPN_Kyoto_01",
+            "삿포로": "JPN_Sapporo_01",
+            // 중국
+            "베이징": "CHN_Beijing_01",
+            "상하이": "CHN_Shanghai_01",
+            "광저우": "CHN_Guangzhou_01",
+            "시안": "CHN_Xian_01",
+            // 인도
+            "델리": "IND_Delhi_01",
+            "뭄바이": "IND_Mumbai_01",
+            "콜카타": "IND_Kolkata_01",
+            "벵갈루루": "IND_Bengaluru_01",
+            // 영국
+            "런던": "GBR_London_01",
+            "맨체스터": "GBR_Manchester_01",
+            "버밍엄": "GBR_Birmingham_01",
+            "리버풀": "GBR_Liverpool_01",
+            // 독일
+            "베를린": "DEU_Berlin_01",
+            "뮌헨": "DEU_Munich_01",
+            "프랑크푸르트": "DEU_Frankfurt_01",
+            "함부르크": "DEU_Hamburg_01",
+            // 프랑스
+            "파리": "FRA_Paris_01",
+            "마르세유": "FRA_Marseille_01",
+            "리옹": "FRA_Lyon_01",
+            "니스": "FRA_Nice_01",
+            // 이탈리아
+            "로마": "ITA_Rome_01",
+            "밀라노": "ITA_Milan_01",
+            "베네치아": "ITA_Venice_01",
+            "피렌체": "ITA_Florence_01",
+            // 미국
+            "뉴욕": "USA_NewYork_01",
+            "로스앤젤레스": "USA_LosAngeles_01",
+            "시카고": "USA_Chicago_01",
+            "마이애미": "USA_Miami_01",
+            // 캐나다
+            "토론토": "CAN_Toronto_01",
+            "밴쿠버": "CAN_Vancouver_01",
+            "몬트리올": "CAN_Montreal_01",
+            "오타와": "CAN_Ottawa_01",
+            // 브라질
+            "상파울루": "BRA_SaoPaulo_01",
+            "리우데자네이루": "BRA_RioDeJaneiro_01",
+            "브라질리아": "BRA_Brasilia_01",
+            "살바도르": "BRA_Salvador_01",
+            // 호주
+            "시드니": "AUS_Sydney_01",
+            "멜버른": "AUS_Melbourne_01",
+            "브리즈번": "AUS_Brisbane_01",
+            "퍼스": "AUS_Perth_01",
+            // 러시아
+            "모스크바": "RUS_Moscow_01",
+            "상트페테르부르크": "RUS_SaintPetersburg_01",
+            "노보시비르스크": "RUS_Novosibirsk_01",
+            "예카테린부르크": "RUS_Yekaterinburg_01",
+            // 남아프리카 공화국
+            "케이프타운": "ZAF_CapeTown_01",
+            "요하네스버그": "ZAF_Johannesburg_01",
+            "더반": "ZAF_Durban_01",
+            "프리토리아": "ZAF_Pretoria_01",
+        };
+
+        const countryMapping = {
+            "대한민국": "KOR_01",
+            "일본": "JPN_01",
+            "중국": "CHN_01",
+            "인도": "IND_01",
+            "영국": "GBR_01",
+            "독일": "DEU_01",
+            "프랑스": "FRA_01",
+            "이탈리아": "ITA_01",
+            "미국": "USA_01",
+            "캐나다": "CAN_01",
+            "브라질": "BRA_01",
+            "호주": "AUS_01",
+            "러시아": "RUS_01",
+            "남아프리카공화국": "ZAF_01",
+        };
+
+        // city 값이 있으면 city에 맞는 이미지, 없으면 country에 맞는 이미지 반환
+        if (city && cityMapping[city]) {
+            return cityMapping[city];
+        } else if (country && countryMapping[country]) {
+            return countryMapping[country];
+        } else {
+            return "defaultImage"; // 매핑되지 않은 경우 기본값 처리
+        }
+    };
+
     return (
         <div className="container mx-auto p-4 max-w-[1024px]">
             {/* 로딩 애니메이션 */}
@@ -419,41 +521,53 @@ function TripLogBoard() {
                 </div>
 
                 {/* 카드 리스트 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    {pageInfo.map((post) => (
-                        <div
-                            key={post.id}
-                            className="bg-white rounded-lg shadow-md overflow-hidden"
-                            onClick={() => handlePostClick(post.id)}
-                        >
-                            <img src={post.image || "/placeholder.jpg"} alt={post.title} className="w-full h-48 object-cover" />
-                            <div className="p-4">
-                                <h2 className="text-lg font-bold">{post.title}</h2>
-                                <p className="text-sm text-gray-600">작성자: {post.writer}</p>
-                                <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
-                                <p className="text-sm text-gray-600">{post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                                    {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}</p>
-                                <p className="text-sm text-right text-green-800 font-semibold">
-                                    {post.country} - {post.city}
-                                </p>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="text-yellow-500">⭐ {post.rating?.toFixed(1) || "0.0"}</span>
-                                    <span className="text-sm text-gray-500">조회수: {post.viewCount}</span>
-                                </div>
-                                <div className="mt-3">
-                                    <div className="flex flex-wrap gap-1">
-                                        {post.tags &&
-                                            post.tags.map((tag, index) => (
-                                                <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {pageInfo.map((post) => {
+            // 변환된 city 또는 country 값을 사용하여 이미지 경로 설정
+            const imageFileName = getImageFileName(post.city, post.country);
+            const imagePath = `/img/countryImages/${imageFileName}.jpg`;
+            return (
+              <div
+                key={post.id}
+                className="bg-white rounded-lg shadow-md overflow-hidden"
+                onClick={() => handlePostClick(post.id)}
+              >
+                {/* post.image가 없으면 cityImagePath 사용 */}
+                <img
+                  src={imagePath || "/placeholder.jpg"}
+                  alt={post.title}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-4">
+                  <h2 className="text-lg font-bold">{post.title}</h2>
+                  <p className="text-sm text-gray-600">작성자: {post.writer}</p>
+                  <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
+                  <p className="text-sm text-gray-600">
+                    {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                    {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}
+                  </p>
+                  <p className="text-sm text-right text-green-800 font-semibold">
+                    {post.country} - {post.city}
+                  </p>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-yellow-500">⭐ {post.rating?.toFixed(1) || "0.0"}</span>
+                    <span className="text-sm text-gray-500">조회수: {post.viewCount}</span>
+                  </div>
+                  <div className="mt-3">
+                    <div className="flex flex-wrap gap-1">
+                      {post.tags &&
+                        post.tags.map((tag, index) => (
+                          <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                            {tag}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
                 </div>
+              </div>
+            );
+          })}
+        </div>
 
                 {/* 페이징 버튼 */}
                 <div className="flex justify-center space-x-2">
