@@ -4,17 +4,14 @@ import { Link, useSearchParams } from "react-router-dom";
 import "react-calendar/dist/Calendar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons";
-import LoadingAnimation from "../../components/LoadingAnimation";
+import LoadingAnimation from "../../components/LoadingAnimation"
 
 function CommunityBoard() {
   //로딩 상태 추가
   const [loading, setLoading] = useState(false);
 
-  // 글 목록 정보
   //배열 안에서 객체로 관리
   const [pageData, setPageData] = useState([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
 
   //파라미터 값 관리
   // URL에서 검색 매개변수를 가져오기 위한 상태
@@ -166,136 +163,110 @@ function CommunityBoard() {
     setSortBy(e.target.value); // 정렬 기준 변경
   };
 
-  // 페이지 이동 핸들러
-  const paginate = (pageNum) => {
-    setCurrentPage(pageNum);
-    setSearchParams({ ...searchParams, pageNum });
-  };
-
-  // 현재 시간과 작성일을 비교해 '몇 시간 전' 또는 '몇 일 전'을 계산하는 함수
-  const getTimeDifference = (createdAt, updatedAt) => {
-    const postDate = new Date(updatedAt ? updatedAt : createdAt);
-    const now = new Date();
-    const timeDiff = now - postDate; // 시간 차이를 밀리초 단위로 계산
-
-    const diffInMinutes = Math.floor(timeDiff / (1000 * 60)); // 밀리초 -> 분
-    const diffInHours = Math.floor(timeDiff / (1000 * 60 * 60)); // 밀리초 -> 시간
-    const diffInDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // 밀리초 -> 일
-
-    if (diffInMinutes < 60) {
-      // 1시간 이내일 경우 '몇 분 전'
-      return `${diffInMinutes}분 전`;
-    } else if (diffInHours < 24) {
-      // 24시간 이내일 경우 '몇 시간 전'
-      return `${diffInHours}시간 전`;
-    } else {
-      // 24시간 이상일 경우 '몇 일 전'
-      return `${diffInDays}일 전`;
-    }
-  };
-
   return (
-    <div className="container mx-auto p-4 max-w-[1024px]">
+    <div className="container mx-auto m-4">
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
-      <div className="container mx-auto m-4">
-        <Link
-          className="px-4 py-2 text-sm font-medium rounded-md bg-green-600 text-gray-100 mr-3"
-          to={{ pathname: "/posts/community/new", search: `?di=${domesticInternational}` }}>
-          새글 작성
-        </Link>
-        <button
-          className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
-          onClick={handleButtonClick}>
-          {pageTurn}
-        </button>
-        <h4 className="font-bold mb-4">{whereAreYou}</h4>
+      <Link
+        className="px-4 py-2 text-sm font-medium rounded-md bg-green-600 text-gray-100 mr-3"
+        to={{ pathname: "/posts/community/new", search: `?di=${domesticInternational}` }}>
+        새글 작성
+      </Link>
+      <button
+        className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
+        onClick={handleButtonClick}>
+        {pageTurn}
+      </button>
+      <h4 className="font-bold mb-4">{whereAreYou}</h4>
 
-        {/* 검색 조건 입력 폼 */}
-        <div className="my-4">
-          {domesticInternational === "International" && ( // 국제 검색일 때 위치 입력 필드 렌더링
-            <input
-              type="text"
-              name="country"
-              value={searchCriteria.country}
-              onChange={handleSearchChange}
-              placeholder="국가"
-              className="border px-2 py-1 mx-2"
-            />
-          )}
+      {/* 검색 조건 입력 폼 */}
+      <div className="my-4">
+        {domesticInternational === "International" && ( // 국제 검색일 때 위치 입력 필드 렌더링
           <input
             type="text"
-            name="city"
-            value={searchCriteria.city}
+            name="country"
+            value={searchCriteria.country}
             onChange={handleSearchChange}
-            placeholder="도시"
+            placeholder="국가"
             className="border px-2 py-1 mx-2"
           />
+        )}
+        <input
+          type="text"
+          name="city"
+          value={searchCriteria.city}
+          onChange={handleSearchChange}
+          placeholder="도시"
+          className="border px-2 py-1 mx-2"
+        />
 
-          {/* 제목/작성자 검색 옵션 선택 */}
-          <div className="flex items-center mb-2">
-            <select value={searchCriteria.condition} onChange={handleConditionChange} className="border px-2 py-1 mx-2">
-              <option value="title">제목</option>
-              <option value="writer">작성자</option>
-              <option value="content">내용</option>
-              <option value="title+writer">제목 + 내용</option>
-            </select>
-          </div>
-
-          <input
-            type="text"
-            name={searchCriteria.condition} // 동적으로 이름 설정
-            value={searchCriteria[searchCriteria.condition]} // 검색 타입에 따라 값 설정
-            onChange={handleQueryChange}
-            placeholder={searchCriteria.condition === "title" ? "제목" : "작성자"}
-            className="border px-2 py-1 mx-2"
-          />
-          <button onClick={handleSearch} className="bg-blue-500 text-white px-4 py-2">
-            검색
-          </button>
-        </div>
-
-        {/* 검색 정렬 기준 다운바 */}
-        <div className="my-4">
-          <label htmlFor="sortBy" className="mr-2">
-            정렬 기준:
-          </label>
-          <select id="sortBy" value={sortBy} onChange={handleSortChange} className="border px-2 py-1">
-            <option value="latest">최신순</option>
-            <option value="viewCount">조회수순</option>
-            <option value="likeCount">좋아요순</option>
+        {/* 제목/작성자 검색 옵션 선택 */}
+        <div className="flex items-center mb-2">
+          <select value={searchCriteria.condition} onChange={handleConditionChange} className="border px-2 py-1 mx-2">
+            <option value="title">제목</option>
+            <option value="writer">작성자</option>
+            <option value="content">내용</option>
+            <option value="title+writer">제목 + 내용</option>
           </select>
         </div>
 
-        {/* 메이트 게시판 리스트 */}
+        <input
+          type="text"
+          name={searchCriteria.condition} // 동적으로 이름 설정
+          value={searchCriteria[searchCriteria.condition]} // 검색 타입에 따라 값 설정
+          onChange={handleQueryChange}
+          placeholder={searchCriteria.condition === "title" ? "제목" : "작성자"}
+          className="border px-2 py-1 mx-2"
+        />
+        <button onClick={handleSearch} className="bg-blue-500 text-white px-4 py-2">
+          검색
+        </button>
+      </div>
 
-        <ul className="w-full border border-gray-200 divide-y divide-gray-200">
+      {/* 검색 정렬 기준 다운바 */}
+      <div className="my-4">
+        <label htmlFor="sortBy" className="mr-2">
+          정렬 기준:
+        </label>
+        <select id="sortBy" value={sortBy} onChange={handleSortChange} className="border px-2 py-1">
+          <option value="latest">최신순</option>
+          <option value="viewCount">조회수순</option>
+          <option value="likeCount">좋아요순</option>
+        </select>
+      </div>
+
+      {/* 메이트 게시판 테이블 */}
+      <table className="table-auto w-full border divide-y divide-x divide-gray-200">
+        <thead className="text-center">
+          <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>작성일</th>
+            <th>조회수/댓글수/좋아요</th>
+          </tr>
+        </thead>
+        <tbody className="text-center divide-y">
           {pageData.map((item) => (
-            <li key={item.id} className="grid grid-cols-1 sm:grid-cols-4 items-center text-center py-2 gap-2">
-              {/* 첫 번째 열: 게시글 정보 */}
-              <div className="col-span-2 sm:col-span-2 text-left pl-5">
+            <tr key={item.id}>
+              <td>{item.id}</td>
+              <td className="text-left">
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded items-center">{`#${item.country}`}</span>
-                  <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded items-center">{`#${item.city}`}</span>
+                  <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">{`#${item.country}`}</span>
+                  <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">{`#${item.city}`}</span>
                   {item.tags &&
                     item.tags.map((tag, index) => (
-                      <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                      <span
+                        key={index}
+                        className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center">
                         {tag}
                       </span>
                     ))}
                 </div>
-                <div className="mt-2">
-                <Link to={`/posts/community/${item.id}/detail`} >
-                  {item.title}
-                </Link>
-                </div>
-              </div>
-
-              {/* 두 번째 열: 작성자 */}
-              <div className="sm:text-center text-sm sm:col-span-1 font-semibold text-gray-500">{item.writer}</div>
-
-              {/* 세 번째 열: 작성일/수정일 */}
-              <div className="text-xs sm:text-center text-left mr-5 sm:mr-1">
+                <Link to={`/posts/community/${item.id}/detail`}>{item.title}</Link>
+              </td>
+              <td>{item.writer}</td>
+              <td className="text-xs">
                 {item.updatedAt ? (
                   <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
                     update
@@ -305,63 +276,34 @@ function CommunityBoard() {
                 )}
                 {new Date(item.updatedAt ? item.updatedAt : item.createdAt).toLocaleDateString("ko-KR", {
                   year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
+                  month: "long",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "numeric",
+                  second: "numeric",
                 })}
-                <div className="text-xs text-gray-500 sm:text-center text-left">
+              </td>
+              {/* 조회수, 좋아요, 덧글 수 */}
+              <td>
+                <span className="text-sm text-gray-500">
                   <span className="mx-3">
-                    <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-1" />
+                    <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
                     {item.viewCount}
                   </span>
                   <span className="mr-3">
-                    <FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-1" />
+                    <FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-2" />
                     {item.likeCount}
                   </span>
-                  <span className="">
-                    <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-1" />
+                  <span className="mr-3">
+                    <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-2" />
                     {item.commentCount}
                   </span>
-                </div>
-              </div>
-            </li>
+                </span>
+              </td>
+            </tr>
           ))}
-        </ul>
-
-        {/* 페이징 버튼 */}
-        <div className="flex justify-center space-x-2 mt-5">
-          <button
-            onClick={() => paginate(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded ${
-              currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-            }`}>
-            &lt;
-          </button>
-          {/* totalPages만큼 배열 생성 */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-            <button
-              key={number}
-              onClick={() => paginate(number)}
-              className={`px-4 py-2 rounded ${
-                currentPage === number ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
-              }`}>
-              {number}
-            </button>
-          ))}
-          <button
-            onClick={() => paginate(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded ${
-              currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-            }`}>
-            &gt;
-          </button>
-        </div>
-
-        <p className="mt-4 text-center">
-          <strong>{pageData.length}</strong>개의 글이 있습니다.
-        </p>
-      </div>
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const LoadingAnimation = ({ duration = 0.7 }) => {
+const LoadingAnimation = () => {
   const [imageWidth, setImageWidth] = useState('0%'); // 처음에는 0%로 시작
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const LoadingAnimation = ({ duration = 0.7 }) => {
           className="w-full h-full object-contain"
           style={{
             clipPath: `inset(0 ${100 - parseInt(imageWidth)}% 0 0)`, // 왼쪽부터 점차 보이도록 설정
-            transition: `clip-path ${duration}s cubic-bezier(0.65, 0, 0.35, 1)`, // 애니메이션 속도 설정
+            transition: 'clip-path 0.7s cubic-bezier(0.65, 0, 0.35, 1)', // 애니메이션 속도 설정
           }}
         />
       </div>

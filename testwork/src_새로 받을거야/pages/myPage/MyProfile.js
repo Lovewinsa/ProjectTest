@@ -19,7 +19,6 @@ import {
 import "../../css/MyProfile.css";
 import FollowerFolloweeModal from "../../components/FollowerFolloweeModal";
 import LoadingAnimation from "../../components/LoadingAnimation";
-import useWebSocket from "../../components/useWebSocket";
 
 function MyProfile(props) {
   // to do : cur_location, last_login
@@ -173,16 +172,16 @@ function MyProfile(props) {
         if (userId === res.data.userProfileInfo.userId) {
           setProfileOwner(true);
         } else {
-          setProfileOwner(false);
+          setProfileOwner(false)
         }
 
         const findReviewerId = res.data.userReviewList.find((item) => item.reviewerId === userId);
         // undefined = false / 이 외에 = true
         setReviewed(!!findReviewerId);
 
-        console.log(res.data.userProfileInfo.userId);
-        console.log(userId);
-        console.log(isProfileOwner);
+        console.log(res.data.userProfileInfo.userId)
+        console.log(userId)
+        console.log(isProfileOwner)
       })
       .catch((error) => console.log(error));
   }, [id, userId]);
@@ -443,38 +442,6 @@ function MyProfile(props) {
     }));
   };
 
-  // ---------------------------------------------------- 채팅 관련
-  const { stompClient, isConnected } = useWebSocket();
-
-  const handleClickChat = () => {
-    console.log("채팅 버튼 클릭");
-    console.log("1번" + userId);
-    if (isConnected) {
-      console.log("웹 소켓 연결 정상");
-    } else {
-      console.log("웹 소켓 비정상");
-    }
-    console.log("2번" + id);
-    axios
-      .post("/api/chat/rooms", {
-        ownerId: userId, // 방 생성자를 명시
-        participantsList: [userId, id], // 대화 참가자 목록
-        type: "ONE_ON_ONE",
-        title: `${nickname}님과${profile.nickname}님의 채팅`,
-      })
-      .then((res) => {
-        const newRoom = res.data;
-
-        alert("채팅방 생성.");
-
-        navigate(`/chatroom/${newRoom.id}`, { state: { chatRooms: newRoom } });
-      })
-      .catch((error) => {
-        console.log(error);
-        alert("채팅방 생성에 실패했습니다.");
-      });
-  };
-
   return (
     <div className="container mx-auto p-4 max-w-[900px] shadow-md rounded-lg">
       {/* 로딩 애니메이션 */}
@@ -610,9 +577,7 @@ function MyProfile(props) {
                   {followingStatus && <FontAwesomeIcon icon={faCheck} />}
                   &nbsp;팔로우
                 </button>
-                <button
-                  onClick={handleClickChat}
-                  className="px-4 py-2 text-sm font-medium rounded-md bg-green-500 text-white">
+                <button className="px-4 py-2 text-sm font-medium rounded-md bg-green-500 text-white" >
                   &nbsp;Message
                 </button>
                 <div id="toast_message" ref={toastMessageRef}>

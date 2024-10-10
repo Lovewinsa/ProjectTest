@@ -555,7 +555,7 @@ function MateBoardDetail(props) {
                 <img src={writerProfile.profilePicture} className="w-20 h-20 rounded-full" alt="" />
               ) : (
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns="http://www.w3.org/2000/svg"d
                   fill="currentColor"
                   className="bi bi-person-circle w-20 h-20"
                   viewBox="0 0 16 16">
