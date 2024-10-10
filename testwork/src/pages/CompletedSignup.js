@@ -13,6 +13,9 @@ function CompletedSignup() {
     const username = useSelector(state => state.userData.username, shallowEqual);
 
     useEffect(() => {
+        // 스크롤을 화면 위로
+        window.scrollTo(0, 0);
+
         if (!isAllChecked) {
             alert("잘못된 경로입니다");
             navigate("/");
@@ -27,10 +30,10 @@ function CompletedSignup() {
 
     useEffect(() => {
         // 로딩 애니메이션을 0.5초 동안만 표시
-        setLoading(true)
+        setLoading(true);
         setTimeout(() => {
-            setLoading(false)
-        }, 700)
+            setLoading(false);
+        }, 700);
         if (!username) return;
 
         const fetchProfile = async () => {
@@ -46,10 +49,10 @@ function CompletedSignup() {
     }, [username]);
 
     return (
-        <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="bg-white min-h-screen flex items-start justify-center py-16">
             {loading && <LoadingAnimation />}
-            <div className="max-w-7xl px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
-                <div className="relative isolate overflow-hidden bg-gray-900 px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
+            <div className="w-full max-w-4xl px-4 sm:px-6 lg:px-8">
+                <div className="relative isolate overflow-hidden bg-gray-900 px-6 pt-12 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-20 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
                     <svg
                         viewBox="0 0 1024 1024"
                         aria-hidden="true"
@@ -63,7 +66,7 @@ function CompletedSignup() {
                             </radialGradient>
                         </defs>
                     </svg>
-                    <div className="max-w-md text-center lg:text-left lg:flex-auto lg:py-32 mx-auto">
+                    <div className="max-w-md text-center lg:text-left lg:flex-auto lg:py-24 mx-auto">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                             회원가입이 완료되었습니다.
                         </h2>
@@ -72,7 +75,7 @@ function CompletedSignup() {
                             <br />
                             편하게 이용해 보세요.
                         </p>
-                        <div className="mt-10 flex items-center justify-center lg:justify-start gap-x-6">
+                        <div className="mt-10 flex items-center justify-center gap-x-6 flex-nowrap">
                             {profile.id && (
                                 <>
                                     <Link
@@ -81,7 +84,7 @@ function CompletedSignup() {
                                     >
                                         추가정보 입력
                                     </Link>
-                                    <Link to="/" className="text-sm font-semibold leading-6 mb-4 text-white">
+                                    <Link to="/" className="text-sm font-semibold mb-4 leading-6 text-white">
                                         TripDuo 둘러보기 <span aria-hidden="true">→</span>
                                     </Link>
                                 </>

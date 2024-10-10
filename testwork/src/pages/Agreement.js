@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import TermServiceModal from '../components/TermServiceModal';
 import TermPrivacyModal from '../components/TermPrivacyModal';
 
 function Agreement() {
+    useEffect(()=>{
+        // 스크롤을 화면 위로
+        window.scrollTo(0, 0);
+    }, [])
     // 약관 전체 동의 상태를 관리하는 상태 변수
     const [allAgreed, setAllAgreed] = useState(false);
 
