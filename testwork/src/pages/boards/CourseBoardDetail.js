@@ -16,8 +16,8 @@ let commentIndex = 0
 const maxLength = 3000
 
 const CourseBoardDetail = () => {
-   //로딩 상태 추가
-   const [loading, setLoading] = useState(false)
+  //로딩 상태 추가
+  const [loading, setLoading] = useState(false)
   //"/posts/course/:id/detail" 에서 id에 해당되는 경로 파라미터 값 얻어오기
   const { id } = useParams()
   //로그인된 user정보
@@ -63,8 +63,6 @@ const CourseBoardDetail = () => {
 
   //검색 키워드, 국내외 관련 처리
   const [searchParams] = useSearchParams()
-  const location = useLocation()
-  const searchParams2 = new URLSearchParams(location.search)
   const domesticInternational = searchParams.get('di')
   //Confirm 모달을 띄울지 여부를 상태값으로 관리
   const [confirmShow, setConfirmShow] = useState(false)
@@ -126,7 +124,7 @@ const CourseBoardDetail = () => {
         if (places.length > 0 && places[0].position && domesticInternational === "Domestic") {
           setKakaoMapCenterLocation({ Ma: places[0].position.Ma, La: places[0].position.La });
         }
-        if (places.length > 0 && places[0] && domesticInternational === "Domestic") {
+        if (places.length > 0 && places[0] && domesticInternational !== "Domestic") {
           setGoogleMapCenterLocation({ Ma: places[0].Ma, La: places[0].La });
         }
 
@@ -141,8 +139,6 @@ const CourseBoardDetail = () => {
         setCommentList(list)
         //전체 댓글 페이지의 개수를 상태값으로 넣어주기
         setTotalPageCount(res.data.totalCommentPages)
-
-
       })
       .catch((error) => {
         console.log("데이터를 가져오지 못했습니다.", error)
@@ -458,10 +454,9 @@ const CourseBoardDetail = () => {
 
 
   return (
-
     <div className="container mx-auto p-4 max-w-[1024px]">
       {/* 로딩 애니메이션 */}
-{loading && <LoadingAnimation />}
+      {loading && <LoadingAnimation />}
       <div className="flex flex-col h-full bg-gray-100 p-6">
         <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
           <div className="flex gap-2">
