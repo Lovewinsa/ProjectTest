@@ -4,55 +4,51 @@ import { shallowEqual, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoadingAnimation from "../components/LoadingAnimation";
 
+function CompletedSignup() {
+    const [loading, setLoading] = useState(false);
+    const [profile, setProfile] = useState({});
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { isAllChecked } = location.state || {};
+    const username = useSelector(state => state.userData.username, shallowEqual);
 
-function CompletedSignup(props) {
-     //로딩 상태 추가
-  const [loading, setLoading] = useState(false)
-    const location = useLocation()
-    const { isAllChecked } = location.state || {}
-    const navigate = useNavigate()
-
-    const [profile, setProfile] = useState({})
-    const username = useSelector(state => state.userData.username, shallowEqual)
-    
     useEffect(() => {
-        
         if (!isAllChecked) {
-            alert("잘못된 경로입니다")
-            navigate("/")
-            
+            alert("잘못된 경로입니다");
+            navigate("/");
         } else {
-            // window.location.reload()가 한 번만 실행되도록
-            // sessionStorage에 새로고침이 한 번 이루어졌는지 여부를 저장
-            const hasReloaded = sessionStorage.getItem("hasReloaded")
+            const hasReloaded = sessionStorage.getItem("hasReloaded");
             if (!hasReloaded) {
-                window.location.reload()
-                sessionStorage.setItem("hasReloaded", "true") // 새로고침 후 플래그 설정
+                sessionStorage.setItem("hasReloaded", "true");
+                window.location.reload();
             }
         }
-    }, [isAllChecked, navigate])
+    }, [isAllChecked, navigate]);
 
-    useEffect(()=>{      
+    useEffect(() => {
         // 로딩 애니메이션을 0.5초 동안만 표시
-    setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-    }, 700)
-        if(username){
-        axios.get(`/api/v1/users/username/${username}`)
-        .then(res=>{
-            console.log(res)
-            setProfile(res.data)
-        })
-        .catch(error=>console.log(error))
-        }    
-    }, [username])
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 700)
+        if (!username) return;
+
+        const fetchProfile = async () => {
+            try {
+                const response = await axios.get(`/api/v1/users/username/${username}`);
+                setProfile(response.data);
+            } catch (error) {
+                console.error("프로필 데이터를 가져오는 중 오류 발생:", error);
+            }
+        };
+
+        fetchProfile();
+    }, [username]);
 
     return (
-        <div className="bg-white">
-            {/* 로딩 애니메이션 */}
-{loading && <LoadingAnimation />}
-            <div className="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
+        <div className="bg-white min-h-screen flex items-center justify-center">
+            {loading && <LoadingAnimation />}
+            <div className="max-w-7xl px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
                 <div className="relative isolate overflow-hidden bg-gray-900 px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
                     <svg
                         viewBox="0 0 1024 1024"
@@ -67,7 +63,7 @@ function CompletedSignup(props) {
                             </radialGradient>
                         </defs>
                     </svg>
-                    <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left">
+                    <div className="max-w-md text-center lg:text-left lg:flex-auto lg:py-32 mx-auto">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                             회원가입이 완료되었습니다.
                         </h2>
@@ -76,19 +72,22 @@ function CompletedSignup(props) {
                             <br />
                             편하게 이용해 보세요.
                         </p>
-                        <div className="mt-10 flex items-center justify-center gap-x-6">
-                            <Link
-                                to={`/users/${profile.id}/profile/edit`}
-                                className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                            >
-                                추가정보 입력
-                            </Link>
-                            <Link to="/" className="text-sm font-semibold leading-6 text-white">
-                                TripDuo 둘러보기 <span aria-hidden="true">→</span>
-                            </Link>
+                        <div className="mt-10 flex items-center justify-center lg:justify-start gap-x-6">
+                            {profile.id && (
+                                <>
+                                    <Link
+                                        to={`/users/${profile.id}/profile/edit`}
+                                        className="rounded-md bg-white px-3.5 py-2.5 mb-4 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                                    >
+                                        추가정보 입력
+                                    </Link>
+                                    <Link to="/" className="text-sm font-semibold leading-6 mb-4 text-white">
+                                        TripDuo 둘러보기 <span aria-hidden="true">→</span>
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
-                    
                 </div>
             </div>
         </div>

@@ -17,8 +17,9 @@ function Signup() {
       alert("회원가입을 위해선 약관동의가 필요합니다.");
       navigate("/agreement");
     }
-  }, [])
+  }, [termsService, termsPrivacy, essential, navigate])
 
+  //상태관리
   const [username, setUsername] = useState('')
   const [nickname, setNickname] = useState('')
   const [isValidUsername, setIsValidUsername] = useState(false)
@@ -42,6 +43,7 @@ function Signup() {
   const [hasNumber, setHasNumber] = useState(false)
   const [hasSpecialChar, setHasSpecialChar] = useState(false)
   const [isValidLength, setIsValidLength] = useState(false)
+
   const [showUsernameValidateMessage, setShowUsernameValidateMessage] = useState(false)
   const [showPasswordValidateMessage, setShowPasswordValidateMessage] = useState(false)
   const [showConfirmPasswordValidateMessage, setShowConfirmPasswordValidateMessage] = useState(false)
@@ -51,7 +53,6 @@ function Signup() {
   const [age, setAge] = useState("")
   const [gender, setGender] = useState("")
   const [email, setEmail] = useState('')
-
   const [phoneNumber, setPhoneNumber] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [isCodeSent, setIsCodeSent] = useState(false)
@@ -59,30 +60,20 @@ function Signup() {
 
   const [isAllChecked, setIsAllChecked] = useState(false)
 
-
-  const validateUsername = (value) => {
-    // 아이디 : 영어 소문자와 숫자로 이루어진 6~16자리
-    const regex = /^[a-z0-9]{6,16}$/
-    return regex.test(value) || value === ""
-  }
-  //비밀번호 일치 여부 검사
+  //유효성 검사 함수
+  // 아이디 : 영어 소문자와 숫자로 이루어진 6~16자리
+  const validateUsername = (value) => /^[a-z0-9]{6,16}$/.test(value) || value === ""
+  // 닉네임 : 한글, 영어 대소문자, 숫자로 이루어진 2~16자리
+  const validateNickname = (value) => /^[가-힣a-zA-Z0-9]{2,16}$/.test(value) || value === ""
+  // 이메일 : 이메일 형식
+  const validateEmail = (value) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value) || value === ""
+  // 비밀번호 일치 여부 검사
   const validateConfirmPassword = (value) => password === value || value === ""
 
   //비밀번호 보이기/숨기기
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword)
-  };
-
-  const validateNickname = (value) => {
-    // 닉네임 : 한글, 영어 대소문자, 숫자로 이루어진 2~16자리
-    const regex = /^[가-힣a-zA-Z0-9]{2,16}$/
-    return regex.test(value) || value === ""
-  }
-  const validateEmail = (value) => {
-    // 이메일 : 이메일 형식
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    return regex.test(value) || value === ""
-  }
+  const togglePasswordVisibility = () => setShowPassword(!showPassword)
+  
+  //모든 유효성 검사 통과했는지 검사
   const updateIsAllChecked = (updates = {}) => {
     const newState = {
       isValidUsername,
@@ -95,9 +86,7 @@ function Signup() {
       isNicknameUnique,
       ...updates
     }
-
-    const allChecked = Object.values(newState).every(Boolean)
-    setIsAllChecked(allChecked)
+    setIsAllChecked(Object.values(newState).every(Boolean))
   }
 
   //아이디, 닉네임 중복검사
@@ -105,8 +94,8 @@ function Signup() {
     axios.post(`/api/v1/users/check/${type}`, value, {
       headers: { 'Content-Type': 'text/plain' },
     })
-      .then((response) => {
-        if (response.data) {
+      .then((res) => {
+        if (res.data) {
           setExist(true)
           updateIsAllChecked({ [type === 'username' ? 'isUsernameUnique' : 'isNicknameUnique']: false })
         } else {
@@ -122,6 +111,7 @@ function Signup() {
       })
   }
 
+  //아이디 중복 확인
   const handleCheckUsername = () => {
     if (isValidUsername) {
       checkAvailability('username', username, setIsUsernameExist, setIsUsernameUnique)
@@ -131,6 +121,7 @@ function Signup() {
     }
   }
 
+  //닉네임 중복 확인
   const handleCheckNickname = () => {
     if (isValidNickname) {
       checkAvailability('nickname', nickname, setIsNicknameExist, setIsNicknameUnique)
@@ -140,16 +131,17 @@ function Signup() {
     }
   }
 
+  //아이디 입력 핸들러
   const usernameHandleChange = (e) => {
     const value = e.target.value
     setUsername(value)
     const validUsername = validateUsername(value)
     setIsValidUsername(validUsername)
     setShowUsernameValidateMessage(value !== "" && !validUsername)
-
     updateIsAllChecked({ isValidUsername: validUsername, isUsernameUnique: false })
   }
 
+  //비밀번호 입력 핸들러 및 유효성 검사
   const passwordHandleChange = (e) => {
     const value = e.target.value
     setPassword(value)
@@ -176,7 +168,8 @@ function Signup() {
 
     updateIsAllChecked({ isValidPassword: validPassword })
   }
-  //비밀번호 확인
+
+  //비밀번호 확인 핸들러
   const confirmPasswordHandleChange = (e) => {
     const value = e.target.value
     setConfirmPassword(value)
@@ -189,24 +182,22 @@ function Signup() {
     updateIsAllChecked({ isPasswordMatched: passwordMatched })
   }
 
+  //닉네임 입력 핸들러
   const nicknameHandleChange = (e) => {
     const value = e.target.value
     setNickname(value)
     const validNickname = validateNickname(value)
     setIsValidNickname(validNickname)
     setShowNicknameValidateMessage(value !== "" && !validNickname)
-
     updateIsAllChecked({ isValidNickname: validNickname })
   }
 
+  //전화번호 입력 핸들러
   const phoneNumberHandleChange = (e) => {
-    const { value } = e.target;
-    // 숫자만 추출
-    const numericValue = value.replace(/\D/g, '');
-    // 전화번호 형식으로 변환
-    const formattedValue = formatPhoneNumber(numericValue);
+    const { value } = e.target
+    const numericValue = value.replace(/\D/g, '') // 숫자만 추출
+    const formattedValue = formatPhoneNumber(numericValue) // 전화번호 형식으로 변환
     setPhoneNumber(formattedValue)
-
     updateIsAllChecked()
   }
   //전화번호 포맷처리 함수
@@ -219,45 +210,49 @@ function Signup() {
   //실제 저장용 값('-' 제거)
   const getUnformattedPhoneNumber = () => phoneNumber.replace(/\D/g, '')
 
+  //이메일 입력 핸들러
   const emailHandleChange = (e) => {
     const value = e.target.value
     const validEmail = validateEmail(value)
     setEmail(value)
     setIsValidEmail(validEmail)
     setShowEmailValidateMessage(value !== "" && !validEmail)
-
     updateIsAllChecked({ isValidEmail: validEmail })
   }
 
+  //인증코드 입력 핸들러
   const verificationCodeHandleChange = (e) => {
     setVerificationCode(e.target.value)
     updateIsAllChecked()
   }
 
+  //인증코드 전송
   const sendVerificationCode = () => {
-    //인증요청 전송 api
     axios.post('/api/v1/auth/phone/send-code', phoneNumber)
-      .then((response) => {
+      .then(() => {
         setIsCodeSent(true)
         alert('인증 코드가 전송되었습니다.')
       })
-      .catch((error) => {
+      .catch(() => {
         alert('인증 코드 전송에 실패했습니다.')
       })
   }
+
+  //휴대폰 번호 인증 확인
   const verifyPhoneNumber = () => {
     //인증 확인 api
     axios.post('/api/v1/auth/phone/verify-code', { phoneNumber, code: verificationCode })
-      .then((response) => {
+      .then(() => {
         setIsVerified(true)
         updateIsAllChecked({ isVerified: true })
         alert('휴대폰 번호가 성공적으로 인증되었습니다.')
       })
-      .catch((error) => {
+      .catch(() => {
         alert('인증 코드가 잘못되었습니다.')
       })
   }
 
+  //JWT토큰 처리 후 로그인 상태 저장
   const processToken = (token) => {
     if (token.startsWith("Bearer+")) {
       localStorage.setItem("token", token)
@@ -281,13 +276,14 @@ function Signup() {
     }
   }
 
+  //회원가입 처리
   const handleSignUp = (e) => {
     e.preventDefault()
     if (!isAllChecked) {
       alert("모든 항목을 올바르게 입력해주세요.")
       return
     }
-    //회원가입 api
+    
     axios.post(`/api/v1/auth/signup`, {
       username,
       password,
@@ -298,11 +294,11 @@ function Signup() {
       gender,
       email
     })
-      .then((response) => {
-        processToken(response.data)
+      .then((res) => {
+        processToken(res.data)
       })
-      .catch((error) => {
-        console.error('회원가입에 실패하였습니다');
+      .catch(() => {
+        alert('회원가입에 실패하였습니다');
       })
   }
 
