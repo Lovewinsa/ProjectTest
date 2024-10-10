@@ -1,9 +1,10 @@
 import axios from "axios";
 import moment from "moment/moment";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Calendar from "react-calendar";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import LoadingAnimation from "../../components/LoadingAnimation";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 function TripLogBoard() {
     //로딩 상태 추가
@@ -38,7 +39,23 @@ function TripLogBoard() {
     const [selectedDateRange, setSelectedDateRange] = useState([null, null])
     // 캘린더 표시 여부 상태
     const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+    const calendarRef = useRef(null)
+
     const navigate = useNavigate()
+
+    // 캘린더 외부 클릭시 캘린더 모달 닫기
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+                setIsCalendarOpen(false) // 달력 닫기
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside)
+        }
+    }, [])
 
     useEffect(() => {
         // 로딩 애니메이션을 0.5초 동안만 표시
@@ -219,17 +236,6 @@ function TripLogBoard() {
         })
     }
 
-    // 현재 날짜로 돌아오는 함수 추가
-    const handleTodayClick = () => {
-        const today = new Date()
-        setSelectedDateRange([today, today]); // 현재 날짜로 설정
-        setSearchCriteria({
-            ...searchCriteria,
-            startDate: today.toLocaleDateString('ko-KR'),
-            endDate: today.toLocaleDateString('ko-KR'),
-        })
-    }
-
     // 달력에서 날짜를 선택할 때 호출되는 함수
     const handleDateChange = (dateRange) => {
         setSelectedDateRange(dateRange)
@@ -240,6 +246,20 @@ function TripLogBoard() {
             startDate: dateRange[0] ? dateRange[0].toLocaleDateString('ko-KR') : "",
             endDate: dateRange[1] ? dateRange[1].toLocaleDateString('ko-KR') : "",
         })
+    }
+
+    // 캘린더의 날짜 스타일을 설정하는 함수 추가
+    const tileClassName = ({ date }) => {
+        const day = date.getDay() // 0: 일요일, 1: 월요일, ..., 6: 토요일
+        // 기본적으로 검은색으로 설정
+        let className = "text-black"
+
+        // 토요일과 일요일에만 빨간색으로 변경
+        if (day === 0 || day === 6) {
+            className = "text-red-500" // 토요일과 일요일에 숫자를 빨간색으로 표시
+        }
+
+        return className // 최종 클래스 이름 반환
     }
 
     // 페이지 이동 핸들러
@@ -474,27 +494,57 @@ function TripLogBoard() {
                         </button>
 
                         {/* 캘린더 표시 여부에 따라 렌더링 */}
-                        {isCalendarOpen && (
-                            <div className="absolute z-50 bg-white shadow-lg rounded-md p-4 mt-2">
-                                <Calendar
-                                    selectRange={true}
-                                    onChange={handleDateChange}
-                                    value={selectedDateRange || [new Date(), new Date()]}
-                                    formatDay={(locale, date) => moment(date).format("DD")}
-                                    minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                                    maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                                    navigationLabel={null}
-                                    showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
-                                    calendarType="hebrew" //일요일부터 보이도록 설정
-                                />
-                                <button onClick={handleDateReset} className="bg-red-500 text-white px-4 py-2 ml-2">
-                                    날짜 초기화
-                                </button>
-                                <button onClick={handleTodayClick} className="bg-green-500 text-white px-4 py-2 ml-2">
-                                    오늘로 돌아가기
-                                </button>
-                            </div>
-                        )}
+                        <div ref={calendarRef}>
+                            {isCalendarOpen && (
+                                <div className="absolute z-50 bg-white shadow-lg p-2">
+                                    <button
+                                        onClick={handleDateReset}
+                                        className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-700 transition duration-150">
+                                        날짜 리셋
+                                    </button>
+                                    <Calendar
+                                        selectRange={true}
+                                        className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                                        onChange={handleDateChange}
+                                        value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
+                                        minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                                        maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                                        navigationLabel={null}
+                                        showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
+                                        calendarType="hebrew" //일요일부터 보이도록 설정
+                                        tileClassName={tileClassName} // 날짜 스타일 설정
+                                        formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
+                                        formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                                        prevLabel={
+                                            <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                                        }
+                                        nextLabel={
+                                            <FaChevronRight className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                                        }
+                                        prev2Label={null}
+                                        next2Label={null}
+                                        // <button
+                                        //   onClick={(event) => {
+                                        //     event.preventDefault()
+                                        //     // handleDateReset()
+                                        //     handleDateChange([new Date(), new Date()])
+                                        //   }}
+                                        //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
+                                        //   오늘로
+                                        // </button>
+                                        //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
+                                        tileContent={({ date }) => {
+                                            return (
+                                                <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
+                                                    {date.getDate()} {/* 날짜 숫자만 표시 */}
+                                                </span>
+                                            )
+                                        }} // 날짜 내용 설정
+                                        formatDay={() => null}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <button
@@ -521,53 +571,53 @@ function TripLogBoard() {
                 </div>
 
                 {/* 카드 리스트 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {pageInfo.map((post) => {
-            // 변환된 city 또는 country 값을 사용하여 이미지 경로 설정
-            const imageFileName = getImageFileName(post.city, post.country);
-            const imagePath = `/img/countryImages/${imageFileName}.jpg`;
-            return (
-              <div
-                key={post.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden"
-                onClick={() => handlePostClick(post.id)}
-              >
-                {/* post.image가 없으면 cityImagePath 사용 */}
-                <img
-                  src={imagePath || "/placeholder.jpg"}
-                  alt={post.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4">
-                  <h2 className="text-lg font-bold">{post.title}</h2>
-                  <p className="text-sm text-gray-600">작성자: {post.writer}</p>
-                  <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
-                  <p className="text-sm text-gray-600">
-                    {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                    {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}
-                  </p>
-                  <p className="text-sm text-right text-green-800 font-semibold">
-                    {post.country} - {post.city}
-                  </p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-yellow-500">⭐ {post.rating?.toFixed(1) || "0.0"}</span>
-                    <span className="text-sm text-gray-500">조회수: {post.viewCount}</span>
-                  </div>
-                  <div className="mt-3">
-                    <div className="flex flex-wrap gap-1">
-                      {post.tags &&
-                        post.tags.map((tag, index) => (
-                          <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
-                            {tag}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {pageInfo.map((post) => {
+                        // 변환된 city 또는 country 값을 사용하여 이미지 경로 설정
+                        const imageFileName = getImageFileName(post.city, post.country);
+                        const imagePath = `/img/countryImages/${imageFileName}.jpg`;
+                        return (
+                            <div
+                                key={post.id}
+                                className="bg-white rounded-lg shadow-md overflow-hidden"
+                                onClick={() => handlePostClick(post.id)}
+                            >
+                                {/* post.image가 없으면 cityImagePath 사용 */}
+                                <img
+                                    src={imagePath || "/placeholder.jpg"}
+                                    alt={post.title}
+                                    className="w-full h-48 object-cover"
+                                />
+                                <div className="p-4">
+                                    <h2 className="text-lg font-bold">{post.title}</h2>
+                                    <p className="text-sm text-gray-600">작성자: {post.writer}</p>
+                                    <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
+                                    <p className="text-sm text-gray-600">
+                                        {post.startDate === null ? "설정하지 않았습니다." : new Date(post.startDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                                        {post.endDate === null ? "" : ` ~ ${new Date(post.endDate).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}`}
+                                    </p>
+                                    <p className="text-sm text-right text-green-800 font-semibold">
+                                        {post.country} - {post.city}
+                                    </p>
+                                    <div className="flex justify-between items-center mt-2">
+                                        <span className="text-yellow-500">⭐ {post.rating?.toFixed(1) || "0.0"}</span>
+                                        <span className="text-sm text-gray-500">조회수: {post.viewCount}</span>
+                                    </div>
+                                    <div className="mt-3">
+                                        <div className="flex flex-wrap gap-1">
+                                            {post.tags &&
+                                                post.tags.map((tag, index) => (
+                                                    <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
                 {/* 페이징 버튼 */}
                 <div className="flex justify-center space-x-2">
