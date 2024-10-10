@@ -28,7 +28,7 @@ function MyPlace() {
 
     // 저장된 장소 목록 불러오기
     useEffect(() => {
-        // 로딩 애니메이션을 0.5초 동안만 표시
+        // 로딩 애니메이션을 0.7초 동안만 표시
         setLoading(true)
         setTimeout(() => {
             setLoading(false)
@@ -36,8 +36,16 @@ function MyPlace() {
         axios.get(`/api/v1/users/${loggedInUserId}/trips/saved-places`)
             .then(res => {
                 const savedPlacesList = res.data
-                setPlacesInfo(res.data)
-                setKakaoMapCenterLocation({ Ma: savedPlacesList[0].place.latitude, La: savedPlacesList[0].place.longitude })
+                if (savedPlacesList.length > 0) {
+                    setPlacesInfo(savedPlacesList)
+                    setKakaoMapCenterLocation({
+                        Ma: savedPlacesList[0].place.latitude,
+                        La: savedPlacesList[0].place.longitude
+                    })
+                } else {
+                    // 장소가 없을 때 기본 상태 유지
+                    setPlacesInfo([]);
+                }
             })
             .catch(error => {
                 alert("저장된 장소를 불러오지 못했습니다.")
@@ -74,7 +82,6 @@ function MyPlace() {
 
     // 장소 저장 후 호출되는 함수
     const handleSavePlace = (place) => {
-        console.log(place)
         const placeInfo = {
             addressName: place.address_name,
             categoryGroupCode: place.category_group_code,
@@ -88,13 +95,25 @@ function MyPlace() {
             latitude: parseFloat(place.y),  // y를 latitude로 변환
             longitude: parseFloat(place.x), // x를 longitude로 변환
             userId: loggedInUserId,
-            userMemo: place.placeMemo,
+            userMemo: place.placeMemo || "",
         }
+
         axios.post(`/api/v1/users/${loggedInUserId}/trips/saved-places`, placeInfo)
             .then(res => {
+                // 장소 저장 후 placesInfo 상태 업데이트
+                setPlacesInfo(prevPlaces => [
+                    ...prevPlaces,
+                    { place: placeInfo }
+                ])
+
+                // 저장된 장소의 좌표로 지도 중심 이동
+                setKakaoMapCenterLocation({ Ma: placeInfo.latitude, La: placeInfo.longitude })
+
+                // 메모 저장 시 해당 장소 메모도 업데이트
+                setSelectedPlaceMemo(placeInfo.userMemo)
+
                 // 장소 저장 후 검색 컴포넌트를 닫습니다.
                 setShowPlaceSearch(false)
-
             }).catch(error => {
                 alert("장소를 저장하지 못했습니다.")
                 console.log(error)

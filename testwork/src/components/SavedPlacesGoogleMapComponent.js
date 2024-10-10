@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 
-const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
+const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation, onMapReady }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState([]);
@@ -16,13 +16,15 @@ const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
 
     loader.load().then(() => {
       const map = new window.google.maps.Map(mapRef.current, {
-        // 기본 좌표: 서울
         center: { lat: 37.5665, lng: 126.978 }, 
         zoom: 14,
       });
       setMap(map);
+      if (onMapReady) {
+        onMapReady(map); // 지도 준비 완료 후 부모에게 알림
+      }
     });
-  }, []);
+  }, [onMapReady]);
 
   const clearMarkers = () => {
     markers.forEach((marker) => marker.setMap(null));
@@ -75,8 +77,7 @@ const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
   };
 
   useEffect(() => {
-    
-    window.closeInfoWindows = () => {
+    const closeInfoWindows = () => {
       infoWindows.forEach((infoWindow) => infoWindow.close());
     };
 
@@ -86,18 +87,11 @@ const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
   }, [map, savedPlaces]);
 
   useEffect(() => {
-    // console.log(savedPlaces)
-    // console.log(centerLocation)
-
-    
-    //map이 초기화되지 않았을 때는 바로 반환
     if (!map) return;
-    // centerLocation이 업데이트될 때마다 지도 중심을 해당 위치로 이동
     if (map && centerLocation) {
       const { Ma, La } = centerLocation;
       const newCenter = new window.google.maps.LatLng(Ma, La);
-    //   console.log('New center location:', newCenter)
-      map.panTo(newCenter);
+      map.setCenter(newCenter); // 지도 중심을 바로 설정
     }
   }, [map, centerLocation]);
 
@@ -106,7 +100,7 @@ const SavedPlacesGoogleMapComponent = ({ savedPlaces, centerLocation }) => {
       <div
         ref={mapRef}
         className="flex-grow mb-4"
-        style={{ width: "100%", height: "50vh" }}>
+        style={{ width: "100%", height: "60vh" }}> {/* 크기를 CourseBoardDetail과 맞춤 */}
       </div>
     </div>
   );

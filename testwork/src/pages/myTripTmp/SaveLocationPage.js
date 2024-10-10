@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 
-  
-
 const SaveLocationPage = ({ onSave }) => {
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
@@ -10,6 +8,7 @@ const SaveLocationPage = ({ onSave }) => {
   const [places, setPlaces] = useState([]);
   const [markers, setMarkers] = useState([]);
   const [infoWindows, setInfoWindows] = useState([]);
+  const [placeMemo, setPlaceMemo] = useState(""); // 장소 메모 상태 추가
 
   useEffect(() => {
     const initializeMap = () => {
@@ -55,26 +54,8 @@ const SaveLocationPage = ({ onSave }) => {
     setInfoWindows([]);
   };
 
-  //장소메모 데이터를 추가하기 위한 함수
-  window.updatePlaceMemo = (placeId, memo) => {
-    const updatedPlaces = places.map((place) => {
-      if (place.id === placeId) {
-        return {
-          ...place,
-          placeMemo: memo,
-        };
-      }
-      return place;
-    });
-    setPlaces(updatedPlaces);
-  };
-
-  //검색한 결과 선택 시 렌더링 되는 박스
+  // 검색 결과 선택 시 렌더링 되는 박스
   const createInfoWindowContent = (place) => {
-    const buttonLabel = "저장";
-    const buttonOnClick = `window.savePlace('${place.place_name}')`;
-    const textareaOnInput = `window.updatePlaceMemo('${place.id}', this.value)`;
-  
     return `
       <div style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;width:100%;max-width:600px;">
         <div style="margin-bottom: 8px; display: flex; justify-content: space-between; width: 100%;">
@@ -83,11 +64,11 @@ const SaveLocationPage = ({ onSave }) => {
         <div style="margin-bottom: 8px;">${place.address_name}</div>
         <div style="margin-bottom: 8px;">전화번호: ${place.phone || '정보 없음'}</div>
         <div style="margin-bottom: 8px;"><a href="${place.place_url}" target="_blank">장소 링크</a></div>
-        <textarea placeholder="장소 메모..." style="width: 100%; margin-bottom: 8px;" oninput="${textareaOnInput}">${place.placeMemo || ''}</textarea>
+        <textarea placeholder="장소 메모..." style="width: 100%; margin-bottom: 8px;" oninput="window.updatePlaceMemo('${place.id}', this.value)">${place.placeMemo || ''}</textarea>
         <button
-        onclick="${buttonOnClick}"
+        onclick="window.savePlace('${place.place_name}')"
         style="width:100%;background-color:green;color:white;padding:5px;border:none;border-radius:5px;">
-          ${buttonLabel}
+          저장
         </button>
       </div>
     `;
@@ -95,6 +76,10 @@ const SaveLocationPage = ({ onSave }) => {
 
   window.closeInfoWindow = () => {
     infoWindows.forEach((infoWindow) => infoWindow.close());
+  };
+
+  window.updatePlaceMemo = (placeId, memo) => {
+    setPlaceMemo(memo); // 메모 상태 업데이트
   };
 
   window.savePlace = (placeName) => {
@@ -151,9 +136,14 @@ const SaveLocationPage = ({ onSave }) => {
 
   const handleSave = (place) => {
     if (place) {
+      const placeToSave = {
+        ...place,
+        placeMemo, // 메모 추가
+      };
 
-      onSave(place); // 선택된 장소를 외부 컴포넌트로 전달
+      onSave(placeToSave); // 선택된 장소와 메모를 외부 컴포넌트로 전달
       setSelectedPlace(null);
+      setPlaceMemo(""); // 저장 후 메모 초기화
     }
   };
 
