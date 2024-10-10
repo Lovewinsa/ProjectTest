@@ -212,7 +212,7 @@ function MyProfileForm(props) {
 
   // form 에서 전송되는 데이터 : profilePicture, profileMessage ,(email),(phoneNumber)
   return (
-    <div className="container mx-auto p-4 max-w-[900px]">
+    <div className="container mx-auto p-4 max-w-[900px] shadow-md rounded-lg">
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
       <div>
@@ -243,17 +243,15 @@ function MyProfileForm(props) {
                 ref={profileImage}
                 onClick={() => inputImage.current.click()}
                 src={imageData}
-                className="w-[150px] h-[150px] rounded-full mb-4"
+                className="w-40 h-40 rounded-full mb-4 shadow-lg"
                 alt="profilePicture"
               />
             ) : (
               <svg
                 onClick={() => inputImage.current.click()}
                 xmlns="http://www.w3.org/2000/svg"
-                width="150"
-                height="150"
                 fill="currentColor"
-                className="bi bi-person-circle mb-4"
+                className="bi bi-person-circle mb-4 w-40 h-40"
                 viewBox="0 0 16 16">
                 <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
                 <path
@@ -375,13 +373,13 @@ function MyProfileForm(props) {
 
           {/* 프로필 메세지 */}
           <div className="mb-3">
-            <label htmlFor="profileMessage" className="block text-sm font-medium mb-1">
+            <label htmlFor="profileMessage" className="block text-sm font-medium mb-1 overflow-y-auto">
               Profile Message
             </label>
             <textarea
               onChange={handleChange}
               name="profileMessage"
-              className="fborder-2 border-gray-400 rounded-md p-2 min-h-[100px] overflow-y-auto w-full"
+              className="fborder-2 border-gray-400 rounded-md p-2 min-h-40 max-h-40 overflow-y-auto w-full"
               rows="5"
               value={profile.profileMessage || ""}
             />

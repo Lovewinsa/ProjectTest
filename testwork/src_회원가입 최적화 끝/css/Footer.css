@@ -1,0 +1,21 @@
+/* 전체 레이아웃 설정 */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 메인 컨텐츠 영역: flex-grow를 사용하여 남은 공간을 차지 */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15%;
+}

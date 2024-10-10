@@ -50,6 +50,7 @@ import CommunityBoardDetail from "../pages/boards/CommunityBoardDetail"
 import CommunityBoardEditForm from "../pages/boards/CommunityBoardEditForm"
 import ResetPassword from "../pages/ResetPassword"
 import ApiDocs from "../pages/admin/ApiDocs"
+import ReportBoard from "../pages/boards/ReportBoard"
 
 // /users/:id
 // /users/:id/setting
@@ -111,7 +112,7 @@ const routes = [
 
 const protectedRoutes = [
   // ### board ###
-
+  { path: "/report", element: <ReportBoard/>},
   //      ### mate ###
   { path: "/posts/mate/new", element: <MateBoardForm /> },
   { path: "/posts/mate/:id/edit", element: <MateBoardEditForm /> },

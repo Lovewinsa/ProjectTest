@@ -168,16 +168,20 @@ function MyProfile(props) {
 
         setReviewList(list);
 
-        console.log(res.data);
-
         // 접속된 사용자와 프로필 사용자의 id 가 같으면 Owner = true
         if (userId === res.data.userProfileInfo.userId) {
           setProfileOwner(true);
+        } else {
+          setProfileOwner(false)
         }
 
         const findReviewerId = res.data.userReviewList.find((item) => item.reviewerId === userId);
         // undefined = false / 이 외에 = true
         setReviewed(!!findReviewerId);
+
+        console.log(res.data.userProfileInfo.userId)
+        console.log(userId)
+        console.log(isProfileOwner)
       })
       .catch((error) => console.log(error));
   }, [id, userId]);
@@ -439,7 +443,7 @@ function MyProfile(props) {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-[900px]">
+    <div className="container mx-auto p-4 max-w-[900px] shadow-md rounded-lg">
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
       {isProfileOwner && (
@@ -455,7 +459,7 @@ function MyProfile(props) {
         </div>
       )}
       {/* 전체 div */}
-      <div className="flex-col">
+      <div className={`flex-col ${!isProfileOwner ? "mt-24" : ""}`}>
         {blockStatus && (
           <p className="ml-10 mb-0 text-sm text-red-600">
             <FontAwesomeIcon icon={faPersonCircleXmark} />
@@ -465,17 +469,15 @@ function MyProfile(props) {
         {/* 프로필 부분 전체 */}
         <div className="relative flex-col ">
           {/* 세로로 가운데, 아이템들 수평 간격 6px 마진 3  */}
-          <div className="flex items-center gap-x-6 m-3 justify-center">
+          <div className="flex flex-col items-center gap-x-6 m-3 justify-center">
             {/* 프로필 이미지 핸들링 */}
             {profile.profilePicture ? (
-              <img src={profile.profilePicture} className="w-20 h-20 rounded-full" alt="" />
+              <img src={profile.profilePicture} className="w-40 h-40 rounded-full shadow-lg" alt="" />
             ) : (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="100"
-                height="100"
                 fill="currentColor"
-                className="bi bi-person-circle"
+                className="bi bi-person-circle w-40 h-40"
                 viewBox="0 0 16 16">
                 <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
                 <path
@@ -485,19 +487,83 @@ function MyProfile(props) {
               </svg>
             )}
 
-            <div>
-              <h3 className="text-base font-semibold leading-7 tracking-tight text-gray-900">
-                <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
+            <div className="mt-5 flex">
+              <h3 className="text-xl text-base font-semibold leading-7 tracking-tight text-gray-900">
+                <FontAwesomeIcon icon={ratingIcon} color={ratingColor} className="mr-2"></FontAwesomeIcon>
                 {profile.nickname}
               </h3>
-              <p className="text-sm font-semibold leading-6 text-green-600">
-                {profile.gender} / {profile.age}
+              {/* Toggle 버튼 (신고/차단) 프로필 주인이 아닐시에만 랜더링*/}
+              {!isProfileOwner && (
+                <div className="flex items-center dropdown-wrapper">
+                  <button
+                    onClick={handleClickToggle}
+                    data-dropdown-toggle="dropdownDots"
+                    className="dropdown-button inline-flex items-center p-2 text-sm font-medium text-center text-gray-600 bg-white rounded-lg hover:bg-gray-100 focus:ring-1focus:outline-none focus:ring-gray-50"
+                    type="button">
+                    <svg
+                      className="w-4 h-4"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                      viewBox="0 0 4 15">
+                      <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+                    </svg>
+                  </button>
+
+                  <div
+                    id="dropdownDots"
+                    ref={dropdownMenuRef}
+                    className="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-40 dropdown-inner">
+                    <div className="py-2 text-sm text-gray-700" aria-labelledby="dropdownMenuIconButton">
+                      <p onClick={handleCopy} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                        프로필 링크
+                      </p>
+                      <p onClick={handleBlock} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                        {!blockStatus ? (
+                          <>차단</>
+                        ) : (
+                          <>
+                            <FontAwesomeIcon icon={faCheck} />
+                            차단됨
+                          </>
+                        )}
+                      </p>
+                      {/* 유저 신고 */}
+                      <p onClick={handleReportUser} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                        신고
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-md font-semibold leading-6 text-green-600 space-x-3">
+                <span>{profile.gender}</span> <span>{profile.age}</span>
               </p>
+            </div>
+
+            {/* 팔로우/팔로우 카운트 뷰 + 팝업 페이지 */}
+            <div className="flex space-x-4 justify-center mt-3">
+              <button
+                onClick={() => {
+                  handleOpenModal("followee");
+                }}>
+                <strong className="text-lg">{profile.followeeCount}</strong>{" "}
+                <span className="text-gray-500">Following</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleOpenModal("follower");
+                }}>
+                <strong className="text-lg">{profile.followerCount}</strong>{" "}
+                <span className="text-gray-500">Followers</span>
+              </button>
             </div>
 
             {/* 프로필 사용자 / 방문자 구분 */}
             {isProfileOwner ? (
-              <div>
+              <div className="mt-5">
                 <button
                   className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
                   onClick={handleClick}>
@@ -506,82 +572,25 @@ function MyProfile(props) {
               </div>
             ) : (
               // 팔로우, 평가
-              <div className="flex ">
+              <div className="flex space-x-3 mt-5">
                 <button className={followButtonClasses} onClick={handleClickFollow}>
                   {followingStatus && <FontAwesomeIcon icon={faCheck} />}
                   &nbsp;팔로우
+                </button>
+                <button className="px-4 py-2 text-sm font-medium rounded-md bg-green-500 text-white" >
+                  &nbsp;Message
                 </button>
                 <div id="toast_message" ref={toastMessageRef}>
                   {profile.nickname}님을 팔로우하기 시작합니다
                 </div>
               </div>
             )}
-            {/* Toggle 버튼 (신고/차단) 프로필 주인이 아닐시에만 랜더링*/}
-            {!isProfileOwner && (
-              <div className="flex items-center dropdown-wrapper">
-                <button
-                  onClick={handleClickToggle}
-                  data-dropdown-toggle="dropdownDots"
-                  className="dropdown-button inline-flex items-center p-2 text-sm font-medium text-center text-gray-600 bg-white rounded-lg hover:bg-gray-100 focus:ring-1focus:outline-none focus:ring-gray-50"
-                  type="button">
-                  <svg
-                    className="w-5 h-5"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 4 15">
-                    <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-                  </svg>
-                </button>
-
-                <div
-                  id="dropdownDots"
-                  ref={dropdownMenuRef}
-                  className="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-40 dropdown-inner">
-                  <div className="py-2 text-sm text-gray-700" aria-labelledby="dropdownMenuIconButton">
-                    <p onClick={handleCopy} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      프로필 링크
-                    </p>
-                    <p onClick={handleBlock} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      {!blockStatus ? (
-                        <>차단</>
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faCheck} />
-                          차단됨
-                        </>
-                      )}
-                    </p>
-                    {/* 유저 신고 */}
-                    <p onClick={handleReportUser} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                      신고
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 팔로우/팔로우 카운트 뷰 + 팝업 페이지 */}
-          <div className="flex space-x-4 justify-center">
-            <button
-              onClick={() => {
-                handleOpenModal("followee");
-              }}>
-              <strong>{profile.followeeCount}</strong> Following
-            </button>
-            <button
-              onClick={() => {
-                handleOpenModal("follower");
-              }}>
-              <strong>{profile.followerCount}</strong> Followers
-            </button>
           </div>
         </div>
         {/* MODAL */}
         {isModalOpen && <FollowerFolloweeModal id={id} ff={modalTab} onClose={handleCloseModal} />}
         {/*  소셜 링크 렌더링 */}
-        <div className="mt-3 flex justify-center">
+        <div className="mt-5 flex justify-center">
           {Array.isArray(profile.socialLinks) &&
             profile.socialLinks.map((link, index) => {
               const [platform, url] = link.split("+");
@@ -601,8 +610,8 @@ function MyProfile(props) {
             })}
         </div>
         {/* profile message */}
-        <div className="my-3">
-          <div id="profileMessage" className="border-2 border-gray-400 rounded-md p-2 min-h-[100px] overflow-y-auto">
+        <div className="my-5">
+          <div id="profileMessage" className="py-5 border-t border-slate-200 text-center min-h-40 overflow-y-auto">
             {profile.profileMessage ?? ""}
           </div>
         </div>
@@ -685,7 +694,7 @@ function MyProfile(props) {
             <div className="font-bold">{nickname}</div>
             <div className="relative">
               <textarea
-                className="border border-white rounded w-full h-24 p-2"
+                className="border border-white rounded w-full h-24 p-2 "
                 placeholder={userId ? "리뷰를 남겨보세요" : "리뷰를 작성하시려면 로그인이 필요합니다."}
                 value={userReview}
                 maxLength={maxLength}

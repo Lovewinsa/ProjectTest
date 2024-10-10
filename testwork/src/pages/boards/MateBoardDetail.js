@@ -433,13 +433,16 @@ function MateBoardDetail(props) {
     }
   };
   // ---------------------------------------------------- 채팅 관련
-  const { stompClient, isConnected, messages, setMessages } = useWebSocket();
-  const [subscribedRoomIds, setSubscribedRoomIds] = useState([]); // 내가 구독한 목록
+  const { stompClient, isConnected, } = useWebSocket();
 
   const handleClickChat = () => {
     console.log("채팅 버튼 클릭");
     console.log("1번" + userId);
-
+    if(isConnected){
+      console.log("웹 소켓 연결 정상")
+    } else{
+      console.log("웹 소켓 비정상");
+    }
     console.log("2번" + writerProfile.id);
     axios
       .post("/api/chat/rooms", {
@@ -449,11 +452,11 @@ function MateBoardDetail(props) {
         title: `${username}님과${writerProfile.nickname}님의 채팅`,
       })
       .then((res) => {
-        const chatRoomId = res.data;
-        navigate(`/chatroom/${chatRoomId.id}`);
+        const newRoom = res.data;
+        
         alert("채팅방 생성.");
 
-        selectRoom(chatRoomId.id); // 방 선택
+        navigate(`/chatroom/${newRoom.id}`, { state: { chatRooms: newRoom } });
       })
       .catch((error) => {
         console.log(error);
@@ -461,54 +464,7 @@ function MateBoardDetail(props) {
       });
   };
 
-  // 채팅방 선택시 메시지 불러오기
-  const selectRoom = (roomId) => {
-    if (!stompClient || !stompClient.connected) {
-      console.error("WebSocket not connected yet");
-      return;
-    }
-
-    navigate(`/chatroom/${roomId}`);
-
-    axios
-      .get(`/api/chat/rooms/${roomId}`)
-      .then((res) => {
-        const chatMessageroom = res.data;
-        console.log("Response:", res.data);
-
-        const chatMessagetopic =
-          chatMessageroom.type === "ONE_ON_ONE"
-            ? `/user/private/${chatMessageroom.id}`
-            : `/topic/group/${chatMessageroom.id}`;
-
-        stompClient.subscribe(chatMessagetopic, (message) => {
-          const parsedMessage = JSON.parse(message.body);
-          setMessages((prevMessages) => [...prevMessages, parsedMessage]);
-        });
-
-        const newRoomTopic =
-          chatMessageroom.type === "ONE_ON_ONE"
-            ? `/user/newroom/private/${chatMessageroom.id}`
-            : `/topic/newroom/group/${chatMessageroom.id}`;
-        stompClient.subscribe(newRoomTopic, (message) => {
-          const parsedMessage = JSON.parse(message.body);
-          setMessages((prevMessages) => [...prevMessages, parsedMessage]);
-        });
-      })
-
-      .catch((error) => {
-        console.error("Error fetching room info:", error.response ? error.response.data : error.message);
-      });
-
-    axios
-      .get(`/api/chat/rooms/${roomId}/getMessages`)
-      .then((response) => {
-        setMessages(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching messages:", error);
-      });
-  };
+ 
 
   //프로필 링크 복사
   const handleCopy = () => {
@@ -599,11 +555,9 @@ function MateBoardDetail(props) {
                 <img src={writerProfile.profilePicture} className="w-20 h-20 rounded-full" alt="" />
               ) : (
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="100"
-                  height="100"
+                  xmlns="http://www.w3.org/2000/svg"d
                   fill="currentColor"
-                  className="bi bi-person-circle"
+                  className="bi bi-person-circle w-20 h-20"
                   viewBox="0 0 16 16">
                   <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
                   <path

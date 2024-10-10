@@ -89,19 +89,27 @@ function MyPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 max-w-[900px]">
+    <div className="container mx-auto p-4 max-w-[900px] shadow-md rounded-lg">
+      <div>
+        <button
+          type="button"
+          className="mb-20 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
+          onClick={() => {
+            navigate(`/`);
+          }}>
+          HOME
+        </button>
+      </div>
       {/* 프로필 */}
       <div className="m-3 flex justify-center">
         <div className="flex items-center gap-x-6 m-3">
           {imageData ? (
-            <img src={imageData} className="w-20 h-20 rounded-full" />
+            <img src={imageData} className="w-20 h-20 rounded-full shadow-lg" />
           ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="100"
-              height="100"
               fill="currentColor"
-              className="bi bi-person-circle"
+              className="bi bi-person-circle w-20 h-20"
               viewBox="0 0 16 16">
               <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
               <path
@@ -112,11 +120,11 @@ function MyPage() {
           )}
           <div>
             <h3 className="text-base font-semibold leading-7 tracking-tight text-gray-900">
-              <FontAwesomeIcon icon={ratingIcon} color={ratingColor}></FontAwesomeIcon>
+              <FontAwesomeIcon icon={ratingIcon} color={ratingColor} className="mr-2"></FontAwesomeIcon>
               {profile.nickname}
             </h3>
             <p className="text-sm font-semibold leading-6 text-green-600">
-              {profile.gender} / {profile.age}
+              {profile.gender}  /  {profile.age}
             </p>
           </div>
           <div>
