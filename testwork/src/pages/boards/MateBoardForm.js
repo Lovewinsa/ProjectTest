@@ -113,6 +113,11 @@ function MateBoardForm(props) {
   const removeTag = (tagToRemove) => setPostTags(postTags.filter((tag) => tag !== tagToRemove));
 
   const handleSubmit = async () => {
+    if (!post.title) {
+      alert("제목을 입력해주세요.");
+      return;
+    }
+
     const updatedPost = {
       ...post,
       tags: postTags,

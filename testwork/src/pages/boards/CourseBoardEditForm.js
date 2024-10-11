@@ -76,6 +76,16 @@ const CourseBoardEditForm = () => {
     }, [id])
 
     const handleSubmit = () => {
+        if (!postInfo.title) {
+            alert("제목을 입력해주세요.");
+            return;
+        }
+
+        if (!postInfo.country) {
+            alert("나라를 선택해주세요.");
+            return;
+        }
+
         axios.put(`/api/v1/posts/${id}`, postInfo)  // PUT 요청으로 업데이트
             .then((res) => {
                 alert("수정했습니다")
