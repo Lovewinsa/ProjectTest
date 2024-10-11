@@ -27,7 +27,7 @@ function CourseBoard() {
   })
 
   //국내/해외 페이지
-  const [domesticInternational, setDomesticInternational] = useState("Domestic")
+  const [domesticInternational, setDomesticInternational] = useState("")
   //국내/해외 페이지 전환 버튼
   const [pageTurn, setPageTurn] = useState("")
   const [desiredCountry, setDesiredCountry] = useState(null)
@@ -41,13 +41,37 @@ function CourseBoard() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const calendarRef = useRef(null)
 
+  //무한 스크롤 트리거
+  const observerRef = useRef(null)
+
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // 로딩 애니메이션을 0.7초 동안만 표시
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+    }, 700)
+
+    let pageNum = searchParams.get("pageNum") || 1
+    const diValue = searchParams.get("di") || "Domestic"
+    const city = searchParams.get("city") || ""
+    const startDate = searchParams.get("startDate") || ""
+    const endDate = searchParams.get("endDate") || ""
+    const country = searchParams.get("country") || ""
+    const keyword = searchParams.get("keyword") || ""
+
+    setCurrentPage(Number(pageNum))
+    setDomesticInternational(diValue)
+
+    setSearchCriteria({ city, startDate, endDate, country, keyword, condition: searchCriteria.condition })
+  }, [searchParams])
 
   // 캘린더 외부 클릭시 캘린더 모달 닫기
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        setIsCalendarOpen(false) // 달력 닫기
+        setIsCalendarOpen(false)
       }
     }
 
@@ -57,112 +81,141 @@ function CourseBoard() {
     }
   }, [])
 
-  useEffect(() => {
-    // 로딩 애니메이션을 0.5초 동안만 표시
+  // 검색 필터 + 국내/해외 필터
+  const fetchFilteredPosts = (pageNum = 1) => {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
     }, 700)
-    let pageNum = searchParams.get("pageNum") || 1
-    const diValue = searchParams.get("di") || "Domestic"
-    const city = searchParams.get("city") || ""
-    const startDate = searchParams.get("startDate") || ""
-    const endDate = searchParams.get("endDate") || ""
-    const country = searchParams.get("country") || ""
-    const keyword = searchParams.get("keyword") || ""
-    
-    setCurrentPage(Number(pageNum));
-    setDomesticInternational(diValue)
 
-    setSearchCriteria({ city, startDate, endDate, country, keyword, condition: searchCriteria.condition }); // 검색 조건 설정
-    // 국내/국제 값 업데이트
-  }, [searchParams]);
+    const params = {
+      country: searchCriteria.country || null,
+      city: searchCriteria.city || null,
+      startDate: searchCriteria.startDate || null,
+      endDate: searchCriteria.endDate || null,
+      keyword: searchCriteria.keyword || null,
+      condition: searchCriteria.condition || null,
+      sortBy,
+      pageNum,
+      pageSize: 12
+    }
 
-  const fetchFilteredPosts = () => {
-      const params = {
-          country: searchCriteria.country || null,
-          city: searchCriteria.city || null,
-          startDate: searchCriteria.startDate || null,
-          endDate: searchCriteria.endDate || null,
-          keyword: searchCriteria.keyword || null,
-          condition: searchCriteria.condition || null,
-          sortBy
-        }
-
-   axios
+    axios
       .get("/api/v1/posts/course", { params })
       .then((res) => {
-        //필터링되어 돌아온 params를 받는다
-        console.log(res.data);
-        let filtered = res.data.list;
+        //필터링되어 돌아온 데이터
+        let filtered = res.data.list
+
+        // 필터링된 데이터 개수 확인
+        console.log("필터링 전 데이터 개수:", res.data.list.length);
+        console.log("필터링 후 데이터 개수:", filtered.length);
+
         //국내 해외 필터링
         if (domesticInternational === "Domestic") {
-          filtered = filtered.filter((item) => item.country === "한국");
+          filtered = filtered.filter((item) => item.country === "대한민국")
         } else if (domesticInternational === "International") {
-          filtered = filtered.filter((item) => item.country !== "한국");
+          filtered = filtered.filter((item) => item.country !== "대한민국")
         }
-        setPageInfo(filtered)
+
+        // 국내/해외에 따라 상태 값 관리
+        setPageInfo((prevInfo) => {
+          const combinedPosts = [
+            ...prevInfo.filter((item) =>
+              (domesticInternational === "Domestic" ? item.country === "대한민국" : item.country !== "대한민국")
+            ),
+            ...filtered
+          ]
+
+          // 중복 제거 (id를 기준으로)
+          const uniquePosts = combinedPosts.reduce((acc, currentPost) => {
+            if (!acc.some(post => post.id === currentPost.id)) {
+              acc.push(currentPost)
+            }
+            return acc
+          }, [])
+
+          return uniquePosts
+        })
+
+        let tempStr = ""
+        if (domesticInternational === "Domestic") {
+          tempStr = "국내 여행 코스"
+        } else if (domesticInternational === "International") {
+          tempStr = "해외 여행 코스"
+        }
+        setDesiredCountry(`${tempStr}`)
+
         setTotalPages(res.data.totalPostPages)
-        //서버로부터 응답된 데이터 state에 넣기
-        setDesiredCountry(domesticInternational === "Domestic" ? "국내여행 코스 페이지" : "해외여행 코스 페이지")
         setPageTurn(domesticInternational === "Domestic" ? "해외로" : "국내로")
-        
-        // 총 페이지 수 업데이트
-        
       })
       .catch((error) => {
         console.log(error)
       })
   }
 
-   // 해외 / 국내 전환시 호출
-   useEffect(() => {
-    fetchFilteredPosts();
-  }, [domesticInternational]);
+  // 해외 / 국내 전환시 호출
+  useEffect(() => {
+    setPageInfo([])
+    setCurrentPage(1)
+    fetchFilteredPosts(1)
+  }, [domesticInternational])
 
-  const search = () => {
-    fetchFilteredPosts(); // 비동기 처리를 기다리지 않음
-  }
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      const target = entries[0]
+      if (target.isIntersecting && currentPage < totalPages) {
+        setCurrentPage((prevPage) => prevPage + 1)
+      }
+    })
+    if (observerRef.current) {
+      observer.observe(observerRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current)
+      }
+    }
+  }, [currentPage, totalPages])
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchFilteredPosts(currentPage)
+    }
+  }, [currentPage])
 
   //국내, 해외 선택 이벤트
   const handleDesiredCountry = () => {
-    setDomesticInternational(domesticInternational === "International" ? "Domestic" : "International")
+    const newDomesticInternational = domesticInternational === "International" ? "Domestic" : "International"
+    setDomesticInternational(newDomesticInternational)
     setSearchParams({
       ...searchCriteria,
-      di: domesticInternational === "International" ? "Domestic" : "International",
+      di: newDomesticInternational,
     })
   }
 
   // 새로운 검색을 시작하는 함수
   const handleSearch = () => {
-    setSearchParams({
-      country: searchCriteria.country,
-      city: searchCriteria.city,
-      startDate: searchCriteria.startDate,
-      endDate: searchCriteria.endDate,
-      condition: searchCriteria.condition,
-      keyword: searchCriteria.keyword,
-      di: domesticInternational,
-    })
-
-    search()
+    setPageInfo([]) // 새로운 검색 시 데이터 초기화
+    setCurrentPage(1) // 페이지 초기화
+    fetchFilteredPosts(1) // 첫 페이지 데이터 다시 불러오기
   }
 
   const handleSortChange = (e) => {
-    setSortBy(e.target.value); // 정렬 기준 변경
+    const newSortBy = e.target.value
+    setSortBy(e.target.value) // 정렬 기준 변경
+
     // 정렬 기준에 따라 pageData를 정렬
-    const sortedData = [...pageInfo].sort((a, b) => {
-      if (e.target.value === "latest") {
-        return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
-      } else if (e.target.value === "viewCount") {
-        return b.viewCount - a.viewCount;
-      } else if (e.target.value === "likeCount") {
-        return b.likeCount - a.likeCount;
-      }
-      return 0; // 기본값
-    });
-    setPageInfo(sortedData); // 정렬된 데이터를 상태에 저장
-  };
+    let sortedData = [...pageInfo]
+    if (newSortBy === "latest") {
+      sortedData.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+    } else if (newSortBy === "viewCount") {
+      sortedData.sort((a, b) => b.viewCount - a.viewCount)
+    } else if (newSortBy === "likeCount") {
+      sortedData.sort((a, b) => b.likeCount - a.likeCount)
+    }
+    setPageInfo(sortedData) // 정렬된 데이터를 상태에 저장
+  }
 
   // 검색 기준 변경 핸들러
   const handleConditionChange = (e) => {
@@ -186,6 +239,12 @@ function CourseBoard() {
       ...searchCriteria,
       keyword: value, // 검색어를 keyword로 저장
     })
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
   }
 
   // 날짜 초기화
@@ -221,23 +280,6 @@ function CourseBoard() {
     }
 
     return className // 최종 클래스 이름 반환
-  }
-
-  // 페이지 이동 핸들러
-  const paginate = (pageNum) => {
-    setCurrentPage(pageNum)
-    setSearchParams({ ...searchParams, pageNum })
-  }
-
-  //Reset 버튼을 눌렀을 때
-  const handleReset = () => {
-    //검색조건과 검색어 초기화
-    setSearchCriteria({
-      condition: "",
-      keyword: "",
-    })
-    // //1페이지 내용이 보여지게
-    // refreshPageInfo(1)
   }
 
   // 현재 시간과 작성일을 비교해 '몇 시간 전' 또는 '몇 일 전'을 계산하는 함수
@@ -311,10 +353,10 @@ function CourseBoard() {
       리옹: "FRA_Lyon_01",
       니스: "FRA_Nice_01",
       // 이탈리아
-      로마: "ITA_Rome_01",
-      밀라노: "ITA_Milan_01",
-      베네치아: "ITA_Venice_01",
-      피렌체: "ITA_Florence_01",
+      로마: "ITA_Roma_01",
+      밀라노: "ITA_Milano_01",
+      베네치아: "ITA_Venezia_01",
+      피렌체: "ITA_Firenze_01",
       // 미국
       뉴욕: "USA_NewYork_01",
       로스앤젤레스: "USA_LosAngeles_01",
@@ -381,56 +423,32 @@ function CourseBoard() {
       {loading && <LoadingAnimation />}
       <div className="container mx-auto">
         <div className="flex justify-between mb-4">
-          <Link
-            to={{
-              pathname: "/posts/course/new",
-              search: `?di=${domesticInternational}&status=PUBLIC`,
+          <button
+            onClick={() => {
+              window.location.href = `/posts/course/new?di=${domesticInternational}&status=PUBLIC` // URL을 올바르게 설정
             }}
-            className="text-blue-500">
+            className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
             여행코스 계획하기
-          </Link>
+          </button>
           <button
             onClick={handleDesiredCountry}
-            className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-500 transition-all duration-300">
+            className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
             {pageTurn}
           </button>
         </div>
-        <h1 className="text-3xl font-bold text-center mb-8">{desiredCountry}</h1>
+        <h1 className="font-bold mb-4">{desiredCountry}</h1>
 
         {/* 검색 조건 입력 폼 */}
-        <div className="my-4 space-y-4">
-          {/* 국가와 도시를 한 행으로 배치 */}
-          <div className="flex items-center gap-4">
-            {domesticInternational === "International" && (
-              <input
-                type="text"
-                name="country"
-                value={searchCriteria.country}
-                onChange={handleSearchChange}
-                placeholder="국가"
-                className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-              />
-            )}
-
-            <input
-              type="text"
-              name="city"
-              value={searchCriteria.city}
-              onChange={handleSearchChange}
-              placeholder="도시"
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-            />
-          </div>
-
+        <div className="my-4 space-y-4 p-4 w-full md:w-1/2 bg-white rounded-lg shadow-md shadow-tripDuoMint border border-tripDuoGreen">
           {/* 제목/작성자 선택 필드 */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <select
               value={searchCriteria.condition}
               onChange={handleConditionChange}
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+              className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
               <option value="title">제목</option>
               <option value="content">내용</option>
-              <option value="title_content">제목 + 내용</option>
+              <option value="title_content">제목 및 내용</option>
             </select>
 
             <input
@@ -439,42 +457,77 @@ function CourseBoard() {
               value={searchCriteria[searchCriteria.condition]}
               onChange={handleQueryChange}
               placeholder={searchCriteria.condition}
-              className="border border-gray-300 rounded-md px-4 py-2 w-5/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              onKeyDown={handleKeyDown}
+              className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-2/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
             />
           </div>
 
-          {/* 날짜 선택 및 검색 버튼 */}
-          <div className="flex items-center space-x-2 mt-4">
+          {/* 국가와 도시를 한 행으로 배치 */}
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+            {domesticInternational === "International" && (
+              <input
+                type="text"
+                name="country"
+                value={searchCriteria.country}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
+                placeholder="국가"
+                className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+              />
+            )}
+
+            <input
+              type="text"
+              name="city"
+              value={searchCriteria.city}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              placeholder="도시"
+              className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+            />
+            
+            {/* 날짜 선택 및 검색 버튼 */}
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300">
-              {selectedDateRange[0] && selectedDateRange[1]
-                ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
-                : "날짜 선택"}
+              className="bg-tripDuoMint text-white font-bold px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+              <span className="whitespace-nowrap">
+                {selectedDateRange[0] && selectedDateRange[1]
+                  ? `${selectedDateRange[0].getFullYear().toString().slice(-2)}${(selectedDateRange[0].getMonth() + 1)
+                    .toString()
+                    .padStart(2, "0")}${selectedDateRange[0]
+                      .getDate()
+                      .toString()
+                      .padStart(2, "0")} / ${selectedDateRange[1].getFullYear().toString().slice(-2)}${(
+                        selectedDateRange[1].getMonth() + 1
+                      )
+                        .toString()
+                        .padStart(2, "0")}${selectedDateRange[1].getDate().toString().padStart(2, "0")}`
+                  : "날짜 선택"}
+              </span>
             </button>
 
             {/* 캘린더 표시 여부에 따라 렌더링 */}
             <div ref={calendarRef}>
               {isCalendarOpen && (
                 <div className="absolute z-50 bg-white shadow-lg p-2">
-                   <button
+                  <button
                     onClick={handleDateReset}
                     className="text text-sm absolute top-8 right-20 bg-tripDuoGreen text-white px-2 py-1 rounded hover:bg-green-700 transition duration-150">
                     today
                   </button>
                   <Calendar
                     selectRange={true}
-                    className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                    className="w-full p-4 bg-white rounded-lg border-none"
                     onChange={handleDateChange}
-                    value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
-                    minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                    maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                    value={selectedDateRange || [new Date(), new Date()]}
+                    minDetail="month"
+                    maxDetail="month"
                     navigationLabel={null}
-                    showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
-                    calendarType="hebrew" //일요일부터 보이도록 설정
-                    tileClassName={tileClassName} // 날짜 스타일 설정
-                    formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
-                    formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                    showNeighboringMonth={false}
+                    calendarType="hebrew"
+                    tileClassName={tileClassName}
+                    formatYear={(locale, date) => moment(date).format("YYYY")}
+                    formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")}
                     prevLabel={
                       <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
                     }
@@ -483,47 +536,36 @@ function CourseBoard() {
                     }
                     prev2Label={null}
                     next2Label={null}
-                    // <button
-                    //   onClick={(event) => {
-                    //     event.preventDefault()
-                    //     // handleDateReset()
-                    //     handleDateChange([new Date(), new Date()])
-                    //   }}
-                    //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
-                    //   오늘로
-                    // </button>
-                    //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
                     tileContent={({ date }) => {
                       return (
                         <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
-                          {date.getDate()} {/* 날짜 숫자만 표시 */}
+                          {date.getDate()}
                         </span>
                       )
-                    }} // 날짜 내용 설정
+                    }}
                     formatDay={() => null}
                   />
                 </div>
               )}
             </div>
-          </div>
 
-          <button
-            onClick={handleSearch}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300 mt-4">
-            검색
-          </button>
+            <div className="flex justify-end w-full items-center">
+              <button
+                onClick={handleSearch}
+                className="font-bold bg-tripDuoMint text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300">
+                검색
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* 검색 정렬 기준 다운바 */}
         <div className="my-4">
-          <label htmlFor="sortBy" className="mr-2">
-            정렬 기준:
-          </label>
           <select
             id="sortBy"
             value={sortBy}
             onChange={handleSortChange}
-            className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+            className="flex justify-start w-full md:w-1/6 border border-tripDuoGreen text-sm rounded-md px-5 py-2 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
             <option value="latest">최신순</option>
             <option value="viewCount">조회수순</option>
             <option value="likeCount">좋아요순</option>
@@ -551,17 +593,17 @@ function CourseBoard() {
                     {post.startDate === null
                       ? ""
                       : new Date(post.startDate).toLocaleDateString("ko-KR", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })}
                     {post.endDate === null
                       ? ""
                       : ` ~ ${new Date(post.endDate).toLocaleDateString("ko-KR", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                        })}`}
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })}`}
                   </p>
                   <p className="text-sm text-right text-green-800 font-semibold">
                     {post.country} - {post.city}
@@ -588,40 +630,8 @@ function CourseBoard() {
           })}
         </div>
 
-        {/* 페이징 버튼 */}
-        <div className="flex justify-center space-x-2">
-          <button
-            onClick={() => paginate(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded ${
-              currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-            }`}>
-            &lt;
-          </button>
-          {/* totalPages만큼 배열 생성 */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-            <button
-              key={number}
-              onClick={() => paginate(number)}
-              className={`px-4 py-2 rounded ${
-                currentPage === number ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
-              }`}>
-              {number}
-            </button>
-          ))}
-          <button
-            onClick={() => paginate(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded ${
-              currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-            }`}>
-            &gt;
-          </button>
-        </div>
-
-        <p className="mt-4 text-center">
-          <strong>{pageInfo.length}</strong>개의 글이 있습니다.
-        </p>
+        {/* 무한 스크롤 트리거 */}
+        <div ref={observerRef}></div>
       </div>
     </div>
   )
