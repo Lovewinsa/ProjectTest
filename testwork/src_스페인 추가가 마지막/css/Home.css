@@ -1,0 +1,37 @@
+/* 기본 스타일 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 드래그 가능한 이미지 스타일 */
+.image-container {
+    display: flex;
+    overflow-x: auto; /* 수평 스크롤 가능 */
+    scroll-snap-type: x mandatory; /* 스크롤 스냅 */
+}
+
+.image-container img {
+    scroll-snap-align: start; /* 스냅 정렬 */
+    width: 100%; /* 이미지 너비 */
+    height: auto; /* 비율 유지 */
+}
+
+/* 카드 스타일 */
+.card {
+    background-color: #f9f9f9; /* 카드 배경색 */
+    border-radius: 8px; /* 모서리 둥글게 */
+    margin: 5px; /* 카드 간격 */
+    padding: 20px; /* 카드 내부 여백 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    transition: transform 0.3s; /* 부드러운 변환 효과 */
+    width: 350px; /* 카드 높이를 늘림 */
+    height: auto;
+}
+
+/* 텍스트 가운데 정렬 */
+.text-center {
+    text-align: center; /* 텍스트 가운데 정렬 */
+}

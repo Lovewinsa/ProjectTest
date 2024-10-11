@@ -140,6 +140,16 @@ function ChatRoom() {
     }
   }, [roomId])
 
+  const messagesEndRef = useRef(null)
+  const chatMessagesRef = useRef(null)
+
+  // 메시지가 추가될 때마다 스크롤을 아래로 이동
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight // 스크롤을 아래로 이동
+    }
+  }, [messages]) // messages가 변경될 때마다 실행
+
   const createChatRoom = (chatRoom) => {
     if (stompClient && stompClient.connected) {
       axios
@@ -355,10 +365,6 @@ function ChatRoom() {
   return (
     <div className="flex flex-row">
       <div className="w-1/3 p-2 border-r border-gray-300">
-        <button onClick={handleShowSubscribedRooms} className="mb-2 p-2 bg-blue-500 text-white rounded">
-          구독한 채팅방 보기
-        </button>
-
         {/* 사용자 초대 UI */}
         <div>
           <div className="mb-2">
@@ -370,31 +376,32 @@ function ChatRoom() {
             </button>
           </div>
         </div>
-
         <h3 className="text-lg font-bold mb-2">채팅방 목록</h3>
-        {/* 채팅방 목록 */}
-        <ul>
-          {chatRooms.map((room) => (
-            <li
-              key={room.id}
-              onClick={() => selectRoom(room.id)}
-              className={`cursor-pointer p-2 ${
-                currentRoomId === room.id
-                  ? "bg-blue-200"
-                  : subscribedRoomIds.includes(room.id)
-                  ? "bg-gray-200"
-                  : "bg-transparent"
-              }`}
-            >
-              {room.title}
-            </li>
-          ))}
-        </ul>
+        <div className="h-96 overflow-y-scroll border border-gray-300 p-2">
+          {/* 채팅방 목록 */}
+          <ul>
+            {chatRooms.map((room) => (
+              <li
+                key={room.id}
+                onClick={() => selectRoom(room.id)}
+                className={`cursor-pointer p-2 ${
+                  currentRoomId === room.id
+                    ? "bg-blue-200"
+                    : subscribedRoomIds.includes(room.id)
+                    ? "bg-gray-200"
+                    : "bg-transparent"
+                }`}
+              >
+                {room.title}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <div className="w-2/3 p-2">
         <h3 className="text-lg font-bold mb-2">채팅방</h3>
-        <div className="h-96 overflow-y-scroll border border-gray-300 p-2">
+        <div className="h-96 overflow-y-scroll border border-gray-300 p-2" ref={chatMessagesRef}>
           {messages
             .filter((message) => message.chatRoomId === currentRoomId)
             .map((message, index) => (
@@ -443,6 +450,7 @@ function ChatRoom() {
                 </div>
               </div>
             ))}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="flex mt-2">
@@ -460,7 +468,7 @@ function ChatRoom() {
       </div>
 
       <div className="w-1/3 p-2 border-l border-gray-300">
-        <h3 className="text-lg font-bold mb-2">알림</h3>
+        <h3 className="text-lg font-bold mb-2">알림</h3> {/* 알림 목록 */} {/* 알림 목록 */}
         <ul>
           {notifications.map((notification, index) => (
             <li key={index} className="mb-1">
@@ -470,6 +478,10 @@ function ChatRoom() {
         </ul>
         <button onClick={sendNotification} className="mb-2 p-2 bg-blue-500 text-white rounded">
           알림 보내기
+        </button>
+        <br />
+        <button onClick={handleShowSubscribedRooms} className="mb-2 p-2 bg-blue-500 text-white rounded">
+          구독한 채팅방 보기
         </button>
         <br />
         <button onClick={clearNotification} className="mb-2 p-2 bg-red-500 text-white rounded">

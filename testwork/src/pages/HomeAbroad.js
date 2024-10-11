@@ -6,6 +6,8 @@ import "../css/Home.css"
 import axios from "axios"
 import { useDispatch } from "react-redux"
 import LoadingAnimation from "../components/LoadingAnimation"
+import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
 function HomeAbroad() {
   const location = useLocation()
@@ -13,6 +15,7 @@ function HomeAbroad() {
   const dispatch = useDispatch()
   const [writerProfiles, setWriterProfiles] = useState({})
   const [loading, setLoading] = useState(false)
+  const tripDuoGreen = '#006622'
   useEffect(() => {
     // 로딩 애니메이션을 0.5초 동안만 표시
     setLoading(true)
@@ -24,11 +27,11 @@ function HomeAbroad() {
   const [matePosts, setMatePosts] = useState([]) // 메이트 게시물 상태
   const [sortBy, setSortBy] = useState("viewCount") // 정렬 기준 초기값 설정
   const [isLoading, setIsLoading] = useState(true) // 로딩 상태
-  const [sliderRef, slider] = useKeenSlider({
+ const [sliderRef, slider] = useKeenSlider({
     loop: true,
     slides: {
       perView: 3,
-      spacing: 10, // 간격을 0으로 설정
+      spacing: 10, // 간격 설정
     },
     breakpoints: {
       "(max-width: 1024px)": {
@@ -40,9 +43,9 @@ function HomeAbroad() {
     },
     dragSpeed: 0.5,
     slideChanged(s) {
-      setCurrentSlide(s.track.details.rel) // 슬라이드가 변경될 때 현재 슬라이드 업데이트
+      setCurrentSlide(s.track.details.rel); // 슬라이드가 변경될 때 현재 슬라이드 업데이트
     },
-  })
+  });
 
   // 버튼을 클릭했을 때 실행할 함수 정의
   const handlePrev = () => {
@@ -140,7 +143,7 @@ function HomeAbroad() {
       {loading && <LoadingAnimation duration={0.3} />}
       <div className="my-12 relative">
         <header className="py-8 text-center">
-          <h1 className="text-3xl font-bold text-green-600">해외 여행</h1>
+          <h1 className="text-3xl font-bold text-tripDuoMint">해외 여행</h1>
           <p className="mt-2 text-gray-600">다양한 해외 여행 정보를 만나보세요!</p>
         </header>
         <div className="relative">
@@ -161,21 +164,21 @@ function HomeAbroad() {
 
           {/* 왼쪽(이전) 버튼 */}
           <button
-            onClick={handlePrev}
-            className="absolute left-[-40px] top-1/2 transform -translate-y-1/2 bg-transparent text-green-600 rounded-none p-0 text-3xl z-10 transition-transform duration-200 hover:scale-150"
-            style={{ width: "50px", height: "50px" }} // 버튼 크기 설정
-          >
-            &#8592; {/* 왼쪽 화살표 */}
-          </button>
+          onClick={handlePrev}
+          className="absolute left-[-40px] top-1/2 transform -translate-y-1/2 bg-green-600 text-white rounded-full p-0 text-3xl z-10 transition-transform duration-200 hover:scale-110 shadow-lg"
+          style={{ width: "50px", height: "50px", border: "2px solid white", backgroundColor: tripDuoGreen }}
+        >
+          <FontAwesomeIcon icon={faChevronLeft} />
+        </button>
 
-          {/* 오른쪽(다음) 버튼 */}
-          <button
-            onClick={handleNext}
-            className="absolute right-[-40px] top-1/2 transform -translate-y-1/2 bg-transparent text-green-600 rounded-none p-0 text-3xl z-10 transition-transform duration-200 hover:scale-150"
-            style={{ width: "50px", height: "50px" }} // 버튼 크기 설정
-          >
-            &#8594; {/* 오른쪽 화살표 */}
-          </button>
+        <button
+          onClick={handleNext}
+          className="absolute right-[-40px] top-1/2 transform -translate-y-1/2 bg-green-600 text-white rounded-full p-0 text-3xl z-10 transition-transform duration-200 hover:scale-110 shadow-lg"
+          style={{ width: "50px", height: "50px", border: "2px solid white", backgroundColor: tripDuoGreen }}
+        >
+          <FontAwesomeIcon icon={faChevronRight} />
+        </button>
+
           {/* 슬라이드 점들 */}
           <div className="flex justify-center mt-4">
             {[...Array(10)].map((_, index) => (
@@ -183,7 +186,7 @@ function HomeAbroad() {
                 key={index}
                 onClick={() => handleDotClick(index)} // 점 클릭 시 해당 슬라이드로 이동
                 className={`w-3 h-3 mx-1 rounded-full cursor-pointer transition-all duration-200 ${
-                  currentSlide === index ? "bg-green-600 scale-125" : "bg-gray-300"
+                  currentSlide === index ? "bg-tripDuoMint scale-125" : "bg-gray-300"
                 }`}
               />
             ))}
@@ -264,7 +267,7 @@ function HomeAbroad() {
       <div className="my-12 h-16" />
 
       <div className="my-12">
-        <h3 className="text-xl font-semibold mb-4 text-green-600">해외 인기 게시물</h3>
+        <h3 className="text-xl font-semibold mb-4 text-tripDuoGreen">해외 인기 게시물</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {matePosts.map((post) => (
             <div
@@ -304,7 +307,7 @@ function HomeAbroad() {
       <div className="my-12 h-16" />
 
       <div className="my-12">
-        <h3 className="text-xl font-semibold mb-4 text-green-600">해외 추천 여행지(임시)</h3>
+        <h3 className="text-xl font-semibold mb-4 text-tripDuoGreen">해외 추천 여행지(임시)</h3>
         {!isLoggedIn && ( // 로그인하지 않은 경우에만 보이도록 수정
           <p className="text-gray-600 text-sm text-left mb-4">
             <span className="cursor-pointer" onClick={navigateToLogin}>
@@ -324,7 +327,7 @@ function HomeAbroad() {
               <div className="p-4">
                 <h4 className="font-bold">{`여행지 ${product}`}</h4>
                 <p className="text-gray-600">해외 여행지 이름</p>
-                <button className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                <button className="mt-2 bg-tripDuoMint text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
                   더 보기
                 </button>
               </div>
@@ -337,7 +340,7 @@ function HomeAbroad() {
 
       {/* 추가된 카드들 */}
       <div className="my-12">
-        <h3 className="text-xl font-semibold mb-4 text-green-600">여행을 쉽고 간편하게</h3>
+        <h3 className="text-xl font-semibold mb-4 text-tripDuoGreen">여행을 쉽고 간편하게</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="bg-white shadow-lg rounded-lg overflow-hidden">
             <img
@@ -349,7 +352,7 @@ function HomeAbroad() {
               <h4 className="font-bold text-lg">여행 체크리스트</h4>
               <button
                 onClick={() => navigateToPage("/checklist")}
-                className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                className="mt-2 bg-tripDuoMint text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
                 작성하기
               </button>
             </div>
@@ -360,7 +363,7 @@ function HomeAbroad() {
               <h4 className="font-bold text-lg">환율 정보</h4>
               <button
                 onClick={() => navigateToPage("/exchange")}
-                className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                className="mt-2 bg-tripDuoMint text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
                 살펴보기
               </button>
             </div>
@@ -375,7 +378,7 @@ function HomeAbroad() {
               <h4 className="font-bold text-lg">여행 경비 계산기</h4>
               <button
                 onClick={() => navigateToPage("/calculator")}
-                className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                className="mt-2 bg-tripDuoMint text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
                 계산하기
               </button>
             </div>
@@ -386,7 +389,7 @@ function HomeAbroad() {
               <h4 className="font-bold text-lg">여행 플레너</h4>
               <button
                 onClick={() => navigateToPage("/planner")}
-                className="mt-2 bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
+                className="mt-2 bg-tripDuoMint text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition duration-300">
                 계획짜기
               </button>
             </div>

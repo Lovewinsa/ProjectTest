@@ -177,6 +177,15 @@ function MyPage() {
             </h3>
             <p>관심있는 지역, 음식점들을 관리할 수 있습니다.</p>
           </li>
+          <li className="bg-white shadow-md rounded-lg p-4">
+            <h3>
+              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/likedCourse/${id}`}>
+                <strong>Liked Courses</strong>(관심 여행 계획)
+              </Link>
+            </h3>
+            <p>좋아요를 누른 여행 계획을 볼 수 있습니다.</p>
+          </li>
+          
         </ul>
       </div>
 

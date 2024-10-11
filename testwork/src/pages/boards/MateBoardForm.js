@@ -32,12 +32,13 @@ function MateBoardForm(props) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  //테스트 데이터
+  //나라별 도시 목록
   const citiesByCountry = {
     대한민국: ["서울", "부산", "제주", "인천"],
     일본: ["도쿄", "오사카", "교토", "삿포로"],
     중국: ["베이징", "상하이", "광저우", "시안"],
     인도: ["델리", "뭄바이", "콜카타", "벵갈루루"],
+    스페인: ["바르셀로나", "그라나다", "마드리드", "세비야"],
     영국: ["런던", "맨체스터", "버밍엄", "리버풀"],
     독일: ["베를린", "뮌헨", "프랑크푸르트", "함부르크"],
     프랑스: ["파리", "마르세유", "리옹", "니스"],
@@ -47,7 +48,7 @@ function MateBoardForm(props) {
     브라질: ["상파울루", "리우데자네이루", "브라질리아", "살바도르"],
     호주: ["시드니", "멜버른", "브리즈번", "퍼스"],
     러시아: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
-    "남아프리카 공활국": ["케이프타운", "요하네스버그", "더반", "프리토리아"],
+    "남아프리카 공화국": ["케이프타운", "요하네스버그", "더반", "프리토리아"],
     // Add more countries and cities as needed
   };
 
@@ -190,6 +191,7 @@ function MateBoardForm(props) {
                     <optgroup label="유럽">
                       <option value="영국">영국</option>
                       <option value="독일">독일</option>
+                      <option value="스페인">스페인</option>
                       <option value="프랑스">프랑스</option>
                       <option value="이탈리아">이탈리아</option>
                     </optgroup>

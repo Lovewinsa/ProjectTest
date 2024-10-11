@@ -1,15 +1,20 @@
 import axios from "axios"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent"
 import { shallowEqual, useSelector } from "react-redux"
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent"
 import Calendar from "react-calendar"
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import moment from "moment"
 
 const CourseBoardForm = () => {
   const userId = useSelector((state) => state.userData.id, shallowEqual)
   const nickname = useSelector((state) => state.userData.nickname, shallowEqual)
   const username = useSelector((state) => state.userData.username, shallowEqual)
+
+  const calendarRef = useRef(null);
+
 
   const [title, setTitle] = useState("")
   // 달력에서 선택된 날짜 범위 저장
@@ -18,7 +23,7 @@ const CourseBoardForm = () => {
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
   
-  //테스트 데이터
+  //나라별 도시 목록
   const citiesByCountry = {
     대한민국: ["서울", "부산", "제주", "인천"],
     일본: ["도쿄", "오사카", "교토", "삿포로"],
@@ -178,7 +183,19 @@ const CourseBoardForm = () => {
       })
       .catch((error) => console.log(error))
   }
+  // 캘린더의 날짜 스타일을 설정하는 함수 추가
+  const tileClassName = ({ date }) => {
+    const day = date.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+    // 기본적으로 검은색으로 설정
+    let className = "text-black";
 
+    // 토요일과 일요일에만 빨간색으로 변경
+    if (day === 0 || day === 6) {
+      className = "text-red-500"; // 토요일과 일요일에 숫자를 빨간색으로 표시
+    }
+
+    return className; // 최종 클래스 이름 반환
+  };
   return (
     <div className="container mx-auto p-6 max-w-[900px]">
       <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
@@ -237,15 +254,57 @@ const CourseBoardForm = () => {
           </div>
 
           {/* 캘린더 표시 여부에 따라 렌더링 */}
-          {isCalendarOpen && (
-            <div className="absolute z-50 bg-white shadow-lg p-2">
-              <Calendar
-                selectRange={true}
-                onChange={handleDateChange}
-                value={selectedDateRange || [new Date(), new Date()]}  // 초기값 또는 선택된 날짜 범위
-              />
+          <div ref={calendarRef}>
+              {isCalendarOpen && (
+                <div className="absolute z-50 bg-white shadow-lg p-2">
+                  <button
+                    onClick={handleDateReset}
+                    className="text text-sm absolute top-8 right-20 bg-tripDuoGreen text-white px-2 py-1 rounded hover:bg-green-700 transition duration-150">
+                    today
+                  </button>
+                  <Calendar
+                    selectRange={true}
+                    className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                    onChange={handleDateChange}
+                    value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
+                    minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                    maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                    navigationLabel={null}
+                    showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
+                    calendarType="hebrew" //일요일부터 보이도록 설정
+                    tileClassName={tileClassName} // 날짜 스타일 설정
+                    formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
+                    formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                    prevLabel={
+                      <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                    }
+                    nextLabel={
+                      <FaChevronRight className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                    }
+                    prev2Label={null}
+                    next2Label={null}
+                    // <button
+                    //   onClick={(event) => {
+                    //     event.preventDefault()
+                    //     // handleDateReset()
+                    //     handleDateChange([new Date(), new Date()])
+                    //   }}
+                    //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
+                    //   오늘로
+                    // </button>
+                    //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
+                    tileContent={({ date }) => {
+                      return (
+                        <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
+                          {date.getDate()} {/* 날짜 숫자만 표시 */}
+                        </span>
+                      );
+                    }} // 날짜 내용 설정
+                    formatDay={() => null}
+                  />
+                </div>
+              )}
             </div>
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

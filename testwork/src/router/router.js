@@ -34,6 +34,7 @@ import MyPlace from "../pages/myTripTmp/MyPlace"
 import MyPlan from "../pages/myTripTmp/MyPlan"
 import MyRecord from "../pages/myTripTmp/MyRecord"
 import WishMate from "../pages/myTripTmp/WishMate"
+import LikedPostsPage from "../pages/myTripTmp/LikedPostsPage"
 import Alarm from "../pages/Alarm"
 import ChatRoom from "../components/ChatRoom"
 import MyPage from "../pages/myPage/MyPage"
@@ -112,7 +113,7 @@ const routes = [
 
 const protectedRoutes = [
   // ### board ###
-  { path: "/report", element: <ReportBoard/>},
+  { path: "/report", element: <ReportBoard /> },
   //      ### mate ###
   { path: "/posts/mate/new", element: <MateBoardForm /> },
   { path: "/posts/mate/:id/edit", element: <MateBoardEditForm /> },
@@ -140,6 +141,7 @@ const protectedRoutes = [
   { path: "/myPlan/:id", element: <MyPlan /> },
   { path: "/myRecord/:id", element: <MyRecord /> },
   { path: "/wishMate/:id", element: <WishMate /> },
+  { path: "/likedCourse/:id", element: <LikedPostsPage /> },
 
   // ### 개인정보 설정(보안, 인증정보) ###
   { path: "/auth/:id/changePassword", element: <ChangePassword /> },

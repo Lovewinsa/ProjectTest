@@ -329,6 +329,11 @@ function TripLogBoard() {
             "뭄바이": "IND_Mumbai_01",
             "콜카타": "IND_Kolkata_01",
             "벵갈루루": "IND_Bengaluru_01",
+            // 스페인
+            "바르셀로나": "ESP_Barcelona_01",
+            "그라나다": "ESP_Granada_01",
+            "마드리드": "ESP_Madrid_01",
+            "세비야": "ESP_Seville_01",
             // 영국
             "런던": "GBR_London_01",
             "맨체스터": "GBR_Manchester_01",
@@ -386,6 +391,7 @@ function TripLogBoard() {
             "일본": "JPN_01",
             "중국": "CHN_01",
             "인도": "IND_01",
+            "스페인": "ESP_01",
             "영국": "GBR_01",
             "독일": "DEU_01",
             "프랑스": "FRA_01",
@@ -395,7 +401,7 @@ function TripLogBoard() {
             "브라질": "BRA_01",
             "호주": "AUS_01",
             "러시아": "RUS_01",
-            "남아프리카공화국": "ZAF_01",
+            "남아프리 카공화국": "ZAF_01",
         };
 
         // city 값이 있으면 city에 맞는 이미지, 없으면 country에 맞는 이미지 반환

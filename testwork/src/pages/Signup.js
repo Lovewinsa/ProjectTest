@@ -289,7 +289,7 @@ function Signup() {
       password,
       confirmPassword,
       nickname,
-      phoneNumber: getUnformattedPhoneNumber(),
+      encryptedPhoneNumber: getUnformattedPhoneNumber(),
       age,
       gender,
       email
