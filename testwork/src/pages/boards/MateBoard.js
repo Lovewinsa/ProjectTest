@@ -543,7 +543,7 @@ function MateBoard() {
                   <p className="text-sm text-gray-600">작성일: {getTimeDifference(post.createdAt, post.updatedAt)}</p>
                   <p className="text-sm text-gray-600">
                     {post.startDate === null
-                      ? "설정하지 않았습니다."
+                      ? ""
                       : new Date(post.startDate).toLocaleDateString("ko-KR", {
                           year: "numeric",
                           month: "2-digit",
