@@ -350,10 +350,10 @@ function TripLogBoard() {
             "리옹": "FRA_Lyon_01",
             "니스": "FRA_Nice_01",
             // 이탈리아
-            "로마": "ITA_Rome_01",
-            "밀라노": "ITA_Milan_01",
-            "베네치아": "ITA_Venice_01",
-            "피렌체": "ITA_Florence_01",
+            "로마": "ITA_Roma_01",
+            "밀라노": "ITA_Milano_01",
+            "베네치아": "ITA_Venezia_01",
+            "피렌체": "ITA_Firenze_01",
             // 미국
             "뉴욕": "USA_NewYork_01",
             "로스앤젤레스": "USA_LosAngeles_01",
