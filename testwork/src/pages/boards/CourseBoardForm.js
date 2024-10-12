@@ -22,7 +22,7 @@ const CourseBoardForm = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
-  
+
   //나라별 도시 목록
   const citiesByCountry = {
     대한민국: ["서울", "부산", "제주", "인천"],
@@ -62,7 +62,7 @@ const CourseBoardForm = () => {
   const navigate = useNavigate()
 
   //국내 글 작성시 대한민국 자동 선택처리
-  useEffect(()=>{
+  useEffect(() => {
     if (domesticInternational === "Domestic") {
       setCountry("대한민국")
     } else {
@@ -168,7 +168,7 @@ const CourseBoardForm = () => {
       alert("제목을 입력해주세요.");
       return;
     }
-  
+
     if (!country) {
       alert("나라를 선택해주세요.");
       return;
@@ -190,7 +190,8 @@ const CourseBoardForm = () => {
     axios
       .post("/api/v1/posts/course", post)
       .then((res) => {
-        navigate(`/posts/course?di=${domesticInternational}`)
+        status === "PRIVATE" ? navigate(`/myPlan/${userId}`)
+          : navigate(`/posts/course?di=${domesticInternational}`)
       })
       .catch((error) => console.log(error))
   }
@@ -215,7 +216,10 @@ const CourseBoardForm = () => {
             {status === "PRIVATE" && "나만의 "}{domesticInternational === "Domestic" ? "국내 " : "해외 "}여행 코스 작성
           </h1>
           <button
-            onClick={() => navigate(`/posts/course?di=${domesticInternational}`)}
+            onClick={() => {
+              status === "PRIVATE" ? navigate(`/myPlan/${userId}`)
+                : navigate(`/posts/course?di=${domesticInternational}`)
+            }}
             className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
             목록으로 돌아가기
           </button>
@@ -239,6 +243,7 @@ const CourseBoardForm = () => {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                placeholder={status==="PRIVATE" && "MyPage에서 확인 가능한 게시물입니다."}
               />
             </div>
 
@@ -266,56 +271,56 @@ const CourseBoardForm = () => {
 
           {/* 캘린더 표시 여부에 따라 렌더링 */}
           <div ref={calendarRef}>
-              {isCalendarOpen && (
-                <div className="absolute z-50 bg-white shadow-lg p-2">
-                  <button
-                    onClick={handleDateReset}
-                    className="text text-sm absolute top-8 right-20 bg-tripDuoGreen text-white px-2 py-1 rounded hover:bg-green-700 transition duration-150">
-                    today
-                  </button>
-                  <Calendar
-                    selectRange={true}
-                    className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
-                    onChange={handleDateChange}
-                    value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
-                    minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                    maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                    navigationLabel={null}
-                    showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
-                    calendarType="hebrew" //일요일부터 보이도록 설정
-                    tileClassName={tileClassName} // 날짜 스타일 설정
-                    formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
-                    formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
-                    prevLabel={
-                      <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
-                    }
-                    nextLabel={
-                      <FaChevronRight className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
-                    }
-                    prev2Label={null}
-                    next2Label={null}
-                    // <button
-                    //   onClick={(event) => {
-                    //     event.preventDefault()
-                    //     // handleDateReset()
-                    //     handleDateChange([new Date(), new Date()])
-                    //   }}
-                    //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
-                    //   오늘로
-                    // </button>
-                    //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
-                    tileContent={({ date }) => {
-                      return (
-                        <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
-                          {date.getDate()} {/* 날짜 숫자만 표시 */}
-                        </span>
-                      );
-                    }} // 날짜 내용 설정
-                    formatDay={() => null}
-                  />
-                </div>
-              )}
-            </div>
+            {isCalendarOpen && (
+              <div className="absolute z-50 bg-white shadow-lg p-2">
+                <button
+                  onClick={handleDateReset}
+                  className="text text-sm absolute top-8 right-20 bg-tripDuoGreen text-white px-2 py-1 rounded hover:bg-green-700 transition duration-150">
+                  today
+                </button>
+                <Calendar
+                  selectRange={true}
+                  className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                  onChange={handleDateChange}
+                  value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
+                  minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                  maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                  navigationLabel={null}
+                  showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
+                  calendarType="hebrew" //일요일부터 보이도록 설정
+                  tileClassName={tileClassName} // 날짜 스타일 설정
+                  formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
+                  formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                  prevLabel={
+                    <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                  }
+                  nextLabel={
+                    <FaChevronRight className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                  }
+                  prev2Label={null}
+                  next2Label={null}
+                  // <button
+                  //   onClick={(event) => {
+                  //     event.preventDefault()
+                  //     // handleDateReset()
+                  //     handleDateChange([new Date(), new Date()])
+                  //   }}
+                  //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
+                  //   오늘로
+                  // </button>
+                  //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
+                  tileContent={({ date }) => {
+                    return (
+                      <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
+                        {date.getDate()} {/* 날짜 숫자만 표시 */}
+                      </span>
+                    );
+                  }} // 날짜 내용 설정
+                  formatDay={() => null}
+                />
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -500,42 +505,44 @@ const CourseBoardForm = () => {
         </div>
       </div>
 
-      {isSelectPlace && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div
-            className="bg-white p-6 rounded-lg shadow-lg w-2/3 max-w-4xl"
-            style={{ maxHeight: "90vh", overflowY: "auto" }}>
-            <div className="flex justify-between items-center mb-4">
-              <div className="text-xl font-bold">
-                Day {selectedDayIndex + 1} : {selectedPlaceIndex + 1}번 장소 선택 중
+      {
+        isSelectPlace && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div
+              className="bg-white p-6 rounded-lg shadow-lg w-2/3 max-w-4xl"
+              style={{ maxHeight: "90vh", overflowY: "auto" }}>
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-xl font-bold">
+                  Day {selectedDayIndex + 1} : {selectedPlaceIndex + 1}번 장소 선택 중
+                </div>
+                <button
+                  onClick={() => setIsSelectPlace(false)}
+                  className="text-red-600 hover:text-red-800 text-3xl font-bold"
+                  aria-label="Close">
+                  &times;
+                </button>
               </div>
-              <button
-                onClick={() => setIsSelectPlace(false)}
-                className="text-red-600 hover:text-red-800 text-3xl font-bold"
-                aria-label="Close">
-                &times;
-              </button>
-            </div>
 
-            {domesticInternational === "Domestic" ? (
-              <CourseKakaoMapComponent
-                onSave={handleSavePlace}
-                selectedDayIndex={selectedDayIndex}
-                selectedPlaceIndex={selectedPlaceIndex}
-                isSelectPlace={isSelectPlace}
-              />
-            ) : (
-              <CourseGoogleMapComponent
-                onSave={handleSavePlace}
-                selectedDayIndex={selectedDayIndex}
-                selectedPlaceIndex={selectedPlaceIndex}
-                isSelectPlace={isSelectPlace}
-              />
-            )}
+              {domesticInternational === "Domestic" ? (
+                <CourseKakaoMapComponent
+                  onSave={handleSavePlace}
+                  selectedDayIndex={selectedDayIndex}
+                  selectedPlaceIndex={selectedPlaceIndex}
+                  isSelectPlace={isSelectPlace}
+                />
+              ) : (
+                <CourseGoogleMapComponent
+                  onSave={handleSavePlace}
+                  selectedDayIndex={selectedDayIndex}
+                  selectedPlaceIndex={selectedPlaceIndex}
+                  isSelectPlace={isSelectPlace}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   )
 }
 
