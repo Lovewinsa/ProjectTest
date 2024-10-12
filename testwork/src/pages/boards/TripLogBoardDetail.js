@@ -4,7 +4,7 @@ import { shallowEqual, useSelector } from "react-redux"
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import ConfirmModal from "../../components/ConfirmModal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faCrown, faDove, faEye, faFeather, faHeart, faMessage, faPlane, faUser } from "@fortawesome/free-solid-svg-icons"
+import { faCrown, faDove, faEye, faFeather, faHeart, faMessage, faPlane, faStar, faUser } from "@fortawesome/free-solid-svg-icons"
 import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent"
 import SavedPlacesGoogleMapComponent from "../../components/SavedPlacesGoogleMapComponent"
 import LoadingAnimation from "../../components/LoadingAnimation"
@@ -14,6 +14,18 @@ import LoadingAnimation from "../../components/LoadingAnimation"
 let commentIndex = 0
 //댓글 글자수 제한
 const maxLength = 3000
+
+// 모달 스타일 설정
+const customStyles = {
+  content: {
+    top: "50%",
+    left: "50%",
+    right: "auto",
+    bottom: "auto",
+    marginRight: "-50%",
+    transform: "translate(-50%, -50%)",
+  },
+};
 
 const TripLogBoardDetail = () => {
   //로딩 상태 추가
@@ -30,7 +42,20 @@ const TripLogBoardDetail = () => {
   const [writerProfile, setWriterProfile] = useState({})
   //좋아요 버튼 설정
   const [isLiked, setIsLiked] = useState(false)
-  const [likeId, setLikeId] = useState()
+
+  // 별점 버튼 설정
+  const [isRated, setRated] = useState(false);
+  // post 에 새로 매기는 점수
+  const [newPostRating, setNewPostRating] = useState(0);
+  // 로그인된 사용자에 대한 postRating 관련 데이터
+  const [ratedInfo, setRatedInfo] = useState({});
+  // 로그인된 사용자가 매긴 점수
+  const [myRating, setMyRating] = useState(0);
+  // 게시물의 rating 총점
+  const [postRating, setPostRating] = useState(0);
+  // rating 모달 관리
+  const [isRatingModalOpened, setIsRatingModalOpened] = useState(false);
+
   //글 하나의 정보 상태값으로 관리
   const [postInfo, setPostInfo] = useState({ tags: [], postData: [{ dayMemo: "", places: [""] }] })
   //게시물 작성자가 맞는지 여부
@@ -118,6 +143,17 @@ const TripLogBoardDetail = () => {
         const writerData = res.data.userProfileInfo
         setWriterProfile(writerData)
 
+        //rating 관련 정보
+        setPostRating(res.data.dto.rating || 0) // 총점
+        setRatedInfo(res.data.postRating || {}); // 현재 사용자가 매긴 rating 의 정보
+        setMyRating(res.data.postRating.rating || "") // 현재 사용자가 매긴 rating 의 값 (과거 값)
+        //현재 사용자가 rating을 매겼는지 여부
+        if (res.data.postRating === "") {
+          setRated(false);
+        } else {
+          setRated(true);
+        }
+
         //장소 정보
         const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
         setAllPlaces(places)
@@ -146,7 +182,7 @@ const TripLogBoardDetail = () => {
         console.log("데이터를 가져오지 못했습니다.", error)
         alert("게시물을 불러오는 중 문제가 발생했습니다.")
       })
-  }, [id, searchParams]) //경로 파라미터가 변경될 때 서버로부터 데이터 다시 받기
+  }, [id, searchParams, isRated, myRating]) //경로 파라미터가 변경될 때 서버로부터 데이터 다시 받기
 
   useEffect(() => {
     // 마운트될 때 클릭 이벤트를 추가
@@ -199,7 +235,6 @@ const TripLogBoardDetail = () => {
               ...prevPost,
               likeCount: prevPost.likeCount + 1,
             }))
-            setLikeId(res.data)
           })
           .catch((error) => {
             console.log(error)
@@ -440,15 +475,111 @@ const TripLogBoardDetail = () => {
     }
   }
 
+  //rating 모달 열기
+  const openRatingModal = (type) => {
+    setIsRatingModalOpened(true);
+  };
+
+  //rating 모달 닫기
+  const closeRatingModal = () => {
+    setIsRatingModalOpened(false)
+  }
+
+  //별을 클릭했을 때 rating 을 저장
+  const handleRating = (index) => {
+    setNewPostRating(index);
+  };
+
+  //별점 등록
+  const handlePostRating = () => {
+    axios
+      .post(`/api/v1/posts/${postInfo.id}/ratings`
+        , {
+          userId: loggedInUserId, postId: postInfo.id, rating: newPostRating
+        })
+      .then((res) => {
+        closeRatingModal();
+        setRated(true);
+      })
+      .catch((error) => console.log(error));
+  };
+
+  //별점 수정
+  const handleUpdateRating = () => {
+    axios
+      .put(`/api/v1/posts/${postInfo.id}/ratings/${ratedInfo.id}`
+        , {
+          id: ratedInfo.id, userId: loggedInUserId, postId: postInfo.id, rating: newPostRating
+        })
+      .then((res) => {
+        setMyRating(newPostRating)
+        closeRatingModal();
+      })
+      .catch((error) => console.log(error));
+  };
+
+  //별점 삭제
+  const handleDeleteRating = () => {
+    if (window.confirm) {
+      axios
+        .delete(`/api/v1/posts/${postInfo.id}/ratings/${ratedInfo.id}`)
+        .then((res) => {
+          setRated(false);
+          alert("별점을 삭제하였습니다.");
+        })
+        .catch((error) => console.log(error));
+    }
+  };
+
   return (
 
     <div className="container mx-auto p-4 max-w-[1024px]">
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
       <div className="flex flex-col h-full bg-gray-100 p-6">
-        <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
+      <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
+          {/* 왼쪽에 "목록으로" 버튼 */}
+          <div className="flex justify-start">
+            <button
+              onClick={() => navigate(`/posts/course?di=${domesticInternational}`)}
+              className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+              목록으로
+            </button>
+          </div>
+
+          {/* 오른쪽에 별점 및 삭제 버튼 */}
+          <div className="flex items-center ml-auto">
+            <p className="mr-3 font-bold">
+              <FontAwesomeIcon icon={faStar} className={`w-6 h-6 text-yellow-400`} />
+              {postRating || ""}
+            </p>
+            {!isRated ? (
+              <p>
+                <button
+                  className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
+                  onClick={openRatingModal}>
+                  별점
+                </button>
+              </p>
+            ) : (
+              <p>
+                <button
+                  className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100 mr-2"
+                  onClick={openRatingModal}>
+                  <FontAwesomeIcon icon={faStar} className={`w-4 h-4 text-yellow-400`} />
+                  {myRating || ""}
+                </button>
+                <button
+                  className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
+                  onClick={handleDeleteRating}>
+                  삭제
+                </button>
+              </p>
+            )}
+          </div>
+
+          {/* 태그들 */}
           <div className="flex gap-2">
-            {/* 태그s */}
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">#{postInfo.country}</span>
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full items-center">#{postInfo.city}</span>
             {postInfo.tags &&
@@ -458,13 +589,6 @@ const TripLogBoardDetail = () => {
                 </span>
               ))}
           </div>
-
-          {/* 목록으로 버튼 */}
-          <button
-            onClick={() => navigate(`/posts/trip_log?di=${domesticInternational}`)}
-            className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
-            목록으로 돌아가기
-          </button>
         </div>
 
         {/* 여행 일정 */}
@@ -477,39 +601,19 @@ const TripLogBoardDetail = () => {
 
         <div className="flex justify-between items-center m-3">
           <div>
-            <strong>{postInfo.title}</strong>
-            {/* title / 좋아요 버튼 / 좋아요, 조회수 */}
-            {!isWriter && (
-              <button
-                className={`mx-3 ${isLiked ? "bg-pink-600" : "bg-pink-400"
-                  } text-white active:bg-emerald-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
-                type="button"
-                onClick={handleLike}>
-                <FontAwesomeIcon icon={faHeart} className="mr-2" />
-                Like
-              </button>
-            )}
-            <span className="text-sm text-gray-500">
-              <span className="mx-3">
-                <FontAwesomeIcon icon={faEye} className="h-5 w-5 mr-2" />
-                {postInfo.viewCount}
-              </span>
-              <span className="mr-3">
-                <FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-2" />
-                {postInfo.likeCount}
-              </span>
-              <span className="mr-3">
-                <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-2" />
-                {postInfo.commentCount}
-              </span>
-            </span>
+            <strong className="mr-6">{postInfo.title}</strong>
           </div>
 
           {/* 수정, 삭제 버튼 */}
           {loggedInNickname === postInfo.writer && (
             <div className="flex gap-2">
               <button
-                onClick={() => navigate(`/posts/trip_log/${id}/edit`)}
+                onClick={() => navigate(`/posts/trip_log/${id}/new?di=${domesticInternational}`)}
+                className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+                여행기록 작성
+              </button>
+              <button
+                onClick={() => navigate(`/posts/course/${id}/edit?di=${domesticInternational}`)}
                 className="text-white bg-gray-600 hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
                 수정
               </button>
@@ -556,12 +660,34 @@ const TripLogBoardDetail = () => {
               </p>
             </div>
             <div>
-              <button
-                type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={handleViewProfile}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleViewProfile}>
                 프로필 보기
               </button>
+              {/* title / 좋아요 버튼 / 좋아요, 조회수 */}
+              {!isWriter && (
+                <button
+                  className={`mx-3 ${isLiked ? "bg-pink-600" : "bg-pink-400"
+                    } text-white active:bg-emerald-600 font-bold uppercase text-xs px-4 py-2 rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150`}
+                  type="button"
+                  onClick={handleLike}>
+                  <FontAwesomeIcon icon={faHeart} className="mr-2" />
+                  {isLiked ? "unLike" : "Like"}
+                </button>
+              )}
+              <span className="text-sm text-gray-500">
+                <span className="mx-3">
+                  <FontAwesomeIcon icon={faEye} className="h-5 w-5 mr-2" />
+                  {postInfo.viewCount}
+                </span>
+                <span className="mr-3">
+                  <FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-2" />
+                  {postInfo.likeCount}
+                </span>
+                <span className="mr-3">
+                  <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-2" />
+                  {postInfo.commentCount}
+                </span>
+              </span>
             </div>
           </div>
         </div>
