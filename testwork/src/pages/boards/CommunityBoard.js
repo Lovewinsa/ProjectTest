@@ -32,9 +32,8 @@ function CommunityBoard() {
   // *이후에 di 값이 영향을 미치지는않지만 계속 남아있음
   const [domesticInternational, setDomesticInternational] = useState("Domestic");
   const [pageTurn, setPageTurn] = useState("to International");
+  const [desiredCountry, setDesiredCountry] = useState(null);
 
-  // 페이지 전환 버튼
-  const [whereAreYou, setWhereAreYou] = useState(null);
   const [sortBy, setSortBy] = useState("latest"); // 정렬 기준 초기값 설정
 
   // 검색 기준 변경 핸들러
@@ -59,6 +58,12 @@ function CommunityBoard() {
       ...searchCriteria,
       keyword: value, // 검색어를 keyword로 저장
     });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   // searchParams 가 바뀔때마다 실행된다.
@@ -107,10 +112,18 @@ function CommunityBoard() {
 
         //필터링된 데이터를 상태에 저장한다
         setPageData(res.data.list);
+
         //페이지 제목을 변경한다
-        setWhereAreYou(domesticInternational === "International" ? "해외 커뮤니티 페이지" : "국내 커뮤니티 페이지");
+        let tempStr = "";
+        if (domesticInternational === "Domestic") {
+          tempStr = "국내 여행 코스";
+        } else if (domesticInternational === "International") {
+          tempStr = "해외 여행 코스";
+        }
+        setDesiredCountry(`${tempStr}`);
+
         //페이지 전환버튼을 변경한다
-        setPageTurn(domesticInternational === "International" ? "to Domestic" : "to International");
+        setPageTurn(domesticInternational === "International" ? "국내로" : "해외로");
       })
       .catch((error) => {
         console.log("Error:", error);
@@ -127,14 +140,13 @@ function CommunityBoard() {
     fetchFilteredPosts(); // 비동기 처리를 기다리지 않음
   };
 
-  // 국내/해외 변경 버튼 핸들러-
-  const handleButtonClick = () => {
-    // 국내 상태에서 눌렀을 때
-    //상태 변경
-    setDomesticInternational(domesticInternational === "International" ? "Domestic" : "International");
+  //국내, 해외 선택 이벤트
+  const handleDesiredCountry = () => {
+    const newDomesticInternational = domesticInternational === "International" ? "Domestic" : "International";
+    setDomesticInternational(newDomesticInternational);
     setSearchParams({
       ...searchCriteria,
-      di: domesticInternational === "International" ? "Domestic" : "International",
+      di: newDomesticInternational,
     });
   };
 
@@ -174,53 +186,34 @@ function CommunityBoard() {
     <div className="container mx-auto p-4 max-w-[1024px]">
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
-      <div className="container mx-auto m-4">
-        <Link
-          className="px-4 py-2 text-sm font-medium rounded-md bg-green-600 text-gray-100 mr-3"
-          to={{ pathname: "/posts/community/new", search: `?di=${domesticInternational}` }}>
-          새글 작성
-        </Link>
-        <button
-          className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
-          onClick={handleButtonClick}>
-          {pageTurn}
-        </button>
-        <h4 className="font-bold mb-4">{whereAreYou}</h4>
+      <div className="container mx-auto">
+        <div className="flex justify-between mb-4">
+          <button
+            onClick={() => {
+              window.location.href = `/posts/community/new?di=${domesticInternational}&status=PUBLIC`; // URL을 올바르게 설정
+            }}
+            className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+            새 글 작성
+          </button>
+          <button
+            onClick={handleDesiredCountry}
+            className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+            {pageTurn}
+          </button>
+        </div>
+        <h1 className="font-bold mb-4">{desiredCountry}</h1>
 
         {/* 검색 조건 입력 폼 */}
-        <div className="my-4 space-y-4">
-          {/* 국가와 도시를 한 행으로 배치 */}
-          <div className="flex items-center gap-4">
-            {domesticInternational === "International" && (
-              <input
-                type="text"
-                name="country"
-                value={searchCriteria.country}
-                onChange={handleSearchChange}
-                placeholder="국가"
-                className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-              />
-            )}
-
-            <input
-              type="text"
-              name="city"
-              value={searchCriteria.city}
-              onChange={handleSearchChange}
-              placeholder="도시"
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-            />
-          </div>
-
+        <div className="my-4 space-y-4 p-4 w-full md:w-1/2 bg-white rounded-lg shadow-md shadow-tripDuoMint border border-tripDuoGreen">
           {/* 제목/작성자 선택 필드 */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <select
               value={searchCriteria.condition}
               onChange={handleConditionChange}
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+              className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
               <option value="title">제목</option>
               <option value="content">내용</option>
-              <option value="title_writer">제목 + 내용</option>
+              <option value="title_content">제목 및 내용</option>
             </select>
 
             <input
@@ -229,124 +222,151 @@ function CommunityBoard() {
               value={searchCriteria[searchCriteria.condition]}
               onChange={handleQueryChange}
               placeholder={searchCriteria.condition}
-              className="border border-gray-300 rounded-md px-4 py-2 w-5/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              onKeyDown={handleKeyDown}
+              className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-2/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
             />
           </div>
+
+          {/* 국가와 도시를 한 행으로 배치 */}
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+            {domesticInternational === "International" && (
+              <input
+                type="text"
+                name="country"
+                value={searchCriteria.country}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
+                placeholder="국가"
+                className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+              />
+            )}
+
+            <input
+              type="text"
+              name="city"
+              value={searchCriteria.city}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              placeholder="도시"
+              className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+            />
+
+            <div className="flex justify-end w-full items-center">
+              <button
+                onClick={handleSearch}
+                className="font-bold bg-tripDuoMint text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300">
+                검색
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={handleSearch}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300 mt-4">
-          검색
-        </button>
-      </div>
 
-      {/* 검색 정렬 기준 다운바 */}
-      <div className="my-4">
-        <label htmlFor="sortBy" className="mr-2">
-          정렬 기준:
-        </label>
-        <select
-          id="sortBy"
-          value={sortBy}
-          onChange={handleSortChange}
-          className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
-          <option value="latest">최신순</option>
-          <option value="viewCount">조회수순</option>
-        </select>
-      </div>
+        {/* 검색 정렬 기준 다운바 */}
+        <div className="my-4">
+          <select
+            id="sortBy"
+            value={sortBy}
+            onChange={handleSortChange}
+            className="flex justify-start w-full md:w-1/6 border border-tripDuoGreen text-sm rounded-md px-5 py-2 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
+            <option value="latest">최신순</option>
+            <option value="viewCount">조회수순</option>
+            <option value="likeCount">좋아요순</option>
+          </select>
+        </div>
 
-      {/* 메이트 게시판 리스트 */}
+        {/* 메이트 게시판 리스트 */}
 
-      <ul className="w-full border border-gray-200 divide-y divide-gray-200">
-        {pageData.map((item) => (
-          <li key={item.id} className="grid grid-cols-1 sm:grid-cols-4 items-center text-center py-2 gap-2">
-            {/* 첫 번째 열: 게시글 정보 */}
-            <div className="col-span-2 sm:col-span-2 text-left pl-5">
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded items-center">{`#${item.country}`}</span>
-                <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded items-center">{`#${item.city}`}</span>
-                {item.tags &&
-                  item.tags.map((tag, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
-                      {tag}
-                    </span>
-                  ))}
+        <ul className="w-full border border-gray-200 divide-y divide-gray-200">
+          {pageData.map((item) => (
+            <li key={item.id} className="grid grid-cols-1 sm:grid-cols-4 items-center text-center py-2 gap-2">
+              {/* 첫 번째 열: 게시글 정보 */}
+              <div className="col-span-2 sm:col-span-2 text-left pl-5">
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded items-center">{`#${item.country}`}</span>
+                  <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded items-center">{`#${item.city}`}</span>
+                  {item.tags &&
+                    item.tags.map((tag, index) => (
+                      <span key={index} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                </div>
+                <div className="mt-2">
+                  <Link to={`/posts/community/${item.id}/detail`}>{item.title}</Link>
+                  <span className="text-xs ml-3">
+                    <FontAwesomeIcon icon={faStar} className={`w-4 h-4 cursor-pointe text-yellow-400`} />
+                    {item.rating}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2">
-                <Link to={`/posts/community/${item.id}/detail`}>{item.title}</Link>
-                <span className="text-xs ml-3">
-                  <FontAwesomeIcon icon={faStar} className={`w-4 h-4 cursor-pointe text-yellow-400`} />
-                  {item.rating}
-                </span>
+
+              {/* 두 번째 열: 작성자 */}
+              <div className="sm:text-center text-sm sm:col-span-1 font-semibold text-gray-500">{item.writer}</div>
+
+              {/* 세 번째 열: 작성일/수정일 */}
+              <div className="text-xs sm:text-center text-left mr-5 sm:mr-1">
+                {item.updatedAt ? (
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
+                    update
+                  </span>
+                ) : (
+                  <span className="px-8"></span>
+                )}
+                {new Date(item.updatedAt ? item.updatedAt : item.createdAt).toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })}
+                <div className="text-xs text-gray-500 sm:text-center">
+                  <span className="mx-3">
+                    <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-1" />
+                    {item.viewCount}
+                  </span>
+                  <span className="">
+                    <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-1" />
+                    {item.commentCount}
+                  </span>
+                </div>
               </div>
-            </div>
+            </li>
+          ))}
+        </ul>
 
-            {/* 두 번째 열: 작성자 */}
-            <div className="sm:text-center text-sm sm:col-span-1 font-semibold text-gray-500">{item.writer}</div>
-
-            {/* 세 번째 열: 작성일/수정일 */}
-            <div className="text-xs sm:text-center text-left mr-5 sm:mr-1">
-              {item.updatedAt ? (
-                <span className="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
-                  update
-                </span>
-              ) : (
-                <span className="px-8"></span>
-              )}
-              {new Date(item.updatedAt ? item.updatedAt : item.createdAt).toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })}
-              <div className="text-xs text-gray-500 sm:text-center">
-                <span className="mx-3">
-                  <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-1" />
-                  {item.viewCount}
-                </span>
-                <span className="">
-                  <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-1" />
-                  {item.commentCount}
-                </span>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      {/* 페이징 버튼 */}
-      <div className="flex justify-center space-x-2 mt-5">
-        <button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          className={`px-4 py-2 rounded ${
-            currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-          }`}>
-          &lt;
-        </button>
-        {/* totalPages만큼 배열 생성 */}
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+        {/* 페이징 버튼 */}
+        <div className="flex justify-center space-x-2 mt-5">
           <button
-            key={number}
-            onClick={() => paginate(number)}
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
             className={`px-4 py-2 rounded ${
-              currentPage === number ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
             }`}>
-            {number}
+            &lt;
           </button>
-        ))}
-        <button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className={`px-4 py-2 rounded ${
-            currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-          }`}>
-          &gt;
-        </button>
-      </div>
+          {/* totalPages만큼 배열 생성 */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+            <button
+              key={number}
+              onClick={() => paginate(number)}
+              className={`px-4 py-2 rounded ${
+                currentPage === number ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+              }`}>
+              {number}
+            </button>
+          ))}
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded ${
+              currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
+            }`}>
+            &gt;
+          </button>
+        </div>
 
-      <p className="mt-4 text-center">
-        <strong>{pageData.length}</strong>개의 글이 있습니다.
-      </p>
+        <p className="mt-4 text-center">
+          <strong>{pageData.length}</strong>개의 글이 있습니다.
+        </p>
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import FroalaEditor from "react-froala-wysiwyg";
 import { shallowEqual, useSelector } from "react-redux";
 import Calendar from "react-calendar";
 import moment from "moment";
+import { citiesByCountry } from "../../constants/mapping";
 
 function MateBoardForm(props) {
   //유저 정보 관리
@@ -32,25 +33,7 @@ function MateBoardForm(props) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  //나라별 도시 목록
-  const citiesByCountry = {
-    대한민국: ["서울", "부산", "제주", "인천"],
-    일본: ["도쿄", "오사카", "교토", "삿포로"],
-    중국: ["베이징", "상하이", "광저우", "시안"],
-    인도: ["델리", "뭄바이", "콜카타", "벵갈루루"],
-    스페인: ["바르셀로나", "그라나다", "마드리드", "세비야"],
-    영국: ["런던", "맨체스터", "버밍엄", "리버풀"],
-    독일: ["베를린", "뮌헨", "프랑크푸르트", "함부르크"],
-    프랑스: ["파리", "마르세유", "리옹", "니스"],
-    이탈리아: ["로마", "밀라노", "베네치아", "피렌체"],
-    미국: ["뉴욕", "로스앤젤레스", "시카고", "마이애미"],
-    캐나다: ["토론토", "밴쿠버", "몬트리올", "오타와"],
-    브라질: ["상파울루", "리우데자네이루", "브라질리아", "살바도르"],
-    호주: ["시드니", "멜버른", "브리즈번", "퍼스"],
-    러시아: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
-    "남아프리카 공화국": ["케이프타운", "요하네스버그", "더반", "프리토리아"],
-    // Add more countries and cities as needed
-  };
+ 
 
   // 선택한 나라에 맞는 도시 목록을 얻음
   const cities = citiesByCountry[post.country] || []; //citiesByCountry[country]가 undefined 또는 null일 경우 빈 배열 반환

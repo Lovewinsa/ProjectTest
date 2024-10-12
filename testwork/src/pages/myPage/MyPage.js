@@ -143,7 +143,7 @@ function MyPage() {
         <ul className="grid grid-cols-2 gap-4">
           <li className="bg-white shadow-md rounded-lg p-4">
             <h3>
-              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/myPlan/${id}`}>
+              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/myPlan`}>
                 <strong>Travel Plan</strong>(여행 계획)
               </Link>
             </h3>
@@ -155,7 +155,7 @@ function MyPage() {
           </li>
           <li className="bg-white shadow-md rounded-lg p-4">
             <h3>
-              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/myRecord/${id}`}>
+              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/myRecord`}>
                 <strong>Travel Record</strong>(여행 기록)
               </Link>
             </h3>
@@ -163,7 +163,7 @@ function MyPage() {
           </li>
           <li className="bg-white shadow-md rounded-lg p-4">
             <h3>
-              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/wishMate/${id}`}>
+              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/wishMate`}>
                 <strong>Wish Mate</strong>(관심 메이트)
               </Link>
             </h3>
@@ -171,7 +171,7 @@ function MyPage() {
           </li>
           <li className="bg-white shadow-md rounded-lg p-4">
             <h3>
-              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/myPlace/${id}`}>
+              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/myPlace`}>
                 <strong>My Place</strong>(마이 플레이스)
               </Link>
             </h3>
@@ -179,7 +179,7 @@ function MyPage() {
           </li>
           <li className="bg-white shadow-md rounded-lg p-4">
             <h3>
-              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/likedCourse/${id}`}>
+              <Link className="text-gray-500 hover:text-black text-decoration-none" to={`/likedCourse`}>
                 <strong>Liked Courses</strong>(관심 여행 계획)
               </Link>
             </h3>

@@ -1,8 +1,8 @@
-import React, { createRef, useEffect, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import axios from "axios"
-import { shallowEqual, useSelector } from "react-redux"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import React, { createRef, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { shallowEqual, useSelector } from "react-redux";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheck,
   faCrown,
@@ -20,35 +20,12 @@ import "../../css/MyProfile.css"
 import FollowModal from "../../components/FollowModal"
 import LoadingAnimation from "../../components/LoadingAnimation"
 import useWebSocket from "../../components/useWebSocket"
+import { reviewNegativeTagList, reviewPositiveTagList } from "../../constants/mapping"
 
 // ###
 
-const reviewPositiveTagList = [
-  { key: 1, keyword: "COMMUNICATION", text: "메시지에 항상 빠르게 답변해주어 소통이 원활했어요." },
-  { key: 2, keyword: "TRUST", text: "계획된 일정을 철저히 지켜 믿음직했어요." },
-  { key: 3, keyword: "ONTIME", text: "약속 시간을 잘 지켜 여유로운 여행을 즐길 수 있었어요." },
-  { key: 4, keyword: "MANNER", text: "친절하고 배려심 넘치는 태도로 편안하게 여행했어요." },
-  { key: 5, keyword: "FLEXIBLE", text: "변경된 계획에도 유연하게 대처하여 즐거운 여행이 되었어요." },
-  { key: 6, keyword: "ACTIVE", text: "적극적인 태도로 다양한 경험을 할 수 있도록 이끌어주었어요." },
-  { key: 7, keyword: "FRIENDLY", text: "함께 시간을 보내는 내내 즐거웠고, 좋은 친구를 얻은 기분이었어요." },
-  { key: 8, keyword: "PAY", text: "비용 분담에 있어 투명하고 공정하게 처리하여 신뢰가 갔어요." },
-  { key: 9, keyword: "CLEAN", text: "깔끔한 여행 스타일로 쾌적한 환경을 유지해주었어요." },
-]
-
-const reviewNegativeTagList = [
-  { key: 1, keyword: "COMMUNICATION", text: "메시지 답변이 느려서 소통에 어려움을 느꼈어요." },
-  { key: 2, keyword: "TRUST", text: "계획된 일정을 자주 변경하여 불안했어요." },
-  { key: 3, keyword: "ONTIME", text: "약속 시간에 자주 늦어 불편했어요." },
-  { key: 4, keyword: "MANNER", text: "무례한 언행으로 불쾌한 경험을 했어요." },
-  { key: 5, keyword: "FLEXIBLE", text: "변경된 상황에 대한 대처가 미흡하여 아쉬웠어요." },
-  { key: 6, keyword: "ACTIVE", text: "소극적인 태도로 여행에 대한 적극적인 참여가 부족했어요." },
-  { key: 7, keyword: "FRIENDLY", text: "함께 시간을 보내는 것이 불편했어요." },
-  { key: 8, keyword: "PAY", text: "비용 분담에 있어 불투명하고 불공정하여 신뢰가 떨어졌어요." },
-  { key: 9, keyword: "CLEAN", text: "개인 위생 관리가 부족하여 함께 여행하는 것이 불편했어요." },
-]
-
 // 리뷰 최대 글자수
-const maxLength = 3000
+const maxLength = 3000;
 
 //--------------------------------------------------------------------------------------------------------------rating 관리 부
 // rating 비교 조건 데이터
@@ -61,161 +38,160 @@ const ratingConfig = [
   { min: 7500, max: 8999, icon: faPlane, color: "blue" }, // 프리미엄 퍼스트
   { min: 9000, max: 10000, icon: faCrown, color: "yellow" }, // 로얄
   { min: -Infinity, max: Infinity, icon: faUser, color: "black" }, // 기본값
-]
+];
 
 function MyProfile(props) {
   // to do : cur_location, last_login
   //로딩 상태 추가
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  const { id } = useParams() // 프로필 사용자의 id
-  const userId = useSelector((state) => state.userData.id, shallowEqual) // 접속된 사용자의 id
-  const nickname = useSelector((state) => state.userData.nickname, shallowEqual) // 접속된 사용자의 nickname
+  const { id } = useParams(); // 프로필 사용자의 id
+  const userId = useSelector((state) => state.userData.id, shallowEqual); // 접속된 사용자의 id
+  const nickname = useSelector((state) => state.userData.nickname, shallowEqual); // 접속된 사용자의 nickname
 
   // 접족된 사용자와 profile 의 사용자가 같은지
-  const [isProfileOwner, setProfileOwner] = useState(false)
+  const [isProfileOwner, setProfileOwner] = useState(false);
   // 프로필 정보
-  const [profile, setProfile] = useState({})
+  const [profile, setProfile] = useState({});
   // 리뷰 정보
-  const [reviewList, setReviewList] = useState([])
+  const [reviewList, setReviewList] = useState([]);
   // 필터링된 프로필 메세지
-  const [filteredTextValue, setFilterdTextValue] = useState()
+  const [filteredTextValue, setFilterdTextValue] = useState();
 
   // BAD or GOOD or EXCELLENT
-  const [experience, setExperience] = useState()
+  const [experience, setExperience] = useState();
 
   // 팔로우 상태 관리
-  const [followingStatus, setFollowingStatus] = useState(false)
+  const [followingStatus, setFollowingStatus] = useState(false);
   // 팔로우 알림 관리
-  const toastMessageRef = useRef()
+  const toastMessageRef = useRef();
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   //프로필 토글 관리
-  const dropdownMenuRef = useRef()
+  const dropdownMenuRef = useRef();
 
   // 리뷰 작성 관련
   // 새로 작성하는 리뷰 Content // to do : 변수명 수정하기
-  const [userReview, setUserReview] = useState("")
+  const [userReview, setUserReview] = useState("");
   // 작성된 리뷰들의 수정 content
-  const [editTexts, setEditTexts] = useState({})
+  const [editTexts, setEditTexts] = useState({});
   //리뷰 체크박스 상태 설정
-  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedTags, setSelectedTags] = useState([]);
   //리뷰 이미 작성한 사용자인지 체크
-  const [isReviewed, setReviewed] = useState(false)
+  const [isReviewed, setReviewed] = useState(false);
   //리뷰를 작성할 조건이 되는 사용자 (나를 팔로우한 사용자인지)
-  const [isFollowing, setFollowing] = useState(false)
+  const [isFollowing, setFollowing] = useState(false);
 
   // 팔로잉/팔로워 모달 상태관리
-  const [isModalOpen, setModalOpen] = useState(false)
-  const [modalTab, setModalTab] = useState()
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState();
 
   // 차단 상태 관린
-  const [blockStatus, setBlockStatue] = useState(false)
+  const [blockStatus, setBlockStatue] = useState(false);
 
   // 버튼 스타일 - 신청 전/후 색상 변경
   const followButtonClasses = `px-4 py-2 text-sm font-medium rounded-md ${
     followingStatus ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white"
-  }`
+  }`;
 
   // rating 값에 따른 아이콘과 색상 계산 //
   const getRatingDetails = (ratings) => {
     return (
       ratingConfig.find((config) => ratings >= config.min && ratings <= config.max) || { icon: faUser, color: "black" }
-    ) // 기본값
-  }
+    ); // 기본값
+  };
 
-  const { icon: ratingIcon, color: ratingColor } = getRatingDetails(profile.ratings || 0)
+  const { icon: ratingIcon, color: ratingColor } = getRatingDetails(profile.ratings || 0);
   //---------------------------------------------------------------------------------------------------------------rating 관리부
   useEffect(() => {
     // 로딩 애니메이션을 0.5초 동안만 표시
-    setLoading(true)
+    setLoading(true);
     setTimeout(() => {
-      setLoading(false)
-    }, 700)
+      setLoading(false);
+    }, 700);
 
     axios
       .get(`/api/v1/users/${id}`)
       .then((res) => {
-        console.log(res.data)
+        console.log(res.data);
 
         // is Blocked?
         if (res.data.theirFollowType === "BLOCK") {
-          alert("해당 사용자가 당신을 차단하여 더 이상 프로필을 볼 수 없습니다.")
-          navigate("/")
+          alert("해당 사용자가 당신을 차단하여 더 이상 프로필을 볼 수 없습니다.");
+          navigate("/");
         } else if (res.data.theirFollowType === "FOLLOW") {
-          setFollowing(true)
+          setFollowing(true);
         }
 
         // BLOCK or FOLLOW
         if (res.data.myFollowType === "BLOCK") {
-          setBlockStatue(true)
+          setBlockStatue(true);
         } else if (res.data.myFollowType === "FOLLOW") {
-          setFollowingStatus(true)
+          setFollowingStatus(true);
         }
 
         // 불러온 사용자의 정보 저장
-        const userProfileInfo = res.data.userProfileInfo
-        const socialLinksArray = userProfileInfo.socialLinks || ["tictok+", "instagram+"]
+        const userProfileInfo = res.data.userProfileInfo;
+        const socialLinksArray = userProfileInfo.socialLinks || ["tictok+", "instagram+"];
 
         setProfile({
           ...userProfileInfo,
           socialLinks: socialLinksArray,
-        })
+        });
 
         if (res.data.userProfileInfo.profileMessage !== null && res.data.userProfileInfo.profileMessage !== "") {
-          setFilterdTextValue(res.data.userProfileInfo.profileMessage.replace(/\n/g, "<br>"))
+          setFilterdTextValue(res.data.userProfileInfo.profileMessage.replace(/\n/g, "<br>"));
         }
 
         //리뷰 목록이 존재하는지 확인하고, 존재한다면 ref 라는 방 추가
         const list = Array.isArray(res.data.userReviewList)
           ? res.data.userReviewList.map((item) => {
-              item.ref = createRef()
-              return item
+              item.ref = createRef();
+              return item;
             })
-          : []
+          : [];
 
-        setReviewList(list)
+        setReviewList(list);
 
         // 접속된 사용자와 프로필 사용자의 id 가 같으면 Owner = true
         if (userId === res.data.userProfileInfo.userId) {
-          console.log("같은데 이상하다")
-          setProfileOwner(true)
+          setProfileOwner(true);
         } else {
-          setProfileOwner(false)
+          setProfileOwner(false);
         }
 
-        const findReviewerId = res.data.userReviewList.find((item) => item.reviewerId === userId)
+        const findReviewerId = res.data.userReviewList.find((item) => item.reviewerId === userId);
         // undefined = false / 이 외에 = true
-        setReviewed(!!findReviewerId)
+        setReviewed(!!findReviewerId);
       })
-      .catch((error) => console.log(error))
-  }, [id, userId])
+      .catch((error) => console.log(error));
+  }, [id, userId]);
 
   //--------------------------이벤트 관리 부--------------------------------------
 
   // 프로필 수정 클릭
   const handleClick = () => {
-    navigate(`/users/${id}/profile/edit`)
-  }
+    navigate(`/users/${id}/profile/edit`);
+  };
 
   // 팔로잉/팔로워 모달 open
   const handleOpenModal = (tab) => {
-    setModalTab(tab)
-    setModalOpen(true)
-  }
+    setModalTab(tab);
+    setModalOpen(true);
+  };
   // 팔로잉/팔로워 모달 close
   const handleCloseModal = () => {
-    setModalOpen(false)
-  }
+    setModalOpen(false);
+  };
 
   // 토스트 메세지
   const toastOn = () => {
-    toastMessageRef.current.classList.add("active")
+    toastMessageRef.current.classList.add("active");
     setTimeout(() => {
-      toastMessageRef.current.classList.remove("active")
-    }, 1500)
-  }
+      toastMessageRef.current.classList.remove("active");
+    }, 1500);
+  };
 
   // 차단 버튼 클릭 이벤트
   const handleBlock = () => {
@@ -225,178 +201,187 @@ function MyProfile(props) {
         axios
           .post(`/api/v1/users/${id}/block/${userId}`)
           .then((res) => {
-            console.log(res.data)
-            setBlockStatue(true)
-            dropdownMenuRef.current.classList.toggle("hidden") // dropdown 메뉴 숨김
+            console.log(res.data);
+            setBlockStatue(true);
+            //뷰 페이지 설정
+            setFollowingStatus(false);
+            setProfile({
+              ...profile,
+              followerCount: profile.followerCount - 1,
+            });
+            dropdownMenuRef.current.classList.toggle("hidden"); // dropdown 메뉴 숨김
           })
-          .catch((error) => console.log(error))
+          .catch((error) => console.log(error));
       }
     } else {
       // 차단 중인 경우 (blockStatus = true)
       if (window.confirm(`차단을 해제하시겠습니까?`)) {
         axios
-          .post(`/api/v1/users/${id}/block/${userId}`)
+          .delete(`/api/v1/users/${id}/block/${userId}`)
           .then((res) => {
-            console.log(res.data)
-            setBlockStatue(false)
-            dropdownMenuRef.current.classList.toggle("hidden") // dropdown 메뉴 숨김
+            console.log(res.data);
+            setBlockStatue(false);
+
+            dropdownMenuRef.current.classList.toggle("hidden"); // dropdown 메뉴 숨김
           })
-          .catch((error) => console.log(error))
+          .catch((error) => console.log(error));
       }
     }
-  }
+  };
 
   // 팔로우 버튼 클릭 이벤트
   // to do : 팔로우 상태 알림 ( ex) android splash )
   const handleClickFollow = () => {
     if (!followingStatus) {
       //팔로우 중이지 않은경우 (followingStatue = false)
-      toastOn()
+      toastOn();
       axios
         .post(`/api/v1/users/${id}/follow/${userId}`)
         .then((res) => {
-          console.log(res.data)
-          setFollowingStatus(true)
+          console.log(res.data);
+          //뷰 페이지 설정
+          setFollowingStatus(true);
           setProfile({
             ...profile,
             followerCount: profile.followerCount + 1,
-          })
+          });
         })
-        .catch((error) => console.log(error))
+        .catch((error) => console.log(error));
     } else {
       // 팔로우 중인 경우 (followingStatus = true)
       if (window.confirm("팔로우를 취소 하시겠습니까?")) {
         axios
           .delete(`/api/v1/users/${id}/follow/${userId}`)
           .then((res) => {
-            console.log(res.data)
-            setFollowingStatus(false)
+            console.log(res.data);
+            //뷰 페이지 설정
+            setFollowingStatus(false);
             setProfile({
               ...profile,
               followerCount: profile.followerCount - 1,
-            })
+            });
           })
-          .catch((error) => console.log(error))
+          .catch((error) => console.log(error));
       }
     }
-  }
+  };
 
   //프로필 토글 버튼 클릭
   const handleClickToggle = () => {
-    dropdownMenuRef.current.classList.toggle("hidden")
-  }
+    dropdownMenuRef.current.classList.toggle("hidden");
+  };
 
   // 입력된 리뷰 내용 상태값으로 저장
   const handleInputReview = (e) => {
-    setUserReview(e.target.value)
-  }
+    setUserReview(e.target.value);
+  };
 
   // 리뷰 드롭다운 태그 메뉴 관련
   const handleReviewDropDown = (e) => {
     if (e === "BAD") {
-      setExperience("BAD")
-      setSelectedTags([])
+      setExperience("BAD");
+      setSelectedTags([]);
     } else if (e === "GOOD") {
-      setExperience("GOOD")
-      setSelectedTags([])
+      setExperience("GOOD");
+      setSelectedTags([]);
     } else if (e === "EXCELLENT") {
-      setExperience("EXCELLENT")
-      setSelectedTags([])
+      setExperience("EXCELLENT");
+      setSelectedTags([]);
     }
-  }
+  };
 
   // 체크박스 데이터 핸들링
   const handleCheckboxChange = (e) => {
-    const checked = e.target.checked
-    const value = e.target.value
+    const checked = e.target.checked;
+    const value = e.target.value;
 
     if (checked) {
-      setSelectedTags([...selectedTags, value])
+      setSelectedTags([...selectedTags, value]);
     } else {
-      setSelectedTags(selectedTags.filter((tag) => tag !== value))
+      setSelectedTags(selectedTags.filter((tag) => tag !== value));
     }
-  }
+  };
 
   //프로필 링크 복사
   const handleCopy = () => {
-    const tmpText = `localhost:3000/users/${id}/profile`
+    const tmpText = `localhost:3000/users/${id}/profile`;
     navigator.clipboard
       .writeText(tmpText)
       .then(() => {
-        alert("클립보드에 복사되었습니다.")
-        dropdownMenuRef.current.classList.toggle("hidden") // dropdown 메뉴 숨김
+        alert("클립보드에 복사되었습니다.");
+        dropdownMenuRef.current.classList.toggle("hidden"); // dropdown 메뉴 숨김
       })
-      .catch((error) => console.log(error))
-  }
+      .catch((error) => console.log(error));
+  };
 
   // 프로필 사용자 신고
   const handleReportUser = () => {
-    const data = { content: "신고 테스트" }
+    const data = { content: "신고 테스트" };
     if (window.confirm("사용자를 신고하시겠습니까")) {
       axios
         .post(`/api/v1/reports/${id}/user/${userId}`, data)
         .then((res) => {
-          console.log(res.data)
+          console.log(res.data);
           if (res.data.isSuccess) {
-            alert("해당 사용자에 대한 신고가 접수되었습니다.")
+            alert("해당 사용자에 대한 신고가 접수되었습니다.");
           } else {
-            alert(res.data.message)
+            alert(res.data.message);
           }
         })
-        .catch((error) => console.log(error))
+        .catch((error) => console.log(error));
     }
-  }
+  };
 
   // 리뷰 작성
   const handleReviewSubmit = () => {
     if (selectedTags.length === 0) {
-      alert("1개 이상의 태그를 선택해주세요")
-      return
+      alert("1개 이상의 태그를 선택해주세요");
+      return;
     }
     const reviewData = {
       content: userReview,
       experience: experience,
       tags: selectedTags,
-    }
+    };
 
-    console.log(reviewData)
+    console.log(reviewData);
 
     axios
       .post(`/api/v1/users/${id}/review/${userId}`, reviewData)
       .then((res) => {
-        console.log(res.data)
-        const newReview = res.data
-        newReview.ref = createRef()
-        setReviewList([...reviewList, newReview])
+        console.log(res.data);
+        const newReview = res.data;
+        newReview.ref = createRef();
+        setReviewList([...reviewList, newReview]);
         // textArea 초기화
-        setUserReview("")
-        setSelectedTags([])
-        setExperience("")
+        setUserReview("");
+        setSelectedTags([]);
+        setExperience("");
         // 리뷰 작성 조건 조정 => 리뷰 작성 창 제거
-        setReviewed(true)
+        setReviewed(true);
       })
-      .catch((error) => console.log(error))
-  }
+      .catch((error) => console.log(error));
+  };
 
   // 리뷰 신고 처리 함수
   const handleReportReview = (reviewId) => {
     const data = {
       content: "신고 테스트",
-    }
+    };
     if (window.confirm("해당 리뷰를 신고하시겠습니까")) {
       axios
         .post(`/api/v1/reports/${reviewId}/user_review/${userId}`, data)
         .then((res) => {
-          console.log(res.data)
+          console.log(res.data);
           if (res.data.isSuccess) {
-            alert("해당 사용자에 대한 신고가 접수되었습니다.")
+            alert("해당 사용자에 대한 신고가 접수되었습니다.");
           } else {
-            alert(res.data.message)
+            alert(res.data.message);
           }
         })
-        .catch((error) => console.log(error))
+        .catch((error) => console.log(error));
     }
-  }
+  };
 
   // 리뷰 수정 함수
   const handleUpdateReview = (item, editIndex) => {
@@ -404,24 +389,24 @@ function MyProfile(props) {
       content: editTexts[editIndex],
       experience: item.experience,
       tags: item.tags,
-    }
+    };
     axios
       .put(`/api/v1/users/${id}/review/${userId}`, editReviewData)
       .then((res) => {
-        console.log(res.data)
+        console.log(res.data);
         const newReviewList = reviewList.map((tmp) => {
           if (tmp.id === parseInt(item.id)) {
             return {
               ...tmp,
               content: editTexts[editIndex],
-            }
+            };
           }
-          return tmp
-        })
-        setReviewList(newReviewList)
+          return tmp;
+        });
+        setReviewList(newReviewList);
       })
-      .catch((error) => console.log(error))
-  }
+      .catch((error) => console.log(error));
+  };
 
   // 리뷰 삭제 함수
   const handleDeleteReview = () => {
@@ -429,37 +414,37 @@ function MyProfile(props) {
       axios
         .delete(`/api/v1/users/${id}/review/${userId}`)
         .then((res) => {
-          console.log(res.data)
+          console.log(res.data);
           // 사용자당 한개의 리뷰를 작성하기때문에 삭제가 가능한 reviewerId = userId 이다
-          setReviewList(reviewList.filter((item) => item.reviewerId !== userId))
+          setReviewList(reviewList.filter((item) => item.reviewerId !== userId));
 
           //리뷰 작성 조건 수정
-          setReviewed(false)
+          setReviewed(false);
         })
-        .catch((error) => console.log(error))
+        .catch((error) => console.log(error));
     }
-  }
+  };
 
   // 수정 텍스트 상태 업데이트
   const handleEditTextChange = (index, value) => {
     setEditTexts((prev) => ({
       ...prev,
       [index]: value,
-    }))
-  }
+    }));
+  };
 
   // ---------------------------------------------------- 채팅 관련
-  const { stompClient, isConnected } = useWebSocket()
+  const { stompClient, isConnected } = useWebSocket();
 
   const handleClickChat = () => {
-    console.log("채팅 버튼 클릭")
-    console.log("1번" + userId)
+    console.log("채팅 버튼 클릭");
+    console.log("1번" + userId);
     if (isConnected) {
-      console.log("웹 소켓 연결 정상")
+      console.log("웹 소켓 연결 정상");
     } else {
-      console.log("웹 소켓 비정상")
+      console.log("웹 소켓 비정상");
     }
-    console.log("2번" + id)
+    console.log("2번" + id);
     axios
       .post("/api/chat/rooms", {
         ownerId: userId, // 방 생성자를 명시
@@ -468,17 +453,17 @@ function MyProfile(props) {
         title: `${nickname}님과${profile.nickname}님의 채팅`,
       })
       .then((res) => {
-        const newRoom = res.data
+        const newRoom = res.data;
 
-        alert("채팅방 생성.")
+        alert("채팅방 생성.");
 
-        navigate(`/chatroom/${newRoom.id}`, { state: { chatRooms: newRoom } })
+        navigate(`/chatroom/${newRoom.id}`, { state: { chatRooms: newRoom } });
       })
       .catch((error) => {
-        console.log(error)
-        alert("채팅방 생성에 실패했습니다.")
-      })
-  }
+        console.log(error);
+        alert("채팅방 생성에 실패했습니다.");
+      });
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-[900px] shadow-md rounded-lg">
@@ -490,7 +475,7 @@ function MyProfile(props) {
             type="button"
             className="mb-20 px-4 py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600"
             onClick={() => {
-              navigate(`/users/${id}`)
+              navigate(`/users/${id}`);
             }}>
             마이 페이지
           </button>
@@ -512,17 +497,11 @@ function MyProfile(props) {
             {profile.profilePicture ? (
               <img src={profile.profilePicture} className="w-40 h-40 rounded-full shadow-lg" alt="" />
             ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
+              <img
                 className="bi bi-person-circle w-40 h-40"
-                viewBox="0 0 16 16">
-                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                <path
-                  fillRule="evenodd"
-                  d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"
-                />
-              </svg>
+                src={`${process.env.PUBLIC_URL}/img/defaultImages/defaultProfilePicture.svg`}
+                alt="default profile img"
+              />
             )}
 
             <div className="mt-5 flex">
@@ -585,14 +564,14 @@ function MyProfile(props) {
             <div className="flex space-x-4 justify-center mt-3">
               <button
                 onClick={() => {
-                  handleOpenModal("followee")
+                  handleOpenModal("followee");
                 }}>
                 <strong className="text-lg">{profile.followeeCount}</strong>{" "}
                 <span className="text-gray-500">Following</span>
               </button>
               <button
                 onClick={() => {
-                  handleOpenModal("follower")
+                  handleOpenModal("follower");
                 }}>
                 <strong className="text-lg">{profile.followerCount}</strong>{" "}
                 <span className="text-gray-500">Followers</span>
@@ -633,7 +612,7 @@ function MyProfile(props) {
         <div className="mt-5 flex justify-center">
           {Array.isArray(profile.socialLinks) &&
             profile.socialLinks.map((link, index) => {
-              const [platform, url] = link.split("+")
+              const [platform, url] = link.split("+");
               return (
                 <div key={index} className="flex items-center ml-5">
                   <a className="h-8 w-8 rounded-full outline-none focus:outline-none" type="button" href={url}>
@@ -646,7 +625,7 @@ function MyProfile(props) {
                   </a>
                   <span className="ml-2">{url}</span>
                 </div>
-              )
+              );
             })}
         </div>
         {/* profile message */}
@@ -819,7 +798,7 @@ function MyProfile(props) {
                         <span
                           className="cursor-pointer"
                           onClick={() => {
-                            item.ref.current.querySelector(".updateReviewForm").classList.remove("hidden")
+                            item.ref.current.querySelector(".updateReviewForm").classList.remove("hidden");
                           }}>
                           수정
                         </span>
@@ -865,8 +844,8 @@ function MyProfile(props) {
                         type="button"
                         className="text-blue-500 hover:text-blue-700 font-semibold"
                         onClick={() => {
-                          item.ref.current.querySelector(".updateReviewForm").classList.add("hidden")
-                          handleUpdateReview(item, index)
+                          item.ref.current.querySelector(".updateReviewForm").classList.add("hidden");
+                          handleUpdateReview(item, index);
                         }}>
                         수정 확인
                       </button>
@@ -879,7 +858,7 @@ function MyProfile(props) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default MyProfile
+export default MyProfile;

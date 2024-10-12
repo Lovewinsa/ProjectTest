@@ -603,7 +603,6 @@ function MateBoardDetail(props) {
           {/* 캘린더 */}
           <div className="p-4">
             <Calendar
-              className={`rounded-lg`}
               value={selectedDateRange} // 초기값 또는 선택된 날짜 범위
               formatDay={(locale, date) => moment(date).format("DD")}
               minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
@@ -617,7 +616,7 @@ function MateBoardDetail(props) {
           {
             // 로그인된 username 과 post의 userId 로 불러온 작성자 아이디가 동일하면 랜더링
             userId === post.userId && (
-              <div className="container mt-3 ">
+              <div className="container mt-3 text-right">
                 <button
                   type="button"
                   className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none"

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import moment from "moment";
@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons";
 import LoadingAnimation from "../../components/LoadingAnimation";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"; // Font Awesome 또는 원하는 아이콘 라이브러리 사용
+import { cityMapping, countryMapping } from "../../constants/mapping";
 
 function MateBoard() {
   const navigate = useNavigate();
@@ -38,9 +39,8 @@ function MateBoard() {
   // *이후에 di 값이 영향을 미치지는않지만 계속 남아있음
   const [domesticInternational, setDomesticInternational] = useState("Domestic");
   const [pageTurn, setPageTurn] = useState("to International");
+  const [desiredCountry, setDesiredCountry] = useState(null);
 
-  // 페이지 전환 버튼
-  const [whereAreYou, setWhereAreYou] = useState(null);
   const [sortBy, setSortBy] = useState("latest"); // 정렬 기준 초기값 설정
 
   // 달력에서 선택된 날짜 범위 저장
@@ -69,6 +69,12 @@ function MateBoard() {
       ...searchCriteria,
       keyword: value, // 검색어를 keyword로 저장
     });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   // 달력에서 날짜를 선택할 때 호출되는 함수
@@ -164,12 +170,18 @@ function MateBoard() {
         console.log(res.data);
 
         setPageData(res.data.list);
+
         //페이지 제목을 변경한다
-        setWhereAreYou(
-          domesticInternational === "International" ? "해외 여행 메이트 페이지" : "국내 여행 메이트 페이지"
-        );
+        let tempStr = "";
+        if (domesticInternational === "Domestic") {
+          tempStr = "국내 여행 코스";
+        } else if (domesticInternational === "International") {
+          tempStr = "해외 여행 코스";
+        }
+        setDesiredCountry(`${tempStr}`);
+
         //페이지 전환버튼을 변경한다
-        setPageTurn(domesticInternational === "International" ? "to Domestic" : "to International");
+        setPageTurn(domesticInternational === "International" ? "국내로" : "해외로");
       })
       .catch((error) => {
         console.log("Error:", error);
@@ -187,14 +199,13 @@ function MateBoard() {
     fetchFilteredPosts(); // 비동기 처리를 기다리지 않음
   };
 
-  // 국내/해외 변경 버튼 핸들러-
-  const handleButtonClick = () => {
-    // 국내 상태에서 눌렀을 때
-    //상태 변경
-    setDomesticInternational(domesticInternational === "International" ? "Domestic" : "International");
+  //국내, 해외 선택 이벤트
+  const handleDesiredCountry = () => {
+    const newDomesticInternational = domesticInternational === "International" ? "Domestic" : "International";
+    setDomesticInternational(newDomesticInternational);
     setSearchParams({
       ...searchCriteria,
-      di: domesticInternational === "International" ? "Domestic" : "International",
+      di: newDomesticInternational,
     });
   };
 
@@ -263,103 +274,7 @@ function MateBoard() {
 
   // city 또는 country 값에 따른 이미지 파일명 변환 함수
   const getImageFileName = (city, country) => {
-    const cityMapping = {
-      // 대한민국
-      "서울": "KOR_Seoul_01",
-      "부산": "KOR_Busan_01",
-      "제주": "KOR_Jeju_01",
-      "인천": "KOR_Incheon_01",
-      // 일본
-      "도쿄": "JPN_Tokyo_01",
-      "오사카": "JPN_Osaka_01",
-      "교토": "JPN_Kyoto_01",
-      "삿포로": "JPN_Sapporo_01",
-      // 중국
-      "베이징": "CHN_Beijing_01",
-      "상하이": "CHN_Shanghai_01",
-      "광저우": "CHN_Guangzhou_01",
-      "시안": "CHN_Xian_01",
-      // 인도
-      "델리": "IND_Delhi_01",
-      "뭄바이": "IND_Mumbai_01",
-      "콜카타": "IND_Kolkata_01",
-      "벵갈루루": "IND_Bengaluru_01",
-      // 스페인
-      "바르셀로나": "ESP_Barcelona_01",
-      "그라나다": "ESP_Granada_01",
-      "마드리드": "ESP_Madrid_01",
-      "세비야": "ESP_Seville_01",
-      // 영국
-      "런던": "GBR_London_01",
-      "맨체스터": "GBR_Manchester_01",
-      "버밍엄": "GBR_Birmingham_01",
-      "리버풀": "GBR_Liverpool_01",
-      // 독일
-      "베를린": "DEU_Berlin_01",
-      "뮌헨": "DEU_Munich_01",
-      "프랑크푸르트": "DEU_Frankfurt_01",
-      "함부르크": "DEU_Hamburg_01",
-      // 프랑스
-      "파리": "FRA_Paris_01",
-      "마르세유": "FRA_Marseille_01",
-      "리옹": "FRA_Lyon_01",
-      "니스": "FRA_Nice_01",
-      // 이탈리아
-      "로마": "ITA_Roma_01",
-      "밀라노": "ITA_Milano_01",
-      "베네치아": "ITA_Venezia_01",
-      "피렌체": "ITA_Firenze_01",
-      // 미국
-      "뉴욕": "USA_NewYork_01",
-      "로스앤젤레스": "USA_LosAngeles_01",
-      "시카고": "USA_Chicago_01",
-      "마이애미": "USA_Miami_01",
-      // 캐나다
-      "토론토": "CAN_Toronto_01",
-      "밴쿠버": "CAN_Vancouver_01",
-      "몬트리올": "CAN_Montreal_01",
-      "오타와": "CAN_Ottawa_01",
-      // 브라질
-      "상파울루": "BRA_SaoPaulo_01",
-      "리우데자네이루": "BRA_RioDeJaneiro_01",
-      "브라질리아": "BRA_Brasilia_01",
-      "살바도르": "BRA_Salvador_01",
-      // 호주
-      "시드니": "AUS_Sydney_01",
-      "멜버른": "AUS_Melbourne_01",
-      "브리즈번": "AUS_Brisbane_01",
-      "퍼스": "AUS_Perth_01",
-      // 러시아
-      "모스크바": "RUS_Moscow_01",
-      "상트페테르부르크": "RUS_SaintPetersburg_01",
-      "노보시비르스크": "RUS_Novosibirsk_01",
-      "예카테린부르크": "RUS_Yekaterinburg_01",
-      // 남아프리카 공화국
-      "케이프타운": "ZAF_CapeTown_01",
-      "요하네스버그": "ZAF_Johannesburg_01",
-      "더반": "ZAF_Durban_01",
-      "프리토리아": "ZAF_Pretoria_01",
-    };
-
-    const countryMapping = {
-      "대한민국": "KOR_01",
-      "일본": "JPN_01",
-      "중국": "CHN_01",
-      "인도": "IND_01",
-      "스페인": "ESP_01",
-      "영국": "GBR_01",
-      "독일": "DEU_01",
-      "프랑스": "FRA_01",
-      "이탈리아": "ITA_01",
-      "미국": "USA_01",
-      "캐나다": "CAN_01",
-      "브라질": "BRA_01",
-      "호주": "AUS_01",
-      "러시아": "RUS_01",
-      "남아프리카 공화국": "ZAF_01",
-    };
-
-    // city 값이 있으면 city에 맞는 이미지, 없으면 country에 맞는 이미지 반환
+        // city 값이 있으면 city에 맞는 이미지, 없으면 country에 맞는 이미지 반환
     if (city && cityMapping[city]) {
       return cityMapping[city];
     } else if (country && countryMapping[country]) {
@@ -373,53 +288,34 @@ function MateBoard() {
     <div className="container mx-auto p-4 max-w-[1024px]">
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
-      <div className="container mx-auto m-4">
-        <Link
-          className="px-4 py-2 text-sm font-medium rounded-md bg-green-600 text-gray-100 mr-3"
-          to={{ pathname: "/posts/mate/new", search: `?di=${domesticInternational}` }}>
-          새글 작성
-        </Link>
-        <button
-          className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
-          onClick={handleButtonClick}>
-          {pageTurn}
-        </button>
-        <h4 className="font-bold mb-4">{whereAreYou}</h4>
+      <div className="container mx-auto">
+        <div className="flex justify-between mb-4">
+          <button
+            onClick={() => {
+              window.location.href = `/posts/mate/new?di=${domesticInternational}&status=PUBLIC`; // URL을 올바르게 설정
+            }}
+            className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+            여행 메이트 모집하기
+          </button>
+          <button
+            onClick={handleDesiredCountry}
+            className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+            {pageTurn}
+          </button>
+        </div>
+        <h1 className="font-bold mb-4">{desiredCountry}</h1>
 
         {/* 검색 조건 입력 폼 */}
-        <div className="my-4 space-y-4">
-          {/* 국가와 도시를 한 행으로 배치 */}
-          <div className="flex items-center gap-4">
-            {domesticInternational === "International" && (
-              <input
-                type="text"
-                name="country"
-                value={searchCriteria.country}
-                onChange={handleSearchChange}
-                placeholder="국가"
-                className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-              />
-            )}
-
-            <input
-              type="text"
-              name="city"
-              value={searchCriteria.city}
-              onChange={handleSearchChange}
-              placeholder="도시"
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-            />
-          </div>
-
+        <div className="my-4 space-y-4 p-4 w-full md:w-1/2 bg-white rounded-lg shadow-md shadow-tripDuoMint border border-tripDuoGreen">
           {/* 제목/작성자 선택 필드 */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <select
               value={searchCriteria.condition}
               onChange={handleConditionChange}
-              className="border border-gray-300 rounded-md px-4 py-2 w-1/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+              className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
               <option value="title">제목</option>
               <option value="content">내용</option>
-              <option value="title_content">제목 + 내용</option>
+              <option value="title_content">제목 및 내용</option>
             </select>
 
             <input
@@ -428,16 +324,53 @@ function MateBoard() {
               value={searchCriteria[searchCriteria.condition]}
               onChange={handleQueryChange}
               placeholder={searchCriteria.condition}
-              className="border border-gray-300 rounded-md px-4 py-2 w-5/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              onKeyDown={handleKeyDown}
+              className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-2/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
             />
           </div>
-          <div className="flex items-center space-x-2 mt-4">
+
+          {/* 국가와 도시를 한 행으로 배치 */}
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+            {domesticInternational === "International" && (
+              <input
+                type="text"
+                name="country"
+                value={searchCriteria.country}
+                onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
+                placeholder="국가"
+                className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+              />
+            )}
+
+            <input
+              type="text"
+              name="city"
+              value={searchCriteria.city}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              placeholder="도시"
+              className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+            />
+
+            {/* 날짜 선택 및 검색 버튼 */}
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300">
-              {selectedDateRange[0] && selectedDateRange[1]
-                ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
-                : "날짜 선택"}
+              className="bg-tripDuoMint text-white font-bold px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+              <span className="whitespace-nowrap">
+                {selectedDateRange[0] && selectedDateRange[1]
+                  ? `${selectedDateRange[0].getFullYear().toString().slice(-2)}${(selectedDateRange[0].getMonth() + 1)
+                      .toString()
+                      .padStart(2, "0")}${selectedDateRange[0]
+                      .getDate()
+                      .toString()
+                      .padStart(2, "0")} / ${selectedDateRange[1].getFullYear().toString().slice(-2)}${(
+                      selectedDateRange[1].getMonth() + 1
+                    )
+                      .toString()
+                      .padStart(2, "0")}${selectedDateRange[1].getDate().toString().padStart(2, "0")}`
+                  : "날짜 선택"}
+              </span>
             </button>
 
             {/* 캘린더 표시 여부에 따라 렌더링 */}
@@ -451,17 +384,17 @@ function MateBoard() {
                   </button>
                   <Calendar
                     selectRange={true}
-                    className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                    className="w-full p-4 bg-white rounded-lg border-none"
                     onChange={handleDateChange}
-                    value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
-                    minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                    maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                    value={selectedDateRange || [new Date(), new Date()]}
+                    minDetail="month"
+                    maxDetail="month"
                     navigationLabel={null}
-                    showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
-                    calendarType="hebrew" //일요일부터 보이도록 설정
-                    tileClassName={tileClassName} // 날짜 스타일 설정
-                    formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
-                    formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                    showNeighboringMonth={false}
+                    calendarType="hebrew"
+                    tileClassName={tileClassName}
+                    formatYear={(locale, date) => moment(date).format("YYYY")}
+                    formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")}
                     prevLabel={
                       <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
                     }
@@ -470,46 +403,36 @@ function MateBoard() {
                     }
                     prev2Label={null}
                     next2Label={null}
-                    // <button
-                    //   onClick={(event) => {
-                    //     event.preventDefault()
-                    //     // handleDateReset()
-                    //     handleDateChange([new Date(), new Date()])
-                    //   }}
-                    //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
-                    //   오늘로
-                    // </button>
-                    //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
                     tileContent={({ date }) => {
                       return (
                         <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
-                          {date.getDate()} {/* 날짜 숫자만 표시 */}
+                          {date.getDate()}
                         </span>
                       );
-                    }} // 날짜 내용 설정
+                    }}
                     formatDay={() => null}
                   />
                 </div>
               )}
             </div>
+
+            <div className="flex justify-end w-full items-center">
+              <button
+                onClick={handleSearch}
+                className="font-bold bg-tripDuoMint text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300">
+                검색
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleSearch}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300 mt-4">
-            검색
-          </button>
         </div>
 
         {/* 검색 정렬 기준 다운바 */}
         <div className="my-4">
-          <label htmlFor="sortBy" className="mr-2">
-            정렬 기준:
-          </label>
           <select
             id="sortBy"
             value={sortBy}
             onChange={handleSortChange}
-            className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
+            className="flex justify-start w-full md:w-1/6 border border-tripDuoGreen text-sm rounded-md px-5 py-2 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
             <option value="latest">최신순</option>
             <option value="viewCount">조회수순</option>
             <option value="likeCount">좋아요순</option>

@@ -46,9 +46,13 @@ import TripLogBoardEditForm from "../pages/boards/TripLogBoardEditForm"
 import TripLogBoardFormNew from "../pages/boards/TripLogBoardFormNew"
 import CommunityBoardDetail from "../pages/boards/CommunityBoardDetail"
 import CommunityBoardEditForm from "../pages/boards/CommunityBoardEditForm"
-import ResetPassword from "../pages/ResetPassword"
+import ResetPassword from "../pages/myPage/ResetPassword"
 import ApiDocs from "../pages/admin/ApiDocs"
-import ReportBoard from "../pages/boards/ReportBoard"
+import ReportBoard from "../pages/admin/ReportBoard"
+import AdminDashboard from "../pages/admin/AdminHome"
+import UserBoard from '../pages/admin/UserBoard';
+import AdminLayout from "../components/AdminLayout"
+import TripDuoCarousel from "../components/TripDuoCarousel"
 
 // /users/:id
 // /users/:id/setting
@@ -93,7 +97,7 @@ const routes = [
 
   // ### 부가 기능 ###
   { path: "/checklist", element: <TravelChecklist /> },
-  { path: "/exchange", element: <ExchangeInfo /> },
+  { path: "/exchangeInfo", element: <ExchangeInfo /> },
   { path: "/safetyInfo", element: <TravelSafetyInfo /> },
   { path: "/calculator", element: <TravelCostCalculator /> },
   { path: "/recommendations", element: <LocationRecommendations /> },
@@ -103,6 +107,7 @@ const routes = [
 
   // ### etc ###
   { path: "/api-docs", element: <ApiDocs /> },
+  { path: "/test/test", element: <TripDuoCarousel /> },
 ]
 
 const protectedRoutes = [
@@ -131,11 +136,11 @@ const protectedRoutes = [
   { path: "/users/:id/profile/edit", element: <MyProfileForm /> },
 
   // ### my page 메뉴 설정 ###
-  { path: "/myPlace/:id", element: <MyPlace /> },
-  { path: "/myPlan/:id", element: <MyPlan /> },
-  { path: "/myRecord/:id", element: <MyRecord /> },
-  { path: "/wishMate/:id", element: <WishMate /> },
-  { path: "/likedCourse/:id", element: <LikedPostsPage /> },
+  { path: "/myPlace", element: <MyPlace /> },
+  { path: "/myPlan", element: <MyPlan /> },
+  { path: "/myRecord", element: <MyRecord /> },
+  { path: "/wishMate", element: <WishMate /> },
+  { path: "/likedCourse", element: <LikedPostsPage /> },
 
   // ### 개인정보 설정(보안, 인증정보) ###
   { path: "/auth/:id/changePassword", element: <ChangePassword /> },
@@ -145,7 +150,15 @@ const protectedRoutes = [
   { path: "/chatroom/:id", element: <ChatRoom /> },
 
   // ### admin ###
-  { path: "/admin/report", element: <ReportBoard /> },
+  { path: "/admin-dashboard", element: <AdminDashboard /> },
+  { path: "/admin-dashboard/users", element: <UserBoard /> },
+  { path: "/admin-dashboard/reports", element: <ReportBoard /> },
+]
+
+const adminRoutes = [
+  { path: "", element: <AdminDashboard /> },
+  { path: "users", element: <UserBoard /> },
+  { path: "reports", element: <ReportBoard /> },
 ]
 
 const router = createBrowserRouter([
@@ -162,6 +175,14 @@ const router = createBrowserRouter([
       {
         element: <ProtectedRoute />, // 로그인을 요구하는 모든 경로를 ProtectedRoute로 감싸기
         children: protectedRoutes.map((route) => ({
+          path: route.path,
+          element: route.element,
+        })),
+      },
+      // Admin routes with layout
+      {
+        element: <AdminLayout />, // AdminLayout을 사용하여 사이드 바 포함
+        children: adminRoutes.map((route) => ({
           path: route.path,
           element: route.element,
         })),

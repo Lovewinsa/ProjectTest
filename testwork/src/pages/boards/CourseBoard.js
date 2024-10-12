@@ -2,9 +2,10 @@ import axios from "axios"
 import moment from "moment/moment"
 import { useEffect, useRef, useState } from "react"
 import Calendar from "react-calendar"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import LoadingAnimation from "../../components/LoadingAnimation"
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
+import { cityMapping, countryMapping } from "../../constants/mapping"
 
 function CourseBoard() {
   //로딩 상태 추가
@@ -104,8 +105,13 @@ function CourseBoard() {
     axios
       .get("/api/v1/posts/course", { params })
       .then((res) => {
+        console.log(params)
         //필터링되어 돌아온 데이터
         let filtered = res.data.list
+
+        // 필터링된 데이터 개수 확인
+        console.log("필터링 전 데이터 개수:", res.data.list.length);
+        console.log("필터링 후 데이터 개수:", filtered.length);
 
         //국내 해외 필터링
         if (domesticInternational === "Domestic") {
@@ -134,8 +140,6 @@ function CourseBoard() {
           return uniquePosts
         })
 
-        console.log(pageInfo)
-      
         let tempStr = ""
         if (domesticInternational === "Domestic") {
           tempStr = "국내 여행 코스"
@@ -199,10 +203,10 @@ function CourseBoard() {
     setCurrentPage(1) // 페이지 초기화
     fetchFilteredPosts(1) // 첫 페이지 데이터 다시 불러오기
   }
-  // 정렬 기준 변경
+
   const handleSortChange = (e) => {
     const newSortBy = e.target.value
-    setSortBy(e.target.value)
+    setSortBy(e.target.value) // 정렬 기준 변경
 
     // 정렬 기준에 따라 pageData를 정렬
     let sortedData = [...pageInfo]
@@ -259,8 +263,7 @@ function CourseBoard() {
   // 달력에서 날짜를 선택할 때 호출되는 함수
   const handleDateChange = (dateRange) => {
     setSelectedDateRange(dateRange)
-    // 날짜 선택 후 캘린더 닫기
-    setIsCalendarOpen(false)
+    setIsCalendarOpen(false) // 날짜 선택 후 캘린더 닫기
     setSearchCriteria({
       ...searchCriteria,
       startDate: dateRange[0] ? dateRange[0].toLocaleDateString("ko-KR") : "",
@@ -311,101 +314,7 @@ function CourseBoard() {
 
   // city 또는 country 값에 따른 이미지 파일명 변환 함수
   const getImageFileName = (city, country) => {
-    const cityMapping = {
-      // 대한민국
-      서울: "KOR_Seoul_01",
-      부산: "KOR_Busan_01",
-      제주: "KOR_Jeju_01",
-      인천: "KOR_Incheon_01",
-      // 일본
-      도쿄: "JPN_Tokyo_01",
-      오사카: "JPN_Osaka_01",
-      교토: "JPN_Kyoto_01",
-      삿포로: "JPN_Sapporo_01",
-      // 중국
-      베이징: "CHN_Beijing_01",
-      상하이: "CHN_Shanghai_01",
-      광저우: "CHN_Guangzhou_01",
-      시안: "CHN_Xian_01",
-      // 인도
-      델리: "IND_Delhi_01",
-      뭄바이: "IND_Mumbai_01",
-      콜카타: "IND_Kolkata_01",
-      벵갈루루: "IND_Bengaluru_01",
-      // 스페인
-      바르셀로나: "ESP_Barcelona_01",
-      그라나다: "ESP_Granada_01",
-      마드리드: "ESP_Madrid_01",
-      세비야: "ESP_Seville_01",
-      // 영국
-      런던: "GBR_London_01",
-      맨체스터: "GBR_Manchester_01",
-      버밍엄: "GBR_Birmingham_01",
-      리버풀: "GBR_Liverpool_01",
-      // 독일
-      베를린: "DEU_Berlin_01",
-      뮌헨: "DEU_Munich_01",
-      프랑크푸르트: "DEU_Frankfurt_01",
-      함부르크: "DEU_Hamburg_01",
-      // 프랑스
-      파리: "FRA_Paris_01",
-      마르세유: "FRA_Marseille_01",
-      리옹: "FRA_Lyon_01",
-      니스: "FRA_Nice_01",
-      // 이탈리아
-      로마: "ITA_Roma_01",
-      밀라노: "ITA_Milano_01",
-      베네치아: "ITA_Venezia_01",
-      피렌체: "ITA_Firenze_01",
-      // 미국
-      뉴욕: "USA_NewYork_01",
-      로스앤젤레스: "USA_LosAngeles_01",
-      시카고: "USA_Chicago_01",
-      마이애미: "USA_Miami_01",
-      // 캐나다
-      토론토: "CAN_Toronto_01",
-      밴쿠버: "CAN_Vancouver_01",
-      몬트리올: "CAN_Montreal_01",
-      오타와: "CAN_Ottawa_01",
-      // 브라질
-      상파울루: "BRA_SaoPaulo_01",
-      리우데자네이루: "BRA_RioDeJaneiro_01",
-      브라질리아: "BRA_Brasilia_01",
-      살바도르: "BRA_Salvador_01",
-      // 호주
-      시드니: "AUS_Sydney_01",
-      멜버른: "AUS_Melbourne_01",
-      브리즈번: "AUS_Brisbane_01",
-      퍼스: "AUS_Perth_01",
-      // 러시아
-      모스크바: "RUS_Moscow_01",
-      상트페테르부르크: "RUS_SaintPetersburg_01",
-      노보시비르스크: "RUS_Novosibirsk_01",
-      예카테린부르크: "RUS_Yekaterinburg_01",
-      // 남아프리카 공화국
-      케이프타운: "ZAF_CapeTown_01",
-      요하네스버그: "ZAF_Johannesburg_01",
-      더반: "ZAF_Durban_01",
-      프리토리아: "ZAF_Pretoria_01",
-    }
-
-    const countryMapping = {
-      대한민국: "KOR_01",
-      일본: "JPN_01",
-      중국: "CHN_01",
-      인도: "IND_01",
-      스페인: "ESP_01",
-      영국: "GBR_01",
-      독일: "DEU_01",
-      프랑스: "FRA_01",
-      이탈리아: "ITA_01",
-      미국: "USA_01",
-      캐나다: "CAN_01",
-      브라질: "BRA_01",
-      호주: "AUS_01",
-      러시아: "RUS_01",
-      "남아프리카 공화국": "ZAF_01",
-    }
+    
 
     // city 값이 있으면 city에 맞는 이미지, 없으면 country에 맞는 이미지 반환
     if (city && cityMapping[city]) {
@@ -485,7 +394,7 @@ function CourseBoard() {
               placeholder="도시"
               className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
             />
-
+            
             {/* 날짜 선택 및 검색 버튼 */}
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
