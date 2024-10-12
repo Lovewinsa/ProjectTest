@@ -41,6 +41,9 @@ function TripLogBoard() {
     const [isCalendarOpen, setIsCalendarOpen] = useState(false)
     const calendarRef = useRef(null)
 
+    //무한 스크롤 트리거
+    const observerRef = useRef(null)
+
     const navigate = useNavigate()
 
     // 캘린더 외부 클릭시 캘린더 모달 닫기
@@ -70,136 +73,146 @@ function TripLogBoard() {
         const endDate = searchParams.get("endDate") || ""
         const country = searchParams.get("country") || ""
         const keyword = searchParams.get("keyword") || ""
-        const condition = searchCriteria.condition || "title"; // 기존 조건 유지
 
         setCurrentPage(Number(pageNum))
         setDomesticInternational(diValue)
 
-        setSearchCriteria((prev) => ({
-            ...prev,
-            city,
-            startDate,
-            endDate,
-            country,
-            keyword,
-            condition: condition
-        }))
+        setSearchCriteria({ city, startDate, endDate, country, keyword, condition: searchCriteria.condition })
+
+    }, [searchParams])
+
+    // 검색 필터 + 국내/해외 필터
+    const fetchFilteredPosts = (pageNum = 1) => {
+        setLoading(true)
+        setTimeout(() => {
+            setLoading(false)
+        }, 700)
+
+        const params = {
+            di: domesticInternational || null,
+            country: searchCriteria.country || null,
+            city: searchCriteria.city || null,
+            startDate: searchCriteria.startDate || null,
+            endDate: searchCriteria.endDate || null,
+            keyword: searchCriteria.keyword || null,
+            condition: searchCriteria.condition || null,
+            sortBy,
+            pageNum,
+            pageSize: 12
+        }
 
         axios
-            .get(`/api/v1/posts/trip_log`, {
-                params: {
-                    pageNum: Number(pageNum),
-                    country: country || undefined,
-                    city: city || undefined,
-                    startDate: startDate || undefined,
-                    endDate: endDate || undefined,
-                    keyword: keyword || undefined,
-                    condition: condition, // 조건이 없으면 제목으로 설정
-                    sortBy: sortBy || "latest", // 정렬 조건이 없으면 최신순으로 설정
-                    di: diValue || "Domestic", // 국내/해외 페이지가 설정되지 않았으면 기본값으로 설정
-                },
-            })
-            .then(res => {
-                //국내코스, 해외코스 필터
-                const filteredPageInfo = res.data.list.filter((item) => {
+            .get("/api/v1/posts/trip_log", { params })
+            .then((res) => {
+                //필터링되어 돌아온 데이터
+                let filtered = res.data.list
 
-                    const matchesDomesticInternational = diValue === "Domestic" ? item.country === "대한민국" : item.country !== "대한민국"
-                    if (!matchesDomesticInternational) return false
+                //국내 해외 필터링
+                if (domesticInternational === "Domestic") {
+                    filtered = filtered.filter((item) => item.country === "대한민국")
+                } else if (domesticInternational === "International") {
+                    filtered = filtered.filter((item) => item.country !== "대한민국")
+                }
 
-                    const matchesCountry = searchCriteria.country ? item.country.includes(searchCriteria.country) : true
-                    if (!matchesCountry) return false
+                // 국내/해외에 따라 상태 값 관리
+                setPageInfo((prevInfo) => {
+                    const combinedPosts = [
+                        ...prevInfo.filter((item) =>
+                            (domesticInternational === "Domestic" ? item.country === "대한민국" : item.country !== "대한민국")
+                        ),
+                        ...filtered
+                    ]
 
-                    const matchesCity = searchCriteria.city ? item.city.includes(searchCriteria.city) : true
-                    if (!matchesCity) return false
-
-                    // 조건에 따라 제목 또는 작성자를 필터링
-                    const matchesKeyword = searchCriteria.condition === "title"
-                        ? item.title.includes(searchCriteria.keyword)
-                        : searchCriteria.condition === "writer"
-                            ? item.writer.includes(searchCriteria.keyword)
-                            : searchCriteria.condition === "content"
-                                ? item.content.includes(searchCriteria.keyword)
-                                : searchCriteria.condition === "title_content"
-                                    ? item.title.includes(searchCriteria.keyword) || item.content.includes(searchCriteria.keyword)
-                                    : true
-                    if (!matchesKeyword) return false
-
-                    // 선택한 startDate와 endDate 범위에 포함되는 항목만 필터링
-                    const matchesDateRange = (item) => {
-                        const itemStartDate = new Date(item.startDate)
-                        const itemEndDate = new Date(item.endDate)
-                        const searchStartDate = searchCriteria.startDate ? new Date(searchCriteria.startDate) : null
-                        const searchEndDate = searchCriteria.endDate ? new Date(searchCriteria.endDate) : null
-
-                        // 검색 범위의 날짜가 설정되지 않았으면 모든 게시물 표시
-                        if (!searchStartDate && !searchEndDate) {
-                            return true
+                    // 중복 제거 (id를 기준으로)
+                    const uniquePosts = combinedPosts.reduce((acc, currentPost) => {
+                        if (!acc.some(post => post.id === currentPost.id)) {
+                            acc.push(currentPost)
                         }
+                        return acc
+                    }, [])
 
-                        // 검색 범위에 날짜가 설정되었을 경우 날짜 범위 체크
-                        return (
-                            (itemStartDate < searchEndDate && itemEndDate > searchStartDate) ||
-                            (itemStartDate <= searchStartDate && itemEndDate >= searchStartDate) ||
-                            (itemStartDate <= searchEndDate && itemEndDate >= searchEndDate)
-                        )
-                    }
-                    if (!matchesDateRange(item)) return false
-
-                    return true
+                    return uniquePosts
                 })
 
-                //정렬 조건
-                const sorted = filteredPageInfo.sort((a, b) => {
-                    if (sortBy === "latest") {
-                        return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt); // 최신순
-                    } else if (sortBy === "viewCount") {
-                        return b.viewCount - a.viewCount // 조회수순
-                    } else if (sortBy === "likeCount") {
-                        return b.likeCount - a.likeCount // 좋아요순
-                    }
-                    return 0 // 기본값
-                })
+                let tempStr = ""
+                if (domesticInternational === "Domestic") {
+                    tempStr = "국내 여행 코스"
+                } else if (domesticInternational === "International") {
+                    tempStr = "해외 여행 코스"
+                }
+                setDesiredCountry(`${tempStr}`)
 
-                //서버로부터 응답된 데이터 state에 넣기
-                setDesiredCountry(diValue === "Domestic" ? "국내 여행기록 페이지" : "해외 여행기록 페이지")
-                setPageTurn(diValue === "Domestic" ? "해외로" : "국내로")
-                setPageInfo(sorted)
-                // 총 페이지 수 업데이트
-                console.log(res.data.list)
-                // console.log(sorted)
                 setTotalPages(res.data.totalPostPages)
-
+                setPageTurn(domesticInternational === "Domestic" ? "해외로" : "국내로")
             })
-            .catch(error => {
+            .catch((error) => {
                 console.log(error)
             })
-    }, [searchParams, sortBy])
+    }
 
+    // 해외 / 국내 전환시 호출
+    useEffect(() => {
+        setPageInfo([])
+        setCurrentPage(1)
+        fetchFilteredPosts(1)
+    }, [domesticInternational])
+
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            const target = entries[0]
+            if (target.isIntersecting && currentPage < totalPages) {
+                setCurrentPage((prevPage) => prevPage + 1)
+            }
+        })
+        if (observerRef.current) {
+            observer.observe(observerRef.current)
+        }
+
+        return () => {
+            if (observerRef.current) {
+                observer.unobserve(observerRef.current)
+            }
+        }
+    }, [currentPage, totalPages])
+
+    useEffect(() => {
+        if (currentPage > 1) {
+            fetchFilteredPosts(currentPage)
+        }
+    }, [currentPage])
 
     //국내, 해외 선택 이벤트
     const handleDesiredCountry = () => {
-        setDomesticInternational(domesticInternational === "International" ? "Domestic" : "International")
+        const newDomesticInternational = domesticInternational === "International" ? "Domestic" : "International"
+        setDomesticInternational(newDomesticInternational)
         setSearchParams({
             ...searchCriteria,
-            di: domesticInternational === "International" ? "Domestic" : "International",
+            di: newDomesticInternational,
         })
     }
 
     // 새로운 검색을 시작하는 함수
     const handleSearch = () => {
-        setSearchParams({
-            country: searchCriteria.country,
-            city: searchCriteria.city,
-            startDate: searchCriteria.startDate,
-            endDate: searchCriteria.endDate,
-            keyword: searchCriteria.keyword,
-            di: domesticInternational,
-        })
+        setPageInfo([]) // 새로운 검색 시 데이터 초기화
+        setCurrentPage(1) // 페이지 초기화
+        fetchFilteredPosts(1) // 첫 페이지 데이터 다시 불러오기
     }
 
     // 정렬 기준 변경
     const handleSortChange = (e) => {
+        const newSortBy = e.target.value
         setSortBy(e.target.value)
+
+        // 정렬 기준에 따라 pageData를 정렬
+        let sortedData = [...pageInfo]
+        if (newSortBy === "latest") {
+            sortedData.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+        } else if (newSortBy === "viewCount") {
+            sortedData.sort((a, b) => b.viewCount - a.viewCount)
+        } else if (newSortBy === "likeCount") {
+            sortedData.sort((a, b) => b.likeCount - a.likeCount)
+        }
+        setPageInfo(sortedData) // 정렬된 데이터를 상태에 저장
     }
 
     // 검색 기준 변경 핸들러
@@ -224,6 +237,12 @@ function TripLogBoard() {
             ...searchCriteria,
             keyword: value, // 검색어를 keyword로 저장
         })
+    }
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            handleSearch()
+        }
     }
 
     // 날짜 초기화
@@ -260,23 +279,6 @@ function TripLogBoard() {
         }
 
         return className // 최종 클래스 이름 반환
-    }
-
-    // 페이지 이동 핸들러
-    const paginate = (pageNum) => {
-        setCurrentPage(pageNum)
-        // refreshPageInfo(pageNum)
-    }
-
-    //Reset 버튼을 눌렀을 때
-    const handleReset = () => {
-        //검색조건과 검색어 초기화
-        setSearchCriteria({
-            condition: "",
-            keyword: ""
-        })
-        // //1페이지 내용이 보여지게
-        // refreshPageInfo(1)
     }
 
     // 현재 시간과 작성일을 비교해 '몇 시간 전' 또는 '몇 일 전'을 계산하는 함수
@@ -420,38 +422,56 @@ function TripLogBoard() {
             {loading && <LoadingAnimation />}
             <div className="container mx-auto">
                 <div className="flex justify-between mb-4">
-                    <Link
-                        to={{
-                            pathname: "/posts/trip_log/new",
-                            search: `?di=${domesticInternational}&status=PUBLIC`
+                    <button
+                        onClick={() => {
+                            window.location.href = `/posts/trip_log/new?di=${domesticInternational}&status=PUBLIC`
                         }}
-                        className="text-blue-500"
-                    >
-                        여행기록 작성하기
-                    </Link>
+                        className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+                        여행기록 작성
+                    </button>
                     <button
                         onClick={handleDesiredCountry}
-                        className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-500 transition-all duration-300"
-                    >
+                        className="bg-tripDuoMint font-bold text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
                         {pageTurn}
                     </button>
                 </div>
-                <h1 className="text-3xl font-bold text-center mb-8">
-                    {desiredCountry}
-                </h1>
+                <h1 className="font-bold mb-4">{desiredCountry}</h1>
 
                 {/* 검색 조건 입력 폼 */}
-                <div className="my-4 space-y-4">
+                <div className="my-4 space-y-4 p-4 w-full md:w-1/2 bg-white rounded-lg shadow-md shadow-tripDuoMint border border-tripDuoGreen">
+                    {/* 제목/작성자 선택 필드 */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <select
+                            value={searchCriteria.condition}
+                            onChange={handleConditionChange}
+                            className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
+                            <option value="title">제목</option>
+                            <option value="content">내용</option>
+                            <option value="title_content">제목 및 내용</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            name={searchCriteria.condition}
+                            value={searchCriteria[searchCriteria.condition]}
+                            onChange={handleQueryChange}
+                            placeholder={searchCriteria.condition}
+                            onKeyDown={handleKeyDown}
+                            className="border border-tripDuoGreen text-sm rounded-md px-4 py-2 w-full md:w-2/3 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
+                        />
+                    </div>
+
                     {/* 국가와 도시를 한 행으로 배치 */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col md:flex-row items-center gap-4 w-full">
                         {domesticInternational === "International" && (
                             <input
                                 type="text"
                                 name="country"
                                 value={searchCriteria.country}
                                 onChange={handleSearchChange}
+                                onKeyDown={handleKeyDown}
                                 placeholder="국가"
-                                className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                                className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
                             />
                         )}
 
@@ -460,43 +480,29 @@ function TripLogBoard() {
                             name="city"
                             value={searchCriteria.city}
                             onChange={handleSearchChange}
+                            onKeyDown={handleKeyDown}
                             placeholder="도시"
-                            className="border border-gray-300 rounded-md px-4 py-2 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                            className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
                         />
-                    </div>
 
-                    {/* 제목/작성자 선택 필드 */}
-                    <div className="flex items-center gap-4">
-                        <select
-                            value={searchCriteria.condition}
-                            onChange={handleConditionChange}
-                            className="border border-gray-300 rounded-md px-4 py-2 w-1/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                        >
-                            <option value="title">제목</option>
-                            <option value="writer">작성자</option>
-                            <option value="content">내용</option>
-                            <option value="title+writer">제목 + 내용</option>
-                        </select>
-
-                        <input
-                            type="text"
-                            name={searchCriteria.condition}
-                            value={searchCriteria[searchCriteria.condition]}
-                            onChange={handleQueryChange}
-                            placeholder={searchCriteria.condition === "title" ? "제목" : "작성자"}
-                            className="border border-gray-300 rounded-md px-4 py-2 w-5/6 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                        />
-                    </div>
-
-                    {/* 날짜 선택 및 검색 버튼 */}
-                    <div className="flex items-center space-x-2 mt-4">
+                        {/* 날짜 선택 및 검색 버튼 */}
                         <button
                             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300"
-                        >
-                            {selectedDateRange[0] && selectedDateRange[1]
-                                ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
-                                : "날짜 선택"}
+                            className="bg-tripDuoMint text-white font-bold px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300 flex items-center">
+                            <span className="whitespace-nowrap">
+                                {selectedDateRange[0] && selectedDateRange[1]
+                                    ? `${selectedDateRange[0].getFullYear().toString().slice(-2)}${(selectedDateRange[0].getMonth() + 1)
+                                        .toString()
+                                        .padStart(2, "0")}${selectedDateRange[0]
+                                            .getDate()
+                                            .toString()
+                                            .padStart(2, "0")} / ${selectedDateRange[1].getFullYear().toString().slice(-2)}${(
+                                                selectedDateRange[1].getMonth() + 1
+                                            )
+                                                .toString()
+                                                .padStart(2, "0")}${selectedDateRange[1].getDate().toString().padStart(2, "0")}`
+                                    : "날짜 선택"}
+                            </span>
                         </button>
 
                         {/* 캘린더 표시 여부에 따라 렌더링 */}
@@ -505,22 +511,22 @@ function TripLogBoard() {
                                 <div className="absolute z-50 bg-white shadow-lg p-2">
                                     <button
                                         onClick={handleDateReset}
-                                        className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded hover:bg-green-700 transition duration-150">
-                                        날짜 리셋
+                                        className="text text-sm absolute top-8 right-20 bg-tripDuoGreen text-white px-2 py-1 rounded hover:bg-green-700 transition duration-150">
+                                        today
                                     </button>
                                     <Calendar
                                         selectRange={true}
-                                        className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                                        className="w-full p-4 bg-white rounded-lg border-none"
                                         onChange={handleDateChange}
-                                        value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
-                                        minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
-                                        maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                                        value={selectedDateRange || [new Date(), new Date()]}
+                                        minDetail="month"
+                                        maxDetail="month"
                                         navigationLabel={null}
-                                        showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
-                                        calendarType="hebrew" //일요일부터 보이도록 설정
-                                        tileClassName={tileClassName} // 날짜 스타일 설정
-                                        formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
-                                        formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                                        showNeighboringMonth={false}
+                                        calendarType="hebrew"
+                                        tileClassName={tileClassName}
+                                        formatYear={(locale, date) => moment(date).format("YYYY")}
+                                        formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")}
                                         prevLabel={
                                             <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
                                         }
@@ -529,47 +535,36 @@ function TripLogBoard() {
                                         }
                                         prev2Label={null}
                                         next2Label={null}
-                                        // <button
-                                        //   onClick={(event) => {
-                                        //     event.preventDefault()
-                                        //     // handleDateReset()
-                                        //     handleDateChange([new Date(), new Date()])
-                                        //   }}
-                                        //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
-                                        //   오늘로
-                                        // </button>
-                                        //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
                                         tileContent={({ date }) => {
                                             return (
                                                 <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
-                                                    {date.getDate()} {/* 날짜 숫자만 표시 */}
+                                                    {date.getDate()}
                                                 </span>
                                             )
-                                        }} // 날짜 내용 설정
+                                        }}
                                         formatDay={() => null}
                                     />
                                 </div>
                             )}
                         </div>
-                    </div>
 
-                    <button
-                        onClick={handleSearch}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 transition-all duration-300 mt-4"
-                    >
-                        검색
-                    </button>
+                        <div className="flex justify-end w-full items-center">
+                            <button
+                                onClick={handleSearch}
+                                className="font-bold bg-tripDuoMint text-white px-4 py-2 text-sm rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300">
+                                검색
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* 검색 정렬 기준 다운바 */}
                 <div className="my-4">
-                    <label htmlFor="sortBy" className="mr-2">정렬 기준:</label>
                     <select
                         id="sortBy"
                         value={sortBy}
                         onChange={handleSortChange}
-                        className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                    >
+                        className="flex justify-start w-full md:w-1/6 border border-tripDuoGreen text-sm rounded-md px-5 py-2 focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300">
                         <option value="latest">최신순</option>
                         <option value="viewCount">조회수순</option>
                         <option value="likeCount">좋아요순</option>
@@ -625,39 +620,8 @@ function TripLogBoard() {
                     })}
                 </div>
 
-                {/* 페이징 버튼 */}
-                <div className="flex justify-center space-x-2">
-                    <button
-                        onClick={() => paginate(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded ${currentPage === 1 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-                            }`}
-                    >
-                        &lt;
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-                        <button
-                            key={number}
-                            onClick={() => paginate(number)}
-                            className={`px-4 py-2 rounded ${currentPage === number ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
-                                }`}
-                        >
-                            {number}
-                        </button>
-                    ))}
-                    <button
-                        onClick={() => paginate(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded ${currentPage === totalPages ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-gray-300 text-gray-700"
-                            }`}
-                    >
-                        &gt;
-                    </button>
-                </div>
-
-                <p className="mt-4 text-center">
-                    <strong>{pageInfo.length}</strong>개의 글이 있습니다.
-                </p>
+                {/* 무한 스크롤 트리거 */}
+                <div ref={observerRef}></div>
             </div>
         </div>
     );

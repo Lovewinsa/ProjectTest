@@ -1,15 +1,18 @@
 import axios from "axios"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent"
 import { shallowEqual, useSelector } from "react-redux"
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent"
 import Calendar from "react-calendar"
+import moment from "moment"
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
 
 const TripBoardFormNew = () => {
   const loggedInUserId = useSelector((state) => state.userData.id, shallowEqual)
   const loggedInNickname = useSelector((state) => state.userData.nickname, shallowEqual)
-  const loggedInUsername = useSelector((state) => state.userData.username, shallowEqual)
+
+  const calendarRef = useRef(null);
 
   // 달력에서 선택된 날짜 범위 저장
   const [selectedDateRange, setSelectedDateRange] = useState([null, null])
@@ -21,7 +24,7 @@ const TripBoardFormNew = () => {
   const [tagInput, setTagInput] = useState("")
   const [tags, setTags] = useState([])
   const [days, setDays] = useState([{ places: [""], dayMemo: "" }])
-  
+
   //나라별 도시 목록
   const citiesByCountry = {
     대한민국: ["서울", "부산", "제주", "인천"],
@@ -57,7 +60,7 @@ const TripBoardFormNew = () => {
   const navigate = useNavigate()
 
   //국내 글 작성시 대한민국 자동 선택처리
-  useEffect(()=>{
+  useEffect(() => {
     if (domesticInternational === "Domestic") {
       setCountry("대한민국")
     } else {
@@ -75,17 +78,6 @@ const TripBoardFormNew = () => {
     setSelectedDateRange(dateRange)
     // 날짜 선택 후 캘린더 닫기
     setIsCalendarOpen(false)
-  }
-
-  // 날짜 계산 함수
-  const calculateDate = (startDate, dayIndex) => {
-    const date = new Date(startDate)
-    date.setDate(date.getDate() + dayIndex) // 시작 날짜에 dayIndex 만큼 더함
-    return date.toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
   }
 
   const handleTagInput = (e) => {
@@ -170,6 +162,16 @@ const TripBoardFormNew = () => {
 
   //게시글 작성 완료
   const handleSubmit = () => {
+    if (!title) {
+      alert("제목을 입력해주세요.");
+      return;
+    }
+
+    if (!country) {
+      alert("나라를 선택해주세요.");
+      return;
+    }
+
     const post = {
       userId: loggedInUserId,
       writer: loggedInNickname,
@@ -186,10 +188,25 @@ const TripBoardFormNew = () => {
     axios
       .post("/api/v1/posts/trip_log", post)
       .then((res) => {
-        navigate(`/posts/trip_log?di=${domesticInternational}`)
+        status === "PRIVATE" ? navigate(`/myRecord/${loggedInUserId}}`)
+          : navigate(`/posts/trip_log?di=${domesticInternational}`)
       })
       .catch((error) => console.log(error))
   }
+
+  // 캘린더의 날짜 스타일을 설정하는 함수 추가
+  const tileClassName = ({ date }) => {
+    const day = date.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+    // 기본적으로 검은색으로 설정
+    let className = "text-black";
+
+    // 토요일과 일요일에만 빨간색으로 변경
+    if (day === 0 || day === 6) {
+      className = "text-red-500"; // 토요일과 일요일에 숫자를 빨간색으로 표시
+    }
+
+    return className; // 최종 클래스 이름 반환
+  };
 
   return (
     <div className="container mx-auto p-6 max-w-[900px]">
@@ -200,7 +217,9 @@ const TripBoardFormNew = () => {
             {domesticInternational === "Domestic" ? "국내 " : "해외 "}여행기록 작성
           </h1>
           <button
-            onClick={() => navigate(`/posts/trip_log?di=${domesticInternational}`)}
+            onClick={() =>
+              status === "PRIVATE" ? navigate(`/myRecord/${loggedInUserId}}`)
+              : navigate(`/posts/trip_log?di=${domesticInternational}`)}
             className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
             목록으로 돌아가기
           </button>
@@ -224,6 +243,7 @@ const TripBoardFormNew = () => {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                placeholder={status==="PRIVATE" && "MyPage에서 확인 가능한 게시물입니다."}
               />
             </div>
 
@@ -251,15 +271,47 @@ const TripBoardFormNew = () => {
           </div>
 
           {/* 캘린더 표시 여부에 따라 렌더링 */}
-          {isCalendarOpen && (
-            <div className="absolute z-50 bg-white shadow-lg p-2">
-              <Calendar
-                selectRange={true}
-                onChange={handleDateChange}
-                value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
-              />
-            </div>
-          )}
+          <div ref={calendarRef}>
+            {isCalendarOpen && (
+              <div className="absolute z-50 bg-white shadow-lg p-2">
+                <button
+                  onClick={handleDateReset}
+                  className="text text-sm absolute top-8 right-20 bg-tripDuoGreen text-white px-2 py-1 rounded hover:bg-green-700 transition duration-150">
+                  today
+                </button>
+                <Calendar
+                  selectRange={true}
+                  className="w-full p-4 bg-white rounded-lg border-none" // 달력 컴포넌트의 테두리를 없애기 위해 border-none 추가
+                  onChange={handleDateChange}
+                  value={selectedDateRange || [new Date(), new Date()]} // 초기값 또는 선택된 날짜 범위
+                  minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                  maxDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
+                  navigationLabel={null}
+                  showNeighboringMonth={false} //  이전, 이후 달의 날짜는 보이지 않도록 설정
+                  calendarType="hebrew" //일요일부터 보이도록 설정
+                  tileClassName={tileClassName} // 날짜 스타일 설정
+                  formatYear={(locale, date) => moment(date).format("YYYY")} // 네비게이션 눌렀을때 숫자 년도만 보이게
+                  formatMonthYear={(locale, date) => moment(date).format("YYYY. MM")} // 네비게이션에서 2023. 12 이렇게 보이도록 설정
+                  prevLabel={
+                    <FaChevronLeft className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                  }
+                  nextLabel={
+                    <FaChevronRight className="text-green-500 hover:text-green-700 transition duration-150 mx-auto" />
+                  }
+                  prev2Label={null}
+                  next2Label={null}
+                  tileContent={({ date }) => {
+                    return (
+                      <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
+                        {date.getDate()} {/* 날짜 숫자만 표시 */}
+                      </span>
+                    );
+                  }} // 날짜 내용 설정
+                  formatDay={() => null}
+                />
+              </div>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -366,7 +418,7 @@ const TripBoardFormNew = () => {
           {days.map((day, dayIndex) => (
             <div key={dayIndex} className="bg-gray-50 p-4 rounded-lg shadow-inner">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-semibold">Day {dayIndex + 1} - {selectedDateRange && calculateDate(selectedDateRange[0], dayIndex)}</h2>
+                <h2 className="text-xl font-semibold">Day {dayIndex + 1}</h2>
                 <div className="flex space-x-2">
                   <button onClick={addDay} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                     Day 추가

@@ -11,15 +11,14 @@ import moment from "moment"
 const CourseBoardForm = () => {
   const userId = useSelector((state) => state.userData.id, shallowEqual)
   const nickname = useSelector((state) => state.userData.nickname, shallowEqual)
-  const username = useSelector((state) => state.userData.username, shallowEqual)
 
   const calendarRef = useRef(null);
 
-
-  const [title, setTitle] = useState("")
   // 달력에서 선택된 날짜 범위 저장
   const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
+ 
+  const [title, setTitle] = useState("")
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
 
@@ -52,7 +51,6 @@ const CourseBoardForm = () => {
   const [selectedDayIndex, setSelectedDayIndex] = useState(null)
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [savedPlaces, setSavedPlaces] = useState([])
-
   const [isSelectPlace, setIsSelectPlace] = useState(false)
 
   //검색 키워드, 국내외 관련 처리
@@ -69,6 +67,7 @@ const CourseBoardForm = () => {
       setCountry("")
     }
   }, [domesticInternational])
+
   // 날짜 초기화
   const handleDateReset = () => {
     setSelectedDateRange([null, null]) // 날짜 범위를 현재 날짜로 초기화
@@ -195,6 +194,7 @@ const CourseBoardForm = () => {
       })
       .catch((error) => console.log(error))
   }
+
   // 캘린더의 날짜 스타일을 설정하는 함수 추가
   const tileClassName = ({ date }) => {
     const day = date.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
@@ -207,7 +207,8 @@ const CourseBoardForm = () => {
     }
 
     return className; // 최종 클래스 이름 반환
-  };
+  }
+
   return (
     <div className="container mx-auto p-6 max-w-[900px]">
       <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
@@ -299,16 +300,6 @@ const CourseBoardForm = () => {
                   }
                   prev2Label={null}
                   next2Label={null}
-                  // <button
-                  //   onClick={(event) => {
-                  //     event.preventDefault()
-                  //     // handleDateReset()
-                  //     handleDateChange([new Date(), new Date()])
-                  //   }}
-                  //   className="text-black-500 hover:text-green-700 transition duration-150 mx-auto">
-                  //   오늘로
-                  // </button>
-                  //}  다음 달의 다음 달로 이동하는 버튼을 오늘로 이동하는 버튼으로 변경
                   tileContent={({ date }) => {
                     return (
                       <span className={date.getDay() === 0 || date.getDay() === 6 ? "text-red-500" : "text-black"}>
