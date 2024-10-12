@@ -20,7 +20,7 @@ import { shallowEqual, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import { NavLink } from "react-router-dom";
 import useWebSocket from "../../components/useWebSocket";
-import LoadingAnimation from "../../components/LoadingAnimation"
+import LoadingAnimation from "../../components/LoadingAnimation";
 
 //새로 등록한 댓글을 추가할 인덱스
 let commentIndex = 0;
@@ -433,14 +433,14 @@ function MateBoardDetail(props) {
     }
   };
   // ---------------------------------------------------- 채팅 관련
-  const { stompClient, isConnected, } = useWebSocket();
+  const { stompClient, isConnected } = useWebSocket();
 
   const handleClickChat = () => {
     console.log("채팅 버튼 클릭");
     console.log("1번" + userId);
-    if(isConnected){
-      console.log("웹 소켓 연결 정상")
-    } else{
+    if (isConnected) {
+      console.log("웹 소켓 연결 정상");
+    } else {
       console.log("웹 소켓 비정상");
     }
     console.log("2번" + writerProfile.id);
@@ -453,7 +453,7 @@ function MateBoardDetail(props) {
       })
       .then((res) => {
         const newRoom = res.data;
-        
+
         alert("채팅방 생성.");
 
         navigate(`/chatroom/${newRoom.id}`, { state: { chatRooms: newRoom } });
@@ -463,8 +463,6 @@ function MateBoardDetail(props) {
         alert("채팅방 생성에 실패했습니다.");
       });
   };
-
- 
 
   //프로필 링크 복사
   const handleCopy = () => {
@@ -482,7 +480,7 @@ function MateBoardDetail(props) {
       {/* 로딩 애니메이션 */}
       {loading && <LoadingAnimation />}
       <div className="flex flex-col h-full bg-gray-100 p-6">
-        <div className="container">
+        <div className="container mb-10">
           <div className="flex">
             <NavLink
               className="px-4 py-2 text-sm font-medium rounded-md bg-gray-600 text-gray-100"
@@ -605,6 +603,7 @@ function MateBoardDetail(props) {
           {/* 캘린더 */}
           <div className="p-4">
             <Calendar
+              className={`rounded-lg`}
               value={selectedDateRange} // 초기값 또는 선택된 날짜 범위
               formatDay={(locale, date) => moment(date).format("DD")}
               minDetail="month" // 상단 네비게이션에서 '월' 단위만 보이게 설정
@@ -615,37 +614,37 @@ function MateBoardDetail(props) {
               readOnly={true}
             />
           </div>
+          {
+            // 로그인된 username 과 post의 userId 로 불러온 작성자 아이디가 동일하면 랜더링
+            userId === post.userId && (
+              <div className="container mt-3 ">
+                <button
+                  type="button"
+                  className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none"
+                  onClick={() => navigate(`/posts/mate/${id}/edit`)}>
+                  수정
+                </button>
+                <button
+                  type="button"
+                  className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none"
+                  onClick={() => {
+                    axios
+                      .delete(`/api/v1/posts/${id}`)
+                      .then((res) => {
+                        alert("글 삭제 성공");
+                        // 국/해외 페이지 별 리다일렉트
+                        post.country === "대한민국"
+                          ? navigate(`/posts/mate?di=Domestic`)
+                          : navigate(`/posts/mate?di=International`);
+                      })
+                      .catch((error) => console.log(error));
+                  }}>
+                  삭제
+                </button>
+              </div>
+            )
+          }
         </div>
-        {
-          // 로그인된 username 과 post의 userId 로 불러온 작성자 아이디가 동일하면 랜더링
-          userId === post.userId && (
-            <div className="container mt-3">
-              <button
-                type="button"
-                className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                onClick={() => navigate(`/posts/mate/${id}/edit`)}>
-                수정
-              </button>
-              <button
-                type="button"
-                className="m-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                onClick={() => {
-                  axios
-                    .delete(`/api/v1/posts/${id}`)
-                    .then((res) => {
-                      alert("글 삭제 성공");
-                      // 국/해외 페이지 별 리다일렉트
-                      post.country === "대한민국"
-                        ? navigate(`/posts/mate?di=Domestic`)
-                        : navigate(`/posts/mate?di=International`);
-                    })
-                    .catch((error) => console.log(error));
-                }}>
-                삭제
-              </button>
-            </div>
-          )
-        }
 
         {/* 원글의 댓글 작성 form */}
         <div className={`border-3 rounded-lg p-3 mt-4 mb-6 bg-white ${!username ? "hidden" : ""}`}>

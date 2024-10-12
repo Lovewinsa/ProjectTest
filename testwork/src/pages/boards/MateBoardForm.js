@@ -117,7 +117,7 @@ function MateBoardForm(props) {
       alert("제목을 입력해주세요.");
       return;
     }
-
+    
     const updatedPost = {
       ...post,
       tags: postTags,

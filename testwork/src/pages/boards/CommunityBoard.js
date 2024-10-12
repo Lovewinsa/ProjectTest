@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faHeart, faMessage } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faHeart, faMessage, faStar } from "@fortawesome/free-solid-svg-icons";
 import LoadingAnimation from "../../components/LoadingAnimation";
 
 function CommunityBoard() {
@@ -88,6 +88,7 @@ function CommunityBoard() {
   const fetchFilteredPosts = () => {
     //필터링할 검색조건을 params에 담는다
     const params = {
+      di: domesticInternational || null,
       country: searchCriteria.country || null,
       city: searchCriteria.city || null,
       startDate: searchCriteria.startDate || null,
@@ -99,23 +100,15 @@ function CommunityBoard() {
 
     // API 호출
     axios
-      .get("/api/v1/posts/mate", { params })
+      .get("/api/v1/posts/community", { params })
       .then((res) => {
         //필터링되어 돌아온 params를 받는다
         console.log(res.data);
-        let filtered = res.data.list;
-        //국내 해외 필터링
-        if (domesticInternational === "Domestic") {
-          filtered = filtered.filter((item) => item.country === "한국");
-        } else if (domesticInternational === "International") {
-          filtered = filtered.filter((item) => item.country !== "한국");
-        }
+
         //필터링된 데이터를 상태에 저장한다
-        setPageData(filtered);
+        setPageData(res.data.list);
         //페이지 제목을 변경한다
-        setWhereAreYou(
-          domesticInternational === "International" ? "해외 여행 메이트 페이지" : "국내 여행 메이트 페이지"
-        );
+        setWhereAreYou(domesticInternational === "International" ? "해외 커뮤니티 페이지" : "국내 커뮤니티 페이지");
         //페이지 전환버튼을 변경한다
         setPageTurn(domesticInternational === "International" ? "to Domestic" : "to International");
       })
@@ -166,8 +159,6 @@ function CommunityBoard() {
         return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
       } else if (e.target.value === "viewCount") {
         return b.viewCount - a.viewCount;
-      } else if (e.target.value === "likeCount") {
-        return b.likeCount - a.likeCount;
       }
       return 0; // 기본값
     });
@@ -261,7 +252,6 @@ function CommunityBoard() {
           className="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300">
           <option value="latest">최신순</option>
           <option value="viewCount">조회수순</option>
-          <option value="likeCount">좋아요순</option>
         </select>
       </div>
 
@@ -284,6 +274,10 @@ function CommunityBoard() {
               </div>
               <div className="mt-2">
                 <Link to={`/posts/community/${item.id}/detail`}>{item.title}</Link>
+                <span className="text-xs ml-3">
+                  <FontAwesomeIcon icon={faStar} className={`w-4 h-4 cursor-pointe text-yellow-400`} />
+                  {item.rating}
+                </span>
               </div>
             </div>
 
@@ -304,14 +298,10 @@ function CommunityBoard() {
                 month: "2-digit",
                 day: "2-digit",
               })}
-              <div className="text-xs text-gray-500 sm:text-center text-left">
+              <div className="text-xs text-gray-500 sm:text-center">
                 <span className="mx-3">
                   <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-1" />
                   {item.viewCount}
-                </span>
-                <span className="mr-3">
-                  <FontAwesomeIcon icon={faHeart} className="h-4 w-4 mr-1" />
-                  {item.likeCount}
                 </span>
                 <span className="">
                   <FontAwesomeIcon icon={faMessage} className="h-4 w-4 mr-1" />

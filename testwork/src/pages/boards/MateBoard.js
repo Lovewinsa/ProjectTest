@@ -147,6 +147,7 @@ function MateBoard() {
   const fetchFilteredPosts = () => {
     //필터링할 검색조건을 params에 담는다
     const params = {
+      di: domesticInternational || null,
       country: searchCriteria.country || null,
       city: searchCriteria.city || null,
       startDate: searchCriteria.startDate || null,
@@ -160,17 +161,9 @@ function MateBoard() {
     axios
       .get("/api/v1/posts/mate", { params })
       .then((res) => {
-        //필터링되어 돌아온 params를 받는다
         console.log(res.data);
-        let filtered = res.data.list;
-        //국내 해외 필터링
-        if (domesticInternational === "Domestic") {
-          filtered = filtered.filter((item) => item.country === "한국");
-        } else if (domesticInternational === "International") {
-          filtered = filtered.filter((item) => item.country !== "한국");
-        }
-        //필터링된 데이터를 상태에 저장한다
-        setPageData(filtered);
+
+        setPageData(res.data.list);
         //페이지 제목을 변경한다
         setWhereAreYou(
           domesticInternational === "International" ? "해외 여행 메이트 페이지" : "국내 여행 메이트 페이지"

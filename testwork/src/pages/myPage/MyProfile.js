@@ -17,9 +17,51 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons"
 import "../../css/MyProfile.css"
-import FollowerFolloweeModal from "../../components/FollowerFolloweeModal"
+import FollowModal from "../../components/FollowModal"
 import LoadingAnimation from "../../components/LoadingAnimation"
 import useWebSocket from "../../components/useWebSocket"
+
+// ###
+
+const reviewPositiveTagList = [
+  { key: 1, keyword: "COMMUNICATION", text: "메시지에 항상 빠르게 답변해주어 소통이 원활했어요." },
+  { key: 2, keyword: "TRUST", text: "계획된 일정을 철저히 지켜 믿음직했어요." },
+  { key: 3, keyword: "ONTIME", text: "약속 시간을 잘 지켜 여유로운 여행을 즐길 수 있었어요." },
+  { key: 4, keyword: "MANNER", text: "친절하고 배려심 넘치는 태도로 편안하게 여행했어요." },
+  { key: 5, keyword: "FLEXIBLE", text: "변경된 계획에도 유연하게 대처하여 즐거운 여행이 되었어요." },
+  { key: 6, keyword: "ACTIVE", text: "적극적인 태도로 다양한 경험을 할 수 있도록 이끌어주었어요." },
+  { key: 7, keyword: "FRIENDLY", text: "함께 시간을 보내는 내내 즐거웠고, 좋은 친구를 얻은 기분이었어요." },
+  { key: 8, keyword: "PAY", text: "비용 분담에 있어 투명하고 공정하게 처리하여 신뢰가 갔어요." },
+  { key: 9, keyword: "CLEAN", text: "깔끔한 여행 스타일로 쾌적한 환경을 유지해주었어요." },
+]
+
+const reviewNegativeTagList = [
+  { key: 1, keyword: "COMMUNICATION", text: "메시지 답변이 느려서 소통에 어려움을 느꼈어요." },
+  { key: 2, keyword: "TRUST", text: "계획된 일정을 자주 변경하여 불안했어요." },
+  { key: 3, keyword: "ONTIME", text: "약속 시간에 자주 늦어 불편했어요." },
+  { key: 4, keyword: "MANNER", text: "무례한 언행으로 불쾌한 경험을 했어요." },
+  { key: 5, keyword: "FLEXIBLE", text: "변경된 상황에 대한 대처가 미흡하여 아쉬웠어요." },
+  { key: 6, keyword: "ACTIVE", text: "소극적인 태도로 여행에 대한 적극적인 참여가 부족했어요." },
+  { key: 7, keyword: "FRIENDLY", text: "함께 시간을 보내는 것이 불편했어요." },
+  { key: 8, keyword: "PAY", text: "비용 분담에 있어 불투명하고 불공정하여 신뢰가 떨어졌어요." },
+  { key: 9, keyword: "CLEAN", text: "개인 위생 관리가 부족하여 함께 여행하는 것이 불편했어요." },
+]
+
+// 리뷰 최대 글자수
+const maxLength = 3000
+
+//--------------------------------------------------------------------------------------------------------------rating 관리 부
+// rating 비교 조건 데이터
+const ratingConfig = [
+  { min: 0, max: 1499, icon: faFeather, color: "gray" }, // 이코노미
+  { min: 1500, max: 2999, icon: faFeather, color: "blue" }, // 프리미엄 이코노미
+  { min: 3000, max: 4499, icon: faDove, color: "gray" }, // 비지니스
+  { min: 4500, max: 5999, icon: faDove, color: "blue" }, // 프리미엄 비지니스
+  { min: 6000, max: 7499, icon: faPlane, color: "gray" }, // 퍼스트
+  { min: 7500, max: 8999, icon: faPlane, color: "blue" }, // 프리미엄 퍼스트
+  { min: 9000, max: 10000, icon: faCrown, color: "yellow" }, // 로얄
+  { min: -Infinity, max: Infinity, icon: faUser, color: "black" }, // 기본값
+]
 
 function MyProfile(props) {
   // to do : cur_location, last_login
@@ -75,46 +117,6 @@ function MyProfile(props) {
   const followButtonClasses = `px-4 py-2 text-sm font-medium rounded-md ${
     followingStatus ? "bg-gray-200 text-gray-800" : "bg-blue-500 text-white"
   }`
-
-  const reviewPositiveTagList = [
-    { key: 1, keyword: "COMMUNICATION", text: "메시지에 항상 빠르게 답변해주어 소통이 원활했어요." },
-    { key: 2, keyword: "TRUST", text: "계획된 일정을 철저히 지켜 믿음직했어요." },
-    { key: 3, keyword: "ONTIME", text: "약속 시간을 잘 지켜 여유로운 여행을 즐길 수 있었어요." },
-    { key: 4, keyword: "MANNER", text: "친절하고 배려심 넘치는 태도로 편안하게 여행했어요." },
-    { key: 5, keyword: "FLEXIBLE", text: "변경된 계획에도 유연하게 대처하여 즐거운 여행이 되었어요." },
-    { key: 6, keyword: "ACTIVE", text: "적극적인 태도로 다양한 경험을 할 수 있도록 이끌어주었어요." },
-    { key: 7, keyword: "FRIENDLY", text: "함께 시간을 보내는 내내 즐거웠고, 좋은 친구를 얻은 기분이었어요." },
-    { key: 8, keyword: "PAY", text: "비용 분담에 있어 투명하고 공정하게 처리하여 신뢰가 갔어요." },
-    { key: 9, keyword: "CLEAN", text: "깔끔한 여행 스타일로 쾌적한 환경을 유지해주었어요." },
-  ]
-
-  const reviewNegativeTagList = [
-    { key: 1, keyword: "COMMUNICATION", text: "메시지 답변이 느려서 소통에 어려움을 느꼈어요." },
-    { key: 2, keyword: "TRUST", text: "계획된 일정을 자주 변경하여 불안했어요." },
-    { key: 3, keyword: "ONTIME", text: "약속 시간에 자주 늦어 불편했어요." },
-    { key: 4, keyword: "MANNER", text: "무례한 언행으로 불쾌한 경험을 했어요." },
-    { key: 5, keyword: "FLEXIBLE", text: "변경된 상황에 대한 대처가 미흡하여 아쉬웠어요." },
-    { key: 6, keyword: "ACTIVE", text: "소극적인 태도로 여행에 대한 적극적인 참여가 부족했어요." },
-    { key: 7, keyword: "FRIENDLY", text: "함께 시간을 보내는 것이 불편했어요." },
-    { key: 8, keyword: "PAY", text: "비용 분담에 있어 불투명하고 불공정하여 신뢰가 떨어졌어요." },
-    { key: 9, keyword: "CLEAN", text: "개인 위생 관리가 부족하여 함께 여행하는 것이 불편했어요." },
-  ]
-
-  // 리뷰 최대 글자수
-  const maxLength = 3000
-
-  //--------------------------------------------------------------------------------------------------------------rating 관리 부
-  // rating 비교 조건 데이터
-  const ratingConfig = [
-    { min: 0, max: 1499, icon: faFeather, color: "gray" }, // 이코노미
-    { min: 1500, max: 2999, icon: faFeather, color: "blue" }, // 프��미엄 이코노미
-    { min: 3000, max: 4499, icon: faDove, color: "gray" }, // 비지니스
-    { min: 4500, max: 5999, icon: faDove, color: "blue" }, // 프리미엄 비지니스
-    { min: 6000, max: 7499, icon: faPlane, color: "gray" }, // 퍼스트
-    { min: 7500, max: 8999, icon: faPlane, color: "blue" }, // 프리미엄 퍼스트
-    { min: 9000, max: 10000, icon: faCrown, color: "yellow" }, // 로얄
-    { min: -Infinity, max: Infinity, icon: faUser, color: "black" }, // 기본값
-  ]
 
   // rating 값에 따른 아이콘과 색상 계산 //
   const getRatingDetails = (ratings) => {
@@ -626,7 +628,7 @@ function MyProfile(props) {
           </div>
         </div>
         {/* MODAL */}
-        {isModalOpen && <FollowerFolloweeModal id={id} ff={modalTab} onClose={handleCloseModal} />}
+        {isModalOpen && <FollowModal id={id} ff={modalTab} onClose={handleCloseModal} />}
         {/*  소셜 링크 렌더링 */}
         <div className="mt-5 flex justify-center">
           {Array.isArray(profile.socialLinks) &&
@@ -698,10 +700,19 @@ function MyProfile(props) {
                 ) : (
                   ""
                 )}
-                <ul className={`w-full transition-all duration-500 ${experience === "BAD" ? "bg-red-100" : experience === "GOOD" || experience === "EXCELLENT" ? "bg-green-100" : "hidden"} p-4 rounded-lg shadow-lg`}>
+                <ul
+                  className={`w-full transition-all duration-500 ${
+                    experience === "BAD"
+                      ? "bg-red-100"
+                      : experience === "GOOD" || experience === "EXCELLENT"
+                      ? "bg-green-100"
+                      : "hidden"
+                  } p-4 rounded-lg shadow-lg`}>
                   {experience === "BAD"
                     ? reviewNegativeTagList.map((item) => (
-                        <li key={item.key} className="flex items-center mb-2 transform transition-transform duration-100">
+                        <li
+                          key={item.key}
+                          className="flex items-center mb-2 transform transition-transform duration-100">
                           <input
                             id={item.keyword}
                             type="checkbox"
@@ -710,14 +721,18 @@ function MyProfile(props) {
                             onChange={handleCheckboxChange}
                             className="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
                           />
-                          <label htmlFor={item.keyword} className="ms-2 text-md font-bold text-gray-900 transition-colors duration-300 hover:text-red-600">
+                          <label
+                            htmlFor={item.keyword}
+                            className="ms-2 text-md font-bold text-gray-900 transition-colors duration-300 hover:text-red-600">
                             {item.text}
                           </label>
                         </li>
                       ))
                     : experience === "GOOD" || experience === "EXCELLENT"
                     ? reviewPositiveTagList.map((item) => (
-                        <li key={item.key} className="flex items-center mb-2 transform transition-transform duration-100">
+                        <li
+                          key={item.key}
+                          className="flex items-center mb-2 transform transition-transform duration-100">
                           <input
                             id={item.keyword}
                             type="checkbox"
@@ -726,7 +741,9 @@ function MyProfile(props) {
                             onChange={handleCheckboxChange}
                             className="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2"
                           />
-                          <label htmlFor={item.keyword} className="ms-2 text-md font-bold text-gray-900 transition-colors duration-300 hover:text-green-600">
+                          <label
+                            htmlFor={item.keyword}
+                            className="ms-2 text-md font-bold text-gray-900 transition-colors duration-300 hover:text-green-600">
                             {item.text}
                           </label>
                         </li>

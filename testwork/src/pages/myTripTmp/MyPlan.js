@@ -6,7 +6,6 @@ import { useNavigate } from "react-router"
 function MyPlan(props) {
   //course 변수 사용하기 위해 임시로 useState() 사용
   const loggedInUserId = useSelector((state) => state.userData.id, shallowEqual) // 로그인된 user의 id
-  const [course, setCourse] = useState({})
   const [postList, setPostList] = useState([])
 
   const [currentPage, setCurrentPage] = useState(1) // 현재 페이지 상태

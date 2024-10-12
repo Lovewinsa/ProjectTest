@@ -89,6 +89,7 @@ function CourseBoard() {
     }, 700)
 
     const params = {
+      di: domesticInternational || null,
       country: searchCriteria.country || null,
       city: searchCriteria.city || null,
       startDate: searchCriteria.startDate || null,
@@ -103,6 +104,7 @@ function CourseBoard() {
     axios
       .get("/api/v1/posts/course", { params })
       .then((res) => {
+        console.log(params)
         //필터링되어 돌아온 데이터
         let filtered = res.data.list
 

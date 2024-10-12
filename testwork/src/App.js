@@ -3,6 +3,7 @@ import NavBar from "./components/NavBar"
 import Footer from "./components/Footer"
 import { useEffect, useState } from "react"
 import { decodeToken } from "jsontokens"
+import ScrollToTop from "./components/ScrollToTop "
 
 const useJwtExpirationHandler = (token) => {
   useEffect(() => {
@@ -37,6 +38,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <ScrollToTop />
       <NavBar />
       <div className="main-content">{currentOutlet}</div>
       <Footer />

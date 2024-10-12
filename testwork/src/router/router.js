@@ -2,7 +2,6 @@ import { createBrowserRouter } from "react-router-dom"
 import App from "../App"
 import Home from "../pages/Home"
 import Sample from "../pages/Sample"
-import HomeAbroad from "../pages/HomeAbroad"
 import Signup from "../pages/Signup"
 import Agreement from "../pages/Agreement"
 import LoginPage from "../pages/LoginPage"
@@ -20,10 +19,8 @@ import MateBoardDetail from "../pages/boards/MateBoardDetail"
 import TravelChecklist from "../pages/Utilities/TravelChecklist"
 import TravelSafetyInfo from "../pages/Utilities/TravelSafetyInfo"
 import TravelCostCalculator from "../pages/Utilities/TravelCostCalculator"
-import TravelPlanner from "../pages/Utilities/TravelPlaner"
 import LocationRecommendations from "../pages/Utilities/LocationRecommendations"
 import ExchangeInfo from "../pages/Utilities/ExchangeInfo"
-import TravelDiary from "../pages/Utilities/TravelDiary"
 import LanguageCultureTips from "../pages/Utilities/LanguageCultureTips"
 import ExtraPage from "../pages/Utilities/ExtraPage"
 import CourseBoard from "../pages/boards/CourseBoard"
@@ -60,7 +57,6 @@ import ReportBoard from "../pages/boards/ReportBoard"
 const routes = [
   // ### home ###
   { path: "/", element: <Home /> },
-  { path: "/home-abroad", element: <HomeAbroad /> },
 
   // ### sign up, login, logout ... ###
   { path: "/sample", element: <Sample /> },
@@ -100,9 +96,7 @@ const routes = [
   { path: "/exchange", element: <ExchangeInfo /> },
   { path: "/safetyInfo", element: <TravelSafetyInfo /> },
   { path: "/calculator", element: <TravelCostCalculator /> },
-  { path: "/planner", element: <TravelPlanner /> },
   { path: "/recommendations", element: <LocationRecommendations /> },
-  { path: "/diary", element: <TravelDiary /> },
   { path: "/languageTip", element: <LanguageCultureTips /> },
   { path: "/extra", element: <ExtraPage /> },
   { path: "/alarm", element: <Alarm /> },
@@ -113,7 +107,7 @@ const routes = [
 
 const protectedRoutes = [
   // ### board ###
-  { path: "/report", element: <ReportBoard /> },
+
   //      ### mate ###
   { path: "/posts/mate/new", element: <MateBoardForm /> },
   { path: "/posts/mate/:id/edit", element: <MateBoardEditForm /> },
@@ -149,6 +143,9 @@ const protectedRoutes = [
   // ### chat ###
   { path: "/chatroom", element: <ChatRoom /> },
   { path: "/chatroom/:id", element: <ChatRoom /> },
+
+  // ### admin ###
+  { path: "/admin/report", element: <ReportBoard /> },
 ]
 
 const router = createBrowserRouter([

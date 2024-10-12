@@ -35,8 +35,8 @@ const TripLogBoardEditForm = () => {
     const navigate = useNavigate()
     const { id } = useParams()  // URL에서 게시물 ID를 가져옴
 
-    //나라별 도시 목록
-    const citiesByCountry = {
+     //나라별 도시 목록
+     const citiesByCountry = {
         대한민국: ["서울", "부산", "제주", "인천"],
         일본: ["도쿄", "오사카", "교토", "삿포로"],
         중국: ["베이징", "상하이", "광저우", "시안"],
@@ -199,7 +199,7 @@ const TripLogBoardEditForm = () => {
             alert("나라를 선택해주세요.");
             return;
         }
-
+        
         axios.put(`/api/v1/posts/${id}`, postInfo)  // PUT 요청으로 업데이트
             .then((res) => {
                 alert("수정했습니다")

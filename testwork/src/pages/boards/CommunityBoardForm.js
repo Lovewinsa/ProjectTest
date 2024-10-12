@@ -63,7 +63,7 @@ function CommunityBoardForm() {
           tags: [],
           viewCount: 10,
           likeCount: 10,
-          rating: 80,
+          rating: 0,
           status: "OPEN",
           city: "",
         });
