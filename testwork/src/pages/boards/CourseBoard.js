@@ -202,10 +202,10 @@ function CourseBoard() {
     setCurrentPage(1) // 페이지 초기화
     fetchFilteredPosts(1) // 첫 페이지 데이터 다시 불러오기
   }
-
+  // 정렬 기준 변경
   const handleSortChange = (e) => {
     const newSortBy = e.target.value
-    setSortBy(e.target.value) // 정렬 기준 변경
+    setSortBy(e.target.value)
 
     // 정렬 기준에 따라 pageData를 정렬
     let sortedData = [...pageInfo]
@@ -262,7 +262,8 @@ function CourseBoard() {
   // 달력에서 날짜를 선택할 때 호출되는 함수
   const handleDateChange = (dateRange) => {
     setSelectedDateRange(dateRange)
-    setIsCalendarOpen(false) // 날짜 선택 후 캘린더 닫기
+    // 날짜 선택 후 캘린더 닫기
+    setIsCalendarOpen(false)
     setSearchCriteria({
       ...searchCriteria,
       startDate: dateRange[0] ? dateRange[0].toLocaleDateString("ko-KR") : "",
@@ -487,7 +488,7 @@ function CourseBoard() {
               placeholder="도시"
               className="border text-sm border-tripDuoGreen rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-tripDuoMint transition-all duration-300"
             />
-            
+
             {/* 날짜 선택 및 검색 버튼 */}
             <button
               onClick={() => setIsCalendarOpen(!isCalendarOpen)}
