@@ -8,6 +8,9 @@ module.exports = {
         tripDuoGreen: '#006622',  
         tripDuoMint: '#66CC99', 
       },
+      screens: {
+        xs: '480px',
+      }
     },
   },
   plugins: [
