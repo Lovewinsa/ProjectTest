@@ -212,27 +212,29 @@ const CourseBoardForm = () => {
           <h1 className="text-3xl font-semibold text-gray-800">
             {status === "PRIVATE" && "나만의 "}{domesticInternational === "Domestic" ? "국내 " : "해외 "}여행 코스 작성
           </h1>
-          <button
-            onClick={() => {
-              status === "PRIVATE" ? navigate(`/private/myPlan`)
-                : navigate(`/posts/course?di=${domesticInternational}`)
-            }}
-            className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
-            목록으로 돌아가기
-          </button>
-          <button
-            className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
-            onClick={handleSubmit}>
-            작성 완료
-          </button>
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                status === "PRIVATE" ? navigate(`/private/myPlan`)
+                  : navigate(`/posts/course?di=${domesticInternational}`)
+              }}
+              className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 mr-4">
+              목록으로
+            </button>
+            <button
+              className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
+              onClick={handleSubmit}>
+              작성 완료
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 w-4/5">
           <div className="flex mb-4">
             {/* 제목 요소 */}
             <div className="flex-grow-[4]">
-              <label htmlFor="title" className="block text-lg font-medium text-gray-700">
-                제목
+              <label htmlFor="title" className="block text-base font-medium text-gray-700">
+                {/* 제목 */}
               </label>
               <input
                 className="border-gray-300 rounded-md p-2 w-full"
@@ -240,7 +242,7 @@ const CourseBoardForm = () => {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={status === "PRIVATE" ? "MyPage에서 확인 가능한 게시물입니다." : ""}
+                placeholder={status === "PRIVATE" ? "MyPage에서 확인 가능한 게시물입니다." : "제목을 입력해 주세요."}
                 maxLength={50}
               />
             </div>
@@ -249,11 +251,11 @@ const CourseBoardForm = () => {
             <div className="flex flex-grow-[1] items-end justify-end ml-4">
               <button
                 onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2"
+                className="text-gray-700 border hover:bg-gray-300 rounded-md text-sm px-4 py-2"
               >
                 날짜 선택
               </button>
-              <button onClick={handleDateReset} className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 ml-2">
+              <button onClick={handleDateReset} className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md text-sm px-4 py-2 ml-2">
                 날짜 초기화
               </button>
             </div>
@@ -313,8 +315,8 @@ const CourseBoardForm = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="country" className="block text-lg font-medium text-gray-700">
-                나라
+              <label htmlFor="country" className="block text-base font-medium text-gray-700">
+                {/* 나라 */}
               </label>
               <select
                 className="border-gray-300 rounded-md p-2 w-full"
@@ -368,8 +370,8 @@ const CourseBoardForm = () => {
             </div>
 
             <div>
-              <label htmlFor="city" className="block text-lg font-medium text-gray-700">
-                도시
+              <label htmlFor="city" className="block text-base font-medium text-gray-700">
+                {/* 도시 */}
               </label>
               <select
                 className="border-gray-300 rounded-md p-2 w-full"
@@ -389,8 +391,8 @@ const CourseBoardForm = () => {
           </div>
 
           <div>
-            <label htmlFor="tags" className="block text-lg font-medium text-gray-700">
-              태그
+            <label htmlFor="tags" className="block text-base font-medium text-gray-700">
+              {/* 태그 */}
             </label>
             <input
               id="tags"

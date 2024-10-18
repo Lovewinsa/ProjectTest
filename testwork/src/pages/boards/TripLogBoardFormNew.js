@@ -204,42 +204,67 @@ const TripBoardFormNew = () => {
     return className; // 최종 클래스 이름 반환
   };
 
+  const calculateNightsAndDays = (startDate, endDate) => {
+
+    if (!startDate || !endDate) return ""
+
+    // 두 날짜 간의 차이를 밀리초 단위로 계산
+    const diffTime = endDate.getTime() - startDate.getTime()
+
+
+    // 차이를 일(day) 단위로 변환
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    console.log(diffDays);
+
+    if (diffDays > 0) {
+      // "박"의 계산 (diffDays - 1)
+      const days = diffDays + 1
+      // const nights = diffDays > 0 ? diffDays : 0;
+      const nights = diffDays
+
+      return `(${nights}박 ${days}일)`
+    } else {
+      return `(당일 일정)`
+    }
+  }
+
   return (
-    <div className="container mx-auto p-6 max-w-[900px]">
-      <div className="flex flex-col h-full bg-white p-6 shadow-lg rounded-lg">
+    <div className="container mx-auto p-6 max-w-[900px] bg-gradient-to-r from-green-100 to-white rounded-xl shadow-lg">
+      <div className="flex flex-col h-full bg-white p-6 shadow-xl rounded-lg">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-semibold text-gray-800">
+          <h1 className="text-4xl font-bold text-gray-900">
             {status === "PRIVATE" && "나만의 "}
-            {domesticInternational === "Domestic" ? "국내 " : "해외 "}여행기록 작성
+            {domesticInternational === "Domestic" ? "국내 " : "해외 "}여행 기록 작성
           </h1>
-          <button
-            onClick={() =>
-              status === "PRIVATE" ? navigate("/private/myTripLog")
-              : navigate(`/posts/trip_log?di=${domesticInternational}`)}
-            className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
-            목록으로 돌아가기
-          </button>
-          <button
-            className="text-white bg-indigo-600 hover:bg-indigo-500 rounded-full text-sm px-5 py-2"
-            onClick={handleSubmit}>
-            작성 완료
-          </button>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() =>
+                status === "PRIVATE" ? navigate("/private/myTripLog")
+                  : navigate(`/posts/trip_log?di=${domesticInternational}`)
+              }
+              className="text-white bg-green-400 hover:bg-green-700 rounded-full text-sm font-bold px-6 py-2 shadow-md transition duration-150">
+              목록으로
+            </button>
+            <button
+              className="text-white bg-tripDuoMint hover:bg-tripDuoGreen rounded-full text-sm font-bold px-6 py-2 shadow-lg transition duration-150"
+              onClick={handleSubmit}>
+              작성 완료
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex mb-4">
-            {/* 제목 요소 */}
+
+        <div className="pl-6 w-5/6">
+          <div className="flex mb-6">
+            {/* 제목 입력 필드 */}
             <div className="flex-grow-[4]">
-              <label htmlFor="title" className="block text-lg font-medium text-gray-700">
-                제목
-              </label>
               <input
-                className="border-gray-300 rounded-md p-2 w-full"
+                className="border-gray-300 rounded-lg shadow-sm p-3 w-full focus:ring focus:ring-green-200"
                 type="text"
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={status==="PRIVATE" && "MyPage에서 확인 가능한 게시물입니다."}
+                placeholder={status === "PRIVATE" ? "MyPage에서 확인 가능한 게시물입니다." : ""}
                 maxLength={50}
               />
             </div>
@@ -248,22 +273,22 @@ const TripBoardFormNew = () => {
             <div className="flex flex-grow-[1] items-end justify-end ml-4">
               <button
                 onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
+                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2"
+              >
                 날짜 선택
               </button>
-              <button
-                onClick={handleDateReset}
-                className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 ml-2">
+              <button onClick={handleDateReset} className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2 ml-2">
                 날짜 초기화
               </button>
             </div>
           </div>
+
           {/* 선택한 날짜 */}
           <div className="sm:col-span-6">
-            <p style={{ marginTop: "-10px", marginBottom: "-20px" }} className="text-sm text-gray-600 text-right">
-              {selectedDateRange[0] && selectedDateRange[1]
-                ? `${selectedDateRange[0].toLocaleDateString()} ~ ${selectedDateRange[1].toLocaleDateString()}`
-                : "0000. 00. 00. ~ 0000. 00. 00."}
+            <p style={{ marginTop: '-10px', marginBottom: '0px' }} className="text-sm text-gray-600 text-right">
+              {selectedDateRange[0] ? moment(selectedDateRange[0]).format("YYYY. MM. DD") : "0000. 00. 00."} ~
+              {selectedDateRange[1] ? moment(selectedDateRange[1]).format("YYYY. MM. DD") : "0000. 00. 00."}
+              {calculateNightsAndDays(selectedDateRange[0], selectedDateRange[1])}
             </p>
           </div>
 
@@ -310,97 +335,53 @@ const TripBoardFormNew = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="country" className="block text-lg font-medium text-gray-700">
-                나라
-              </label>
-              <select
-                className="border-gray-300 rounded-md p-2 w-full"
-                id="country"
-                value={country}
-                onChange={(e) => {
-                  setCountry(e.target.value)
-                  setCity("")
-                }}>
-                {domesticInternational === "Domestic" ? (
-                  // Domestic일 경우 대한민국만 표시
-                  <option value="대한민국">대한민국</option>
-                ) : (
-                  // International일 경우 기존 나라 선택 옵션 제공
-                  <>
-                    <option value="">나라를 선택하세요</option>
-                    <optgroup label="아시아">
-                      <option value="일본">일본</option>
-                      <option value="중국">중국</option>
-                      <option value="인도">인도</option>
-                    </optgroup>
+          {/* 국가 및 도시 선택 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+            <select
+              className="border-gray-300 rounded-lg p-3 w-full shadow-sm focus:ring focus:ring-green-200"
+              id="country"
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                setCity("");
+              }}>
+              {domesticInternational === "Domestic" ? (
+                <option value="대한민국">대한민국</option>
+              ) : (
+                <>
+                  <option value="">나라를 선택하세요</option>
+                  {/* 국가 옵션 목록 */}
+                </>
+              )}
+            </select>
 
-                    <optgroup label="유럽">
-                      <option value="영국">영국</option>
-                      <option value="독일">독일</option>
-                      <option value="스페인">스페인</option>
-                      <option value="프랑스">프랑스</option>
-                      <option value="이탈리아">이탈리아</option>
-                    </optgroup>
-
-                    <optgroup label="북아메리카">
-                      <option value="미국">미국</option>
-                      <option value="캐나다">캐나다</option>
-                    </optgroup>
-
-                    <optgroup label="남아메리카">
-                      <option value="브라질">브라질</option>
-                    </optgroup>
-
-                    <optgroup label="오세아니아">
-                      <option value="호주">호주</option>
-                    </optgroup>
-
-                    <optgroup label="기타">
-                      <option value="러시아">러시아</option>
-                      <option value="남아프리카 공화국">남아프리카 공화국</option>
-                    </optgroup>
-                  </>
-                )}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="city" className="block text-lg font-medium text-gray-700">
-                도시
-              </label>
-              <select
-                className="border-gray-300 rounded-md p-2 w-full"
-                id="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                disabled={!country} //나라가 선택되지 않으면 비활성화
-              >
-                <option value="">도시를 선택하세요</option>
-                {cities.map((cityOption) => (
-                  <option key={cityOption} value={cityOption}>
-                    {cityOption}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              className="border-gray-300 rounded-lg p-3 w-full shadow-sm focus:ring focus:ring-green-200"
+              id="city"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              disabled={!country}>
+              <option value="">도시를 선택하세요</option>
+              {cities.map((cityOption) => (
+                <option key={cityOption} value={cityOption}>
+                  {cityOption}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div>
-            <label htmlFor="tags" className="block text-lg font-medium text-gray-700">
-              태그
-            </label>
+          {/* 태그 입력 */}
+          <div className="mt-4">
             <input
               id="tags"
               value={tagInput}
               onChange={handleTagInput}
               placeholder="#태그 입력 후 스페이스바"
-              className="border-gray-300 rounded-md p-2 w-full"
+              className="border-gray-300 rounded-lg p-3 w-full shadow-sm focus:ring focus:ring-green-200"
             />
             <div className="flex flex-wrap gap-2 mt-2">
               {tags.map((tag, index) => (
-                <span key={index} className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                <span key={index} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full shadow-sm">
                   {tag}
                   <button className="ml-2 text-gray-600 hover:text-gray-900" onClick={() => removeTag(tag)}>
                     &times;
@@ -411,28 +392,32 @@ const TripBoardFormNew = () => {
           </div>
         </div>
 
+
+        {/* Day 추가 및 장소 선택 */}
         <div className="mt-6 space-y-6">
           {days.map((day, dayIndex) => (
-            <div key={dayIndex} className="bg-gray-50 p-4 rounded-lg shadow-inner">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-semibold">Day {dayIndex + 1}</h2>
+            <div key={dayIndex} className="bg-gray-50 p-6 rounded-lg shadow-md">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold text-indigo-900">Day {dayIndex + 1}</h2>
                 <div className="flex space-x-2">
-                  <button onClick={addDay} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                  <button onClick={addDay} className="border-2 border-blue-900 hover:bg-blue-100 text-blue-900 px-2 py-1 rounded-md shadow-lg transition duration-300 text-sm font-bold">
                     Day 추가
                   </button>
                   <button
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+                    className="border-2 border-red-700 hover:bg-red-100 text-red-700 px-2 py-1 rounded-md shadow-lg transition duration-300 text-sm font-bold"
                     onClick={() => removeDay(dayIndex)}>
                     Day 삭제
                   </button>
                 </div>
               </div>
+
+              {/* Day Memo */}
               <div className="mb-4">
                 <label htmlFor={`dayMemo-${dayIndex}`} className="block text-lg font-medium text-gray-700">
                   Day Record
                 </label>
                 <textarea
-                  className="border-gray-300 rounded-md p-2 w-full"
+                  className="border-gray-300 rounded-md p-2 w-full focus:ring focus:ring-green-200"
                   id={`dayMemo-${dayIndex}`}
                   value={day.dayMemo || ""}
                   onChange={(e) => handleDayMemoChange(dayIndex, e.target.value)}
@@ -441,13 +426,14 @@ const TripBoardFormNew = () => {
                 />
               </div>
 
+              {/* 장소 선택 및 메모 */}
               {day.places.map((place, placeIndex) => (
                 <div key={placeIndex} className="mb-4">
                   <div className="flex items-center space-x-2">
                     <span className="w-20">{placeIndex + 1}번 장소</span>
                     <button
                       type="button"
-                      className="text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-4 py-2.5 text-center"
+                      className="border border-blue-900 hover:bg-blue-100 text-blue-900 px-2 py-1 rounded-md shadow-lg transition duration-300 text-sm font-bold"
                       onClick={() => handlePlaceSelection(dayIndex, placeIndex)}>
                       장소 선택
                     </button>
@@ -459,7 +445,7 @@ const TripBoardFormNew = () => {
                       />
                       <div className="ml-2 w-1/4">
                         <button
-                          className={`text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-4 py-2.5 text-center ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+                          className={`border border-red-700 hover:bg-red-100 text-red-700 px-2 py-1 rounded-md shadow-lg transition duration-300 text-sm font-bold ${day.places.length === 0 ? "opacity-50 cursor-not-allowed" : ""
                             }`}
                           onClick={() => removePlace(dayIndex, placeIndex)}
                           disabled={day.places.length === 0}>
@@ -470,11 +456,13 @@ const TripBoardFormNew = () => {
                   </div>
                 </div>
               ))}
-              {/* 장소 추가 버튼을 하단 중앙에 배치 */}
+
+              {/* 장소 추가 버튼 */}
               <div className="flex justify-center mt-4">
                 <button
                   onClick={() => addPlace(dayIndex)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full">
+                  className="border-2 border-blue-900 hover:bg-blue-100 text-blue-900 px-4 py-2 rounded-md shadow-lg transition duration-300 text-sm font-bold"
+                >
                   장소 추가
                 </button>
               </div>
@@ -482,7 +470,6 @@ const TripBoardFormNew = () => {
           ))}
         </div>
       </div>
-
       {isSelectPlace && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div
@@ -519,7 +506,7 @@ const TripBoardFormNew = () => {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 export default TripBoardFormNew

@@ -171,12 +171,12 @@ function MyPlace() {
                     <div className="flex justify-start">
                         <button
                             onClick={() => navigate(`/users/${loggedInUserId}`)}
-                            className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+                            className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-md text-sm px-4 py-2.5 mr-4 text-center">
                             MyPage
                         </button>
                         <button
                             onClick={() => navigate("/private/myPlace2")}
-                            className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+                            className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-md text-sm px-4 py-2.5 text-center">
                             해외
                         </button>
                     </div>
