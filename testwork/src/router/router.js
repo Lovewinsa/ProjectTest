@@ -16,13 +16,9 @@ import MateBoard from "../pages/boards/MateBoard"
 import MateBoardForm from "../pages/boards/MateBoardForm"
 import MateBoardEditForm from "../pages/boards/MateBoardEditForm"
 import MateBoardDetail from "../pages/boards/MateBoardDetail"
-import TravelChecklist from "../pages/Utilities/TravelChecklist"
-import TravelSafetyInfo from "../pages/Utilities/TravelSafetyInfo"
-import TravelCostCalculator from "../pages/Utilities/TravelCostCalculator"
-import LocationRecommendations from "../pages/Utilities/LocationRecommendations"
+import TripChecklist from "../pages/Utilities/TripChecklist"
+import TripSafetyInfo from "../pages/Utilities/TripSafetyInfo"
 import ExchangeInfo from "../pages/Utilities/ExchangeInfo"
-import LanguageCultureTips from "../pages/Utilities/LanguageCultureTips"
-import ExtraPage from "../pages/Utilities/ExtraPage"
 import CourseBoard from "../pages/boards/CourseBoard"
 import CourseBoardForm from "../pages/boards/CourseBoardForm"
 import CourseBoardDetail from "../pages/boards/CourseBoardDetail"
@@ -32,7 +28,6 @@ import MyPlan from "../pages/myTripTmp/MyPlan"
 import MyRecord from "../pages/myTripTmp/MyRecord"
 import WishMate from "../pages/myTripTmp/WishMate"
 import LikedPostsPage from "../pages/myTripTmp/LikedPostsPage"
-import Alarm from "../pages/Alarm"
 import ChatRoom from "../components/ChatRoom"
 import MyPage from "../pages/myPage/MyPage"
 
@@ -50,17 +45,21 @@ import ResetPassword from "../pages/myPage/ResetPassword"
 import ApiDocs from "../pages/admin/ApiDocs"
 import ReportBoard from "../pages/admin/ReportBoard"
 import AdminDashboard from "../pages/admin/AdminHome"
-import UserBoard from '../pages/admin/UserBoard';
+import UserBoard from "../pages/admin/UserBoard"
 import AdminLayout from "../components/AdminLayout"
-import TripDuoCarousel from "../components/TripDuoCarousel"
+import MyPlace2 from "../pages/myTripTmp/MyPlace2"
+import UtilHome from "../pages/Utilities/UtilHome"
+import TripCostCalculator from "../pages/Utilities/TripCostCalculator"
+import InputExamples from "../pages/myTripTmp/InputExamples"
 
 // /users/:id
 // /users/:id/setting
-// /posts/:{ mate, course, photo, review }/:id/{edit, detail, ...}
+// /posts/:{ mate, course, photo, review }/:id/{update, detail, ...}
 
 const routes = [
   // ### home ###
   { path: "/", element: <Home /> },
+  { path: "/input", element: <InputExamples />},
 
   // ### sign up, login, logout ... ###
   { path: "/sample", element: <Sample /> },
@@ -96,18 +95,13 @@ const routes = [
   { path: "/posts/community/:id/detail", element: <CommunityBoardDetail /> },
 
   // ### 부가 기능 ###
-  { path: "/checklist", element: <TravelChecklist /> },
-  { path: "/exchangeInfo", element: <ExchangeInfo /> },
-  { path: "/safetyInfo", element: <TravelSafetyInfo /> },
-  { path: "/calculator", element: <TravelCostCalculator /> },
-  { path: "/recommendations", element: <LocationRecommendations /> },
-  { path: "/languageTip", element: <LanguageCultureTips /> },
-  { path: "/extra", element: <ExtraPage /> },
-  { path: "/alarm", element: <Alarm /> },
-
+  { path: "/utils", element: <UtilHome /> },
+  { path: "/utils/checklist", element: <TripChecklist /> },
+  { path: "/utils/exchangeInfo", element: <ExchangeInfo /> },
+  { path: "/utils/calculator", element: <TripCostCalculator /> },
+  { path: "/utils/safetyInfo", element: <TripSafetyInfo /> },
+  
   // ### etc ###
-  { path: "/api-docs", element: <ApiDocs /> },
-  { path: "/test/test", element: <TripDuoCarousel /> },
 ]
 
 const protectedRoutes = [
@@ -136,11 +130,12 @@ const protectedRoutes = [
   { path: "/users/:id/profile/edit", element: <MyProfileForm /> },
 
   // ### my page 메뉴 설정 ###
-  { path: "/myPlace", element: <MyPlace /> },
-  { path: "/myPlan", element: <MyPlan /> },
-  { path: "/myRecord", element: <MyRecord /> },
-  { path: "/wishMate", element: <WishMate /> },
-  { path: "/likedCourse", element: <LikedPostsPage /> },
+  { path: "/private/myPlace", element: <MyPlace /> },
+  { path: "/private/myPlace2", element: <MyPlace2 /> },
+  { path: "/private/myPlan", element: <MyPlan /> },
+  { path: "/private/myTripLog", element: <MyRecord /> },
+  { path: "/private/wishMate", element: <WishMate /> },
+  { path: "/private/likedCourse", element: <LikedPostsPage /> },
 
   // ### 개인정보 설정(보안, 인증정보) ###
   { path: "/auth/:id/changePassword", element: <ChangePassword /> },
@@ -148,17 +143,14 @@ const protectedRoutes = [
   // ### chat ###
   { path: "/chatroom", element: <ChatRoom /> },
   { path: "/chatroom/:id", element: <ChatRoom /> },
+]
 
+const adminRoutes = [
   // ### admin ###
   { path: "/admin-dashboard", element: <AdminDashboard /> },
   { path: "/admin-dashboard/users", element: <UserBoard /> },
   { path: "/admin-dashboard/reports", element: <ReportBoard /> },
-]
-
-const adminRoutes = [
-  { path: "", element: <AdminDashboard /> },
-  { path: "users", element: <UserBoard /> },
-  { path: "reports", element: <ReportBoard /> },
+  { path: "/admin-dashboard/api-docs", element: <ApiDocs /> },
 ]
 
 const router = createBrowserRouter([

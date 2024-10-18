@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CourseKakaoMapComponent from "../../components/CourseKakaoMapComponent";
 import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent";
 import LoadingAnimation from "../../components/LoadingAnimation";
+import { citiesByCountry } from "../../constants/mapping";
 
 
 const TripLogBoardEditForm = () => {
@@ -31,29 +32,10 @@ const TripLogBoardEditForm = () => {
         tags: [],
         status: status
     })
+    const [tagInput, setTagInput] = useState("")
 
     const navigate = useNavigate()
     const { id } = useParams()  // URL에서 게시물 ID를 가져옴
-
-     //나라별 도시 목록
-     const citiesByCountry = {
-        대한민국: ["서울", "부산", "제주", "인천"],
-        일본: ["도쿄", "오사카", "교토", "삿포로"],
-        중국: ["베이징", "상하이", "광저우", "시안"],
-        인도: ["델리", "뭄바이", "콜카타", "벵갈루루"],
-        스페인: ["바르셀로나", "그라나다", "마드리드", "세비야"],
-        영국: ["런던", "맨체스터", "버밍엄", "리버풀"],
-        독일: ["베를린", "뮌헨", "프랑크푸르트", "함부르크"],
-        프랑스: ["파리", "마르세유", "리옹", "니스"],
-        이탈리아: ["로마", "밀라노", "베네치아", "피렌체"],
-        미국: ["뉴욕", "로스앤젤레스", "시카고", "마이애미"],
-        캐나다: ["토론토", "밴쿠버", "몬트리올", "오타와"],
-        브라질: ["상파울루", "리우데자네이루", "브라질리아", "살바도르"],
-        호주: ["시드니", "멜버른", "브리즈번", "퍼스"],
-        러시아: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
-        "남아프리카 공화국": ["케이프타운", "요하네스버그", "더반", "프리토리아"],
-        // Add more countries and cities as needed
-    };
 
     const cities = citiesByCountry[postInfo.country] || []
 
@@ -74,9 +56,26 @@ const TripLogBoardEditForm = () => {
     //태그 입력
     const handleTagInput = (e) => {
         const value = e.target.value
+
+        // 태그 길이 15자로 제한
+        if (value.length > 15) {
+            alert("태그는 최대 15자까지 입력 가능합니다.");
+            return
+        }
+
+        setTagInput(value)
+
         if (value.endsWith(" ") && value.trim() !== "") {
             const newTag = value.trim()
+
+            //조건: #으로 시작, 중복 방지, # 단독 입력 방지
             if (newTag !== "#" && newTag.startsWith("#") && !postInfo.tags.includes(newTag)) {
+                // 태그 최대 6개로 제한
+                if (postInfo.tags.length >= 6) {
+                    alert("태그는 최대 6개까지 추가할 수 있습니다.")
+                    return
+                }
+
                 setPostInfo((prev) => ({
                     ...prev,
                     tags: [...prev.tags, newTag]
@@ -199,7 +198,7 @@ const TripLogBoardEditForm = () => {
             alert("나라를 선택해주세요.");
             return;
         }
-        
+
         axios.put(`/api/v1/posts/${id}`, postInfo)  // PUT 요청으로 업데이트
             .then((res) => {
                 alert("수정했습니다")
@@ -244,6 +243,7 @@ const TripLogBoardEditForm = () => {
                             onChange={(e) =>
                                 setPostInfo((prev) => ({ ...prev, title: e.target.value }))
                             }
+                            maxLength={50}
                         />
                     </div>
 
@@ -331,6 +331,7 @@ const TripLogBoardEditForm = () => {
                         </label>
                         <input
                             id="tags"
+                            value={tagInput}
                             onChange={handleTagInput}
                             placeholder="#태그 입력 후 스페이스바"
                             className="border-gray-300 rounded-md p-2 w-full"
@@ -371,14 +372,15 @@ const TripLogBoardEditForm = () => {
 
                             <div className="mb-4">
                                 <label htmlFor={`dayMemo-${dayIndex}`} className="block text-lg font-medium text-gray-700">
-                                    Day Memo
+                                    Day Record
                                 </label>
                                 <textarea
                                     className="border-gray-300 rounded-md p-2 w-full"
                                     id={`dayMemo-${dayIndex}`}
                                     value={day.dayMemo || ""}
                                     onChange={(e) => handleDayMemoChange(dayIndex, e.target.value)}
-                                    placeholder="메모를 입력하세요..."
+                                    placeholder="이날은 무슨 일이 있었나요?"
+                                    maxLength={500}
                                 />
                             </div>
 

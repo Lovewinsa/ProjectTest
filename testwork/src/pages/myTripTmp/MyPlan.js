@@ -2,6 +2,7 @@ import axios from "axios"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { shallowEqual, useSelector } from "react-redux"
 import { useNavigate } from "react-router"
+import { cityMapping, countryMapping } from "../../constants/mapping"
 
 function MyPlan(props) {
   //course 변수 사용하기 위해 임시로 useState() 사용
@@ -71,41 +72,97 @@ function MyPlan(props) {
     }
   }, [currentPage])
 
+  // city 또는 country 값에 따른 이미지 파일명 변환 함수
+  const getImageFileName = (city, country) => {
+    // city 값이 있으면 city에 맞는 이미지, 없으면 country에 맞는 이미지 반환
+    if (city && cityMapping[city]) {
+      return cityMapping[city]
+    } else if (country && countryMapping[country]) {
+      return countryMapping[country]
+    } else {
+      return "defaultImage" // 매핑되지 않은 경우 기본값 처리
+    }
+  }
+
   return (
     <div className="container mx-auto p-4 max-w-[1024px]">
       {/* 게시글 작성 버튼 */}
-      <div className="flex justify-between mb-6">
-        <h3 className="text-2xl font-bold">내 여행 리스트</h3>
-        <button
-          onClick={() => navigate("/posts/course/new?status=PRIVATE")}
-          className="bg-tripDuoMint text-white font-bold px-4 py-2 rounded-md shadow-md hover:bg-tripDuoGreen transition-all duration-300"
-        >
-          새 여행 계획하기
-        </button>
+      <div className="flex justify-end">
+        <div className="bg-tripDuoMint text-white font-bold px-4 py-2 rounded-md shadow-md">
+          <span>새 여행 계획하기:</span>
+          <span
+            className="ml-2 cursor-pointer hover:bg-tripDuoGreen transition-all duration-300 px-2 rounded"
+            onClick={() => navigate("/posts/course/new?status=PRIVATE&di=Domestic")}>
+            국내
+          </span>
+          <span className="mx-2">/</span>
+          <span
+            className="cursor-pointer hover:bg-tripDuoGreen transition-all duration-300 px-2 rounded"
+            onClick={() => navigate("/posts/course/new?status=PRIVATE&di=International")}>
+            해외
+          </span>
+        </div>
       </div>
 
-      {postList.length > 0 ? (
-        <>
-          <ul className="space-y-4">
-            {postList.map((post) => (
-              <li key={post.id} className="p-4 border rounded-lg shadow-md">
-                <a href={`/posts/course/${post.id}/detail`} className="block">
-                  <h4 className="text-xl font-semibold">{post.title}</h4>
-                  <p className="text-gray-600">{post.description}</p>
-                  <p className="text-sm text-gray-500">작성일: {new Date(post.createdAt).toLocaleDateString()}</p>
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          {/* 무한 스크롤 트리거 */}
-          <div ref={observerRef} className="h-10"></div>
-        </>
-      ) : (
-        <div className="text-center">
-          <h3 className="text-xl font-semibold">계획중인 여행이 없습니다</h3>
-        </div>
-      )}
+      <div className="container mx-auto p-4 max-w-[1024px]">
+        {postList ? (
+          <>
+            <div className="py-5">
+              <p className="font-bold text-xl text-center">내 여행 계획</p>
+            </div>
+            <ul className="space-y-4">
+              {postList.map((post) => {
+                const imageFileName = getImageFileName(post.city, post.country)
+                const imagePath = `/img/countryImages/${imageFileName}.jpg`
+                return (
+                  <li
+                    key={post.id}
+                    className={`p-4 border rounded-lg shadow-md border border-green-600 hover:scale-102 transition duration-300 hover:shadow-xl`}
+                    style={{
+                      backgroundImage: `linear-gradient(to right,
+                        rgba(255, 255, 255, 1) 0%, 
+                        rgba(255, 255, 255, 1) 20%, 
+                        rgba(255, 255, 255, 0.5) 40%, 
+                        rgba(255, 255, 255, 0) 60%, 
+                        rgba(255, 255, 255, 0) 80%),
+                        url(${imagePath})`,
+                      backgroundSize: "cover", // 이미지 채우기
+                      backgroundPosition: "center",
+                      // /* 혼합 모드 설정 */
+                      mixBlendMode: "multiply",
+                    }}>
+                    <a href={`/posts/course/${post.id}/detail`} className="block">
+                      <div className="md:flex justify-between">
+                        <div>
+                          <h4 className="text-xl font-semibold">{post.title}</h4>
+                        </div>
+                        <div className="flex md:flex-col md:min-w-32 md:space-y-2">
+                          <p>
+                            <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mr-2">
+                              #{post.city}
+                            </span>
+                          </p>
+                          <p>
+                            <span className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">
+                              #{post.country}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500">작성일: {new Date(post.createdAt).toLocaleDateString()}</p>
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+            <div ref={observerRef} className="h-10"></div>
+          </>
+        ) : (
+          <div className="text-center">
+            <h3 className="text-xl font-semibold">계획중인 여행이 없습니다</h3>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

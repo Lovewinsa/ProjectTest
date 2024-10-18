@@ -7,6 +7,7 @@ import CourseGoogleMapComponent from "../../components/CourseGoogleMapComponent"
 import Calendar from "react-calendar"
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa"
 import moment from "moment"
+import { citiesByCountry } from "../../constants/mapping"
 
 const CourseBoardForm = () => {
   const userId = useSelector((state) => state.userData.id, shallowEqual)
@@ -17,30 +18,10 @@ const CourseBoardForm = () => {
   // 달력에서 선택된 날짜 범위 저장
   const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false); // 캘린더 표시 여부 상태
- 
+
   const [title, setTitle] = useState("")
   const [country, setCountry] = useState("")
   const [city, setCity] = useState("")
-
-  //나라별 도시 목록
-  const citiesByCountry = {
-    대한민국: ["서울", "부산", "제주", "인천"],
-    일본: ["도쿄", "오사카", "교토", "삿포로"],
-    중국: ["베이징", "상하이", "광저우", "시안"],
-    인도: ["델리", "뭄바이", "콜카타", "벵갈루루"],
-    스페인: ["바르셀로나", "그라나다", "마드리드", "세비야"],
-    영국: ["런던", "맨체스터", "버밍엄", "리버풀"],
-    독일: ["베를린", "뮌헨", "프랑크푸르트", "함부르크"],
-    프랑스: ["파리", "마르세유", "리옹", "니스"],
-    이탈리아: ["로마", "밀라노", "베네치아", "피렌체"],
-    미국: ["뉴욕", "로스앤젤레스", "시카고", "마이애미"],
-    캐나다: ["토론토", "밴쿠버", "몬트리올", "오타와"],
-    브라질: ["상파울루", "리우데자네이루", "브라질리아", "살바도르"],
-    호주: ["시드니", "멜버른", "브리즈번", "퍼스"],
-    러시아: ["모스크바", "상트페테르부르크", "노보시비르스크", "예카테린부르크"],
-    "남아프리카 공화국": ["케이프타운", "요하네스버그", "더반", "프리토리아"],
-    // Add more countries and cities as needed
-  };
 
   // 선택한 나라에 맞는 도시 목록을 얻음
   const cities = citiesByCountry[country] || []
@@ -82,11 +63,26 @@ const CourseBoardForm = () => {
 
   const handleTagInput = (e) => {
     const value = e.target.value
+
+    // 태그 길이 15자로 제한
+    if (value.length > 15) {
+      alert("태그는 최대 15자까지 입력 가능합니다.");
+      return
+    }
+
     setTagInput(value)
 
     if (value.endsWith(" ") && value.trim() !== "") {
       const newTag = value.trim()
+
+      //조건: #으로 시작, 중복 방지, # 단독 입력 방지
       if (newTag !== "#" && newTag.startsWith("#") && !tags.includes(newTag)) {
+        // 태그 최대 6개로 제한
+        if (tags.length >= 6) {
+          alert("태그는 최대 6개까지 추가할 수 있습니다.")
+          return
+        }
+
         setTags([...tags, newTag])
         setTagInput("")
       }
@@ -189,7 +185,7 @@ const CourseBoardForm = () => {
     axios
       .post("/api/v1/posts/course", post)
       .then((res) => {
-        status === "PRIVATE" ? navigate(`/myPlan/${userId}`)
+        status === "PRIVATE" ? navigate("/private/myPlan")
           : navigate(`/posts/course?di=${domesticInternational}`)
       })
       .catch((error) => console.log(error))
@@ -218,7 +214,7 @@ const CourseBoardForm = () => {
           </h1>
           <button
             onClick={() => {
-              status === "PRIVATE" ? navigate(`/myPlan/${userId}`)
+              status === "PRIVATE" ? navigate(`/private/myPlan`)
                 : navigate(`/posts/course?di=${domesticInternational}`)
             }}
             className="text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full text-sm px-5 py-2">
@@ -244,7 +240,8 @@ const CourseBoardForm = () => {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={status==="PRIVATE" && "MyPage에서 확인 가능한 게시물입니다."}
+                placeholder={status === "PRIVATE" ? "MyPage에서 확인 가능한 게시물입니다." : ""}
+                maxLength={50}
               />
             </div>
 
@@ -261,6 +258,7 @@ const CourseBoardForm = () => {
               </button>
             </div>
           </div>
+
           {/* 선택한 날짜 */}
           <div className="sm:col-span-6">
             <p style={{ marginTop: '-10px', marginBottom: '-20px' }} className="text-sm text-gray-600 text-right">
@@ -440,6 +438,7 @@ const CourseBoardForm = () => {
                   value={day.dayMemo || ""}
                   onChange={(e) => handleDayMemoChange(dayIndex, e.target.value)}
                   placeholder="메모를 입력하세요..."
+                  maxLength={200}
                 />
               </div>
 
@@ -481,6 +480,7 @@ const CourseBoardForm = () => {
                         id={`placeMemo-${dayIndex}-${placeIndex}`}
                         value={place.placeMemo || ""}
                         onChange={(e) => handlePlaceMemoChange(dayIndex, placeIndex, e.target.value)}
+                        maxLength={150}
                       />
                     </div>
                   </div>
@@ -501,7 +501,7 @@ const CourseBoardForm = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div
               className="bg-white p-6 rounded-lg shadow-lg w-2/3 max-w-4xl"
-              style={{ maxHeight: "90vh", overflowY: "auto" }}>
+              style={{ maxHeight: "80vh", overflowY: "auto" }}>
               <div className="flex justify-between items-center mb-4">
                 <div className="text-xl font-bold">
                   Day {selectedDayIndex + 1} : {selectedPlaceIndex + 1}번 장소 선택 중

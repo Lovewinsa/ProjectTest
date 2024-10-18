@@ -27,7 +27,7 @@ function Home() {
   useEffect(() => {
     if (location.state && location.state.needLogout) {
       // 로그아웃 처리
-      dispatch({ type: "LOGOUT_USER", payload: null })
+      dispatch({ type: "LOGOUT_USER"})
       localStorage.clear()
 
       // 상태 초기화 (새로고침 효과)

@@ -1,13 +1,10 @@
-import AdminLayout from "../../components/AdminLayout";
 
 function AdminDashboard() {
-    return (
-        <>
-            <AdminLayout>
-                <h1>홈</h1>
-            </AdminLayout>
-        </>
-    );
+  return (
+    <>
+      <h1>홈</h1>
+    </>
+  )
 }
 
-export default AdminDashboard;
+export default AdminDashboard

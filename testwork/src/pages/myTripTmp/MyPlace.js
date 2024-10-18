@@ -1,10 +1,10 @@
 import axios from "axios"
 import { useEffect, useState } from "react"
-import SaveLocationPage from "./SaveLocationPage";
 import { useNavigate } from "react-router";
-import SavedPlacesMapComponent from "../../components/SavedPlacesKakaoMapComponent";
+import SavedPlacesKakaoMapComponent from "../../components/SavedPlacesKakaoMapComponent";
 import { shallowEqual, useSelector } from "react-redux";
 import LoadingAnimation from "../../components/LoadingAnimation";
+import KakaoSaveLocationPage from "./KakaoSaveLocationPage";
 
 function MyPlace() {
     //로딩 상태 추가
@@ -33,8 +33,13 @@ function MyPlace() {
         setTimeout(() => {
             setLoading(false)
         }, 700)
-        axios.get(`/api/v1/users/${loggedInUserId}/trips/saved-places`)
+        axios.get(`/api/v1/users/${loggedInUserId}/trips/saved-places`, {
+            params: {
+                di: "Domestic"
+            }
+        })
             .then(res => {
+                console.log(res.data)
                 const savedPlacesList = res.data
                 if (savedPlacesList.length > 0) {
                     setPlacesInfo(savedPlacesList)
@@ -96,21 +101,23 @@ function MyPlace() {
             longitude: parseFloat(place.x), // x를 longitude로 변환
             userId: loggedInUserId,
             userMemo: place.placeMemo || "",
+            di: "Domestic"
         }
 
         axios.post(`/api/v1/users/${loggedInUserId}/trips/saved-places`, placeInfo)
             .then(res => {
+
                 // 장소 저장 후 placesInfo 상태 업데이트
-                setPlacesInfo(prevPlaces => [
-                    ...prevPlaces,
-                    { place: placeInfo }
+                setPlacesInfo(prevPlacesInfo => [
+                    ...prevPlacesInfo,
+                    res.data
                 ])
 
                 // 저장된 장소의 좌표로 지도 중심 이동
                 setKakaoMapCenterLocation({ Ma: placeInfo.latitude, La: placeInfo.longitude })
 
                 // 메모 저장 시 해당 장소 메모도 업데이트
-                setSelectedPlaceMemo(placeInfo.userMemo)
+                setSelectedPlaceMemo(placesInfo.userMemo)
 
                 // 장소 저장 후 검색 컴포넌트를 닫습니다.
                 setShowPlaceSearch(false)
@@ -133,13 +140,13 @@ function MyPlace() {
             // 새로운 infoWindow 생성
             const infoWindow = new window.kakao.maps.InfoWindow({
                 content: `
-                    <div style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;width:100%;max-width:600px;">
+                    <div style="padding:10px;font-size:12px;display:flex;flex-direction:column;align-items:flex-start;width:100%;max-width:600px;height:100%;">
                         <div style="margin-bottom: 8px; display: flex; justify-content: space-between; width: 100%;">
                             <strong>${placeItem.place.placeName}</strong>
                         </div>
                         <div style="margin-bottom: 8px;">${placeItem.place.addressName}</div>
                         <div style="margin-bottom: 8px;">전화번호: ${placeItem.place.phone || '정보 없음'}</div>
-                        <div style="margin-bottom: 8px;"><a href="${placeItem.place.placeUrl}" target="_blank">장소 링크</a></div>
+                        <div style="margin-bottom: 16px;"><a href="${placeItem.place.placeUrl}" target="_blank">장소 링크</a></div>
                     </div>
                 `,
             });
@@ -161,8 +168,20 @@ function MyPlace() {
             {loading && <LoadingAnimation />}
             <div className="flex flex-col items-center min-h-screen bg-gray-100">
                 <div className="w-full max-w-screen-xl mx-auto p-4">
+                    <div className="flex justify-start">
+                        <button
+                            onClick={() => navigate(`/users/${loggedInUserId}`)}
+                            className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+                            MyPage
+                        </button>
+                        <button
+                            onClick={() => navigate("/private/myPlace2")}
+                            className="text-white bg-tripDuoMint hover:bg-tripDuoGreen focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-4 py-2.5 text-center">
+                            해외
+                        </button>
+                    </div>
                     {/* 상단 헤더 */}
-                    <h1 className="text-3xl font-bold mb-4 text-center">마이 플레이스</h1>
+                    <h1 className="text-3xl font-bold mb-4 text-center">마이 플레이스(국내)</h1>
 
                     {/* 장소 검색 버튼 */}
                     <div className="flex justify-end mb-4">
@@ -197,7 +216,7 @@ function MyPlace() {
                         <div className="w-3/4 flex flex-col space-y-4">
                             {/* 지도 영역 */}
                             <div className="flex-grow bg-white rounded-lg shadow-md">
-                                <SavedPlacesMapComponent
+                                <SavedPlacesKakaoMapComponent
                                     savedPlaces={transformedData}
                                     centerLocation={kakaoMapCenterLocation}
                                     onMapReady={setMap}
@@ -214,11 +233,11 @@ function MyPlace() {
                         </div>
                     </div>
 
-                    {/* SaveLocationPage 모달 */}
+                    {/* KakaoSaveLocationPage 모달 */}
                     {showPlaceSearch && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                             <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-xl">
-                                <SaveLocationPage onSave={handleSavePlace} />
+                                <KakaoSaveLocationPage onSave={handleSavePlace} />
                                 <button
                                     onClick={() => setShowPlaceSearch(false)}
                                     className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-400 transition"

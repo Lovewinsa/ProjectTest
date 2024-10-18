@@ -8,7 +8,7 @@ function LogoutPage() {
 
     useEffect(() => {
         localStorage.clear();
-        dispatch({ type: "LOGOUT_USER", payload: null });
+        dispatch({ type: "LOGOUT_USER"});
         navigate('/');  // 홈 페이지 또는 로그인 페이지로 리다이렉트
         window.location.reload();  // 페이지 새로고침
     }, [dispatch, navigate]);

@@ -9,14 +9,11 @@ import {
   faBell,
   faChevronDown,
   faChevronUp,
-  faCompass,
   faMessage,
   faMicrophone,
   faPeoplePulling,
   faPersonSwimming,
   faPersonThroughWindow,
-  faPersonWalkingLuggage,
-  faUser,
 } from "@fortawesome/free-solid-svg-icons"
 
 function NavBar() {
@@ -135,7 +132,7 @@ function NavBar() {
 
   const completeLogout = () => {
     localStorage.clear()
-    dispatch({ type: "LOGOUT_USER", payload: null })
+    dispatch({ type: "LOGOUT_USER" })
     setIsLoggedIn(false)
     navigate("/")
     window.location.reload()
@@ -181,14 +178,8 @@ function NavBar() {
       {/* 글로벌 네비게이션 바 */}
       <nav className="bg-white p-4 shadow-md flex justify-between items-center relative">
         {/* Off-canvas toggle button */}
-        <button type="button" className="text-gray-600 pl-20" onClick={() => setOffCanvasOpen(true)}>
+        <button type="button" className="text-gray-600 pl-4" onClick={() => setOffCanvasOpen(true)}>
           <FontAwesomeIcon icon={faBars} className="h-5 w-5 mr-2" />
-        </button>
-
-        <button
-          className="font-bold text-2xl absolute left-1/2 transform -translate-x-1/2"
-          onClick={handleTripDuoClick}>
-          <img className="w-24 h-auto" src="/img/TripDuologo.png" alt="logo" />
         </button>
 
         {/* md 이상에서만 보여주는 icon */}
@@ -203,68 +194,84 @@ function NavBar() {
                 {profilePicture ? (
                   <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Profile" />
                 ) : (
-                  <FontAwesomeIcon icon={faUser} color="black" className="h-5 w-5" />
+                  <img
+                    className="bi bi-person-circle w-6 h-6"
+                    src={`${process.env.PUBLIC_URL}/img/defaultImages/defaultProfilePicture.svg`}
+                    alt="default profile img"
+                  />
                 )}
               </NavLink>
             </>
           )}
-          <button className="font-bold text-gray-800 pr-20" onClick={handleLoginLogoutClick}>
+          <button className="font-bold text-gray-800 pr-4" onClick={handleLoginLogoutClick}>
             {isLoggedIn ? "로그아웃" : "로그인/회원가입"}
           </button>
         </div>
         {/* md 이하에서만 보여주는 icon */}
         <div ref={dropdownRef} className="md:hidden">
-          <div className="pr-20">
-            <FontAwesomeIcon
+          <div className="pr-4">
+            <img
               onClick={(e) => {
                 e.stopPropagation()
                 setDropdownOpen(!isDropdownOpen)
               }}
-              icon={faUser}
-              color="black"
-              className="h-5 w-5 cursor-pointer"
+              className={`bi bi-person-circle ${profilePicture ? "w-8 h-8" : "w-6 h-6"} cursor-pointer rounded-full`}
+              src={
+                profilePicture
+                  ? profilePicture
+                  : `${process.env.PUBLIC_URL}/img/defaultImages/defaultProfilePicture.svg`
+              }
+              alt="default profile img"
             />
           </div>
           {isDropdownOpen && (
-            <div className="absolute right-20 top-10 mt-2 w-42 bg-white shadow divide-y divide-gray-100 rounded-lg py-2 z-10">
+            <div className="absolute right-4 top-10 mt-2 w-42 bg-white shadow divide-y divide-gray-100 rounded-lg py-2 z-10">
               <p className="block px-4 py-2 hover:bg-gray-100 ">
                 <button className="font-bold text-gray-800" onClick={handleLoginLogoutClick}>
                   {isLoggedIn ? "로그아웃" : "로그인/회원가입"}
                 </button>
               </p>
               {isLoggedIn && (
-                <p className="block px-4 py-2 hover:bg-gray-100">
-                  <button
-                    onClick={() => {
-                      navigate(`/users/${userId}`)
-                      setDropdownOpen(!isDropdownOpen)
-                    }}>
-                    마이 페이지
-                  </button>
-                </p>
+                <>
+                  <p className="block px-4 py-2 hover:bg-gray-100">
+                    <button
+                      onClick={() => {
+                        navigate(`/users/${userId}`)
+                        setDropdownOpen(!isDropdownOpen)
+                      }}>
+                      마이 페이지
+                    </button>
+                  </p>
+                  <p className="block px-4 py-2 hover:bg-gray-100">
+                    <button
+                      onClick={() => {
+                        navigate("/chatRoom")
+                        setDropdownOpen(!isDropdownOpen)
+                      }}>
+                      채팅
+                    </button>
+                  </p>
+                </>
               )}
-              <p className="block px-4 py-2 hover:bg-gray-100">
-                <button
-                  onClick={() => {
-                    navigate("/chatRoom")
-                    setDropdownOpen(!isDropdownOpen)
-                  }}>
-                  채팅
-                </button>
-              </p>
             </div>
           )}
+        </div>
+        {/* TripDuo 로고는 항상 가로 정중앙에 위치 */}
+        <div className="absolute left-1/2 transform -translate-x-1/2">
+          <button className="font-bold text-2xl" onClick={handleTripDuoClick}>
+            <img className="w-24 h-auto" src="/img/TripDuologo.png" alt="logo" />
+          </button>
         </div>
       </nav>
 
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <ul className="flex flex-wrap justify-around -mb-px text-sm font-medium text-center text-gray-500 ">
-          <li className="mx-2">
+        <ul className="flex flex-wrap justify-around -mb-px text-sm font-medium text-center text-gray-500 md:flex-nowrap lg:flex-wrap">
+          <li className="mx-2 md:mx-4 lg:mx-2">
             <NavLink
               className={`font-bold text-lg inline-flex items-center justify-center p-3 border-b-2 rounded-t-lg transition-all duration-300 ${
                 location.pathname.startsWith("/posts/course") && location.search.includes("di=Domestic")
-                ? "border-b-2 border-tripDuoGreen text-tripDuoGreen transform scale-105"
+                  ? "border-b-2 border-tripDuoGreen text-tripDuoGreen transform scale-105"
                   : "border-transparent hover:text-gray-600 hover:border-gray-300"
               } group`}
               to="/posts/course?di=Domestic"
@@ -273,11 +280,11 @@ function NavBar() {
               &nbsp;국내 여행
             </NavLink>
           </li>
-          <li className="mx-2">
+          <li className="mx-2 md:mx-4 lg:mx-2">
             <NavLink
               className={`font-bold text-lg inline-flex items-center justify-center p-3 border-b-2 rounded-t-lg transition-all duration-300 ${
                 location.pathname.startsWith("/posts/course") && location.search.includes("di=International")
-                ? "border-b-2 border-tripDuoGreen text-tripDuoGreen transform scale-105"
+                  ? "border-b-2 border-tripDuoGreen text-tripDuoGreen transform scale-105"
                   : "border-transparent hover:text-gray-600 hover:border-gray-300"
               } group`}
               to="/posts/course?di=International"
@@ -286,7 +293,7 @@ function NavBar() {
               &nbsp;해외 여행
             </NavLink>
           </li>
-          <li className="mx-2">
+          <li className="mx-2 md:mx-4 lg:mx-2">
             <NavLink
               className={`font-bold text-lg inline-flex items-center justify-center p-3 border-b-2 rounded-t-lg transition-all duration-300 ${
                 location.pathname === "/posts/mate"
@@ -298,10 +305,10 @@ function NavBar() {
               &nbsp;여행 메이트
             </NavLink>
           </li>
-          <li className="mx-2">
+          <li className="mx-2 md:mx-4 lg:mx-2">
             <NavLink
               className={`font-bold text-lg inline-flex items-center justify-center p-3 border-b-2 rounded-t-lg transition-all duration-300 ${
-                location.pathname === "/posts/mate"
+                location.pathname === "/posts/community"
                   ? "border-b-2 border-tripDuoGreen text-tripDuoGreen transform scale-105"
                   : "border-transparent hover:text-gray-600 hover:border-gray-300"
               } group`}
@@ -421,22 +428,22 @@ function NavBar() {
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to={`/myPlan/${userId}`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to={`/private/myPlan`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     여행 계획
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to={`/myRecord/${userId}`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to={`/private/myTripLog`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     여행 기록
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to={`/wishMate/${userId}`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to={`/private/wishMate`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     관심 메이트
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to={`/myPlace/${userId}`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to={`/private/myPlace`} className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     마이 플레이스
                   </NavLink>
                 </div>
@@ -455,38 +462,23 @@ function NavBar() {
                   openSections.extra ? "max-h-80" : "max-h-0"
                 }`}>
                 <div>
-                  <NavLink to="/checklist" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to="/utils/checklist" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     체크 리스트
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to="/exchangeInfo" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to="/utils/exchangeInfo" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     환율 정보
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to="/safetyInfo" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
-                    안전 정보
-                  </NavLink>
-                </div>
-                <div>
-                  <NavLink to="/calculator" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                  <NavLink to="/utils/calculator" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
                     여행 경비 계산기
                   </NavLink>
                 </div>
                 <div>
-                  <NavLink to="planner" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
-                    여행 플래너
-                  </NavLink>
-                </div>
-                <div>
-                  <NavLink to="recommendations" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
-                    여행 추천 장소
-                  </NavLink>
-                </div>
-                <div>
-                  <NavLink to="languageTip" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
-                    여행 대화/문화 팁
+                  <NavLink to="/utils/safetyInfo" className={offCanvasNavLinkStyle} onClick={closeOffCanvas}>
+                    안전 정보
                   </NavLink>
                 </div>
               </div>

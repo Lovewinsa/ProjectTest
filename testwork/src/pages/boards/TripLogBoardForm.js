@@ -63,7 +63,7 @@ const TripLogBoardForm = () => {
         const postData = res.data.dto
         setPost(postData)
         setTitle(`[ ${res.data.dto.title} ] 게시물의 여행기록`)
-        console.log(res.data.dto)
+
         //장소 정보
         const places = postData.postData.reduce((acc, day) => acc.concat(day.places), [])
         setAllPlaces(places)
@@ -126,11 +126,26 @@ const TripLogBoardForm = () => {
 
   const handleTagInput = (e) => {
     const value = e.target.value
+
+    // 태그 길이 15자로 제한
+    if (value.length > 15) {
+      alert("태그는 최대 15자까지 입력 가능합니다.");
+      return
+    }
+
     setTagInput(value)
 
     if (value.endsWith(" ") && value.trim() !== "") {
       const newTag = value.trim()
+
+      //조건: #으로 시작, 중복 방지, # 단독 입력 방지
       if (newTag !== "#" && newTag.startsWith("#") && !tags.includes(newTag)) {
+        // 태그 최대 6개로 제한
+        if (tags.length >= 6) {
+          alert("태그는 최대 6개까지 추가할 수 있습니다.")
+          return
+        }
+
         setTags([...tags, newTag])
         setTagInput("")
       }
@@ -233,6 +248,7 @@ const TripLogBoardForm = () => {
               id="title"
               defaultValue={title}
               onChange={(e) => setTitle(e.target.value)}
+              maxLength={50}
             />
           </div>
         </div>
@@ -276,6 +292,7 @@ const TripLogBoardForm = () => {
                   id={`dayMemo-${dayIndex}`}
                   onChange={(e) => handleDayMemoChange(dayIndex, e.target.value)}
                   placeholder="이날은 무슨 일이 있었나요?"
+                  maxLength={500}
                 />
               </div>
               {day.places.map((place, placeIndex) => (

@@ -21,7 +21,6 @@ function BestPosts(props) {
     axios
       .get("/api/v1/posts/mate/home")
       .then((response) => {
-        console.log(response.data)
         setPostLists({
           domesticCourse: response.data.domesticCoursePostList,
           internationalCourse: response.data.internationalCoursePostList,
@@ -85,8 +84,8 @@ function BestPosts(props) {
                     const di =
                       postList === postLists.domesticCourse || postList === postLists.domesticMate
                         ? "Domestic"
-                        : "International";
-                    navigate(`/posts/${post.type.toLowerCase()}/${post.id}/detail?di=${di}`);
+                        : "International"
+                    navigate(`/posts/${post.type.toLowerCase()}/${post.id}/detail?di=${di}`)
                   }}>
                   {post.title}
                 </h4>

@@ -163,7 +163,6 @@ const CourseGoogleMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex
             <div
                 ref={mapRef}
                 className="flex-grow mb-4"
-                // 맵의 높이를 뷰포트 높이의 60%로 설정
                 style={{ width: "100%", height: "50vh" }}>
             </div>
 
@@ -207,8 +206,6 @@ const CourseGoogleMapComponent = ({ onSave, selectedDayIndex, selectedPlaceIndex
                                     rating: place.rating,
                                     user_ratings_total: place.user_ratings_total,
                                 };
-                                console.log(place)
-                                console.log(placeData);
 
                                 map.setCenter(place.geometry.location);
                                 map.setZoom(15);

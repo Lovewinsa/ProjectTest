@@ -174,9 +174,9 @@ function MateBoard() {
         //페이지 제목을 변경한다
         let tempStr = "";
         if (domesticInternational === "Domestic") {
-          tempStr = "국내 여행 코스";
+          tempStr = "국내 여행 메이트";
         } else if (domesticInternational === "International") {
-          tempStr = "해외 여행 코스";
+          tempStr = "해외 여행 메이트";
         }
         setDesiredCountry(`${tempStr}`);
 
@@ -190,6 +190,15 @@ function MateBoard() {
 
   // 해외 / 국내 전환시 호출
   useEffect(() => {
+    setSearchCriteria({
+      country: "",
+      city: "",
+      startDate: "",
+      endDate: "",
+      keyword: "",
+      condition: "title", // 기본 조건 설정
+    });
+  
     fetchFilteredPosts();
   }, [domesticInternational]);
 
@@ -203,10 +212,19 @@ function MateBoard() {
   const handleDesiredCountry = () => {
     const newDomesticInternational = domesticInternational === "International" ? "Domestic" : "International";
     setDomesticInternational(newDomesticInternational);
+    setSearchCriteria({
+      country: "",
+      city: "",
+      startDate: "",  // startDate 초기화
+      endDate: "",    // endDate 초기화
+      keyword: "",    // keyword 초기화
+      condition: "title",
+    });
     setSearchParams({
       ...searchCriteria,
       di: newDomesticInternational,
     });
+    window.location.reload();
   };
 
   // 새로운 검색을 시작하는 함수
@@ -228,7 +246,7 @@ function MateBoard() {
     // 정렬 기준에 따라 pageData를 정렬
     const sortedData = [...pageData].sort((a, b) => {
       if (e.target.value === "latest") {
-        return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
+        return new Date(b.createdAt) - new Date(a.createdAt);
       } else if (e.target.value === "viewCount") {
         return b.viewCount - a.viewCount;
       } else if (e.target.value === "likeCount") {

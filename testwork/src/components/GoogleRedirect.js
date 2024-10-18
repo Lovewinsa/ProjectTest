@@ -46,10 +46,10 @@ function GoogleAuthLogin() {
       })
   }, [code])
 
-  const processToken = (token) => {
-    if (token.startsWith("Bearer+")) {
-      localStorage.setItem("token", token)
-      const result = decodeToken(token.substring(7))
+  const processToken = (data) => {
+    if (data.token.startsWith("Bearer+")) {
+      localStorage.setItem("token", data.token)
+      const result = decodeToken(data.token.substring(7))
 
       const userData = {
         id: result.payload.id,
@@ -64,12 +64,16 @@ function GoogleAuthLogin() {
       }
 
       dispatch({ type: "LOGIN_USER", payload: { userData, loginStatus } })
-      axios.defaults.headers.common["Authorization"] = token
+      axios.defaults.headers.common["Authorization"] = data.token
 
       // WebSocket 연결
       connectWebSocket()
 
-      navigate("/")
+      if(data.isLoginChecked){
+        navigate("/")
+      }else if (!data.isLoginChecked){
+        navigate("/completedSignup", { state: { isAllChecked : true } })
+      }
       window.location.reload()
     }
   }
